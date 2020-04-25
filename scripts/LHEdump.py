@@ -34,7 +34,7 @@ infiles   = [
   '/hadoop/cms/store/user/dspitzba/tW_scattering/tW_scattering/nanoAOD/tW_scattering_nanoAOD_100.root'
 ]
 if args.infiles:
-  infiles = args.infiles
+  infiles = [args.infiles]
 
 # HAS BIT
 def hasBit(value,bit):
@@ -81,8 +81,14 @@ class LHEDumper(Module):
         mothdR  = -1
       prompt    = hasBit(particle.statusFlags,0)
       lastcopy  = hasBit(particle.statusFlags,13)
-      particleName =  Particle.from_pdgid(int(particle.pdgId)).name
-      motherName = Particle.from_pdgid(int(mothpid)).name if mothpid != 0 else 'initial'
+      try:
+          particleName =  Particle.from_pdgid(int(particle.pdgId)).name
+      except:
+          particleName = str(particle.pdgId)
+      try:
+        motherName = Particle.from_pdgid(int(mothpid)).name if mothpid != 0 else 'initial'
+      except:
+          particleName = str(particle.pdgId)
       print " %7d %8d %10s %8d %8d %10s %8.2f %8.2f %8d %9s %10s"%(
         i,particle.pdgId,particleName,mothidx,mothpid,motherName,mothdR,particle.pt,particle.status,prompt,lastcopy)
       if abs(particle.pdgId) in [11,13,15]:
