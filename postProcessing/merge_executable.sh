@@ -58,41 +58,8 @@ echo "Running PhysicsTools/NanoAODTools/scripts/nano_postproc.py:"
 echo "Input:"
 echo $INPUTFILENAMES
 
-OUTFILE=$(python -c "print('$INPUTFILENAMES'.split('/')[-1].split('.root')[0]+'_Skim.root')")
-
-echo $OUTFILE
-
-python << EOL
-from importlib import import_module
-from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor   import PostProcessor
-from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel       import Collection
-from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop       import Module
-
-from PhysicsTools.NanoAODTools.postprocessing.modules.tW_scattering.ObjectSelection import *
-from PhysicsTools.NanoAODTools.postprocessing.modules.tW_scattering.lumiWeightProducer import *
-
-#json support to be added
-
-modules = [\
-    lumiWeightProd("$SUMWEIGHT"),
-    selector2018(),
-    ]
-
-p = PostProcessor('./', ["$INPUTFILENAMES"], cut='nJet>2&&(nElectron+nMuon)>0', modules=modules,\
-    branchsel='PhysicsTools/NanoAODTools/python/postprocessing/modules/tW_scattering/keep_and_drop.txt',\
-    outputbranchsel='PhysicsTools/NanoAODTools/python/postprocessing/modules/tW_scattering/keep_and_drop.txt' )
-
-p.run()
-EOL
-
-#python PhysicsTools/NanoAODTools/scripts/nano_postproc.py ./ $INPUTFILENAMES \
-#    --branch-selection PhysicsTools/NanoAODTools/python/postprocessing/modules/tW_scattering/keep_and_drop.txt \
-#    --cut='nJet>0&&(nElectron+nMuon)>0' \
-#    -I PhysicsTools.NanoAODTools.postprocessing.modules.tW_scattering.ObjectSelection selector2018,\
-#       PhysicsTools.NanoAODTools.postprocessing.modules.tW_scattering.lumiWeightProducer lumiWeightProd(0.5)
-
-
-mv $OUTFILE ${OUTPUTNAME}_${IFILE}.root
+INPUTLIST="${INPUTFILENAMES//,/$' '}"
+python PhysicsTools/NanoAODTools/scripts/haddnano.py ${OUTPUTNAME}_${IFILE}.root $INPUTLIST
 
 # Rigorous sweeproot which checks ALL branches for ALL events.
 # If GetEntry() returns -1, then there was an I/O problem, so we will delete it

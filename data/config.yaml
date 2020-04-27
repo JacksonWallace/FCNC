@@ -1,0 +1,7 @@
+meta:
+  version: 0.1.1
+  localNano: /hadoop/cms/store/user/dspitzba/nanoAOD/
+  localSkim: /hadoop/cms/store/user/dspitzba/nanoAOD/ttw_samples/
+
+signalSelection:
+  met: 50

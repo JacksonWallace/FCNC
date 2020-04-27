@@ -17,19 +17,21 @@ import uproot
 import glob
 from coffea.processor.dataframe import LazyDataFrame
 
+from tW_scattering.Tools.helpers import *
+
 data_path = os.path.expandvars('$CMSSW_BASE/src/tW_scattering/data/')
 
-def loadConfig():
-    with open(data_path+'config.yaml') as f:
-        config = yaml.load(f, Loader=Loader)
-    return config
-
-def getName( DAS ):
-    split = DAS.split('/')
-    if split[-1].count('AOD'):
-        return '__'.join(DAS.split('/')[1:3])
-    else:
-        return'dummy'
+#def loadConfig():
+#    with open(data_path+'config.yaml') as f:
+#        config = yaml.load(f, Loader=Loader)
+#    return config
+#
+#def getName( DAS ):
+#    split = DAS.split('/')
+#    if split[-1].count('AOD'):
+#        return '__'.join(DAS.split('/')[1:3])
+#    else:
+#        return'dummy'
 
 def readSampleNames( sampleFile ):
     with open( sampleFile ) as f:
@@ -72,16 +74,18 @@ def main():
         samples = {}
 
     for sample in sampleList:
-        print (sample[0])
+        name = getName(sample[0])
+        print (sample[0], name)
         if not sample[0] in samples.keys():
             samplePath = os.path.join(config['meta']['localNano'], getName(sample[0]) )
             if os.path.isdir( samplePath ):
-                sumWeight, nEvents = readSumWeight(samplePath)
+                pass
             elif os.path.isdir( sample[0] ):
-                sumWeight, nEvents = readSumWeight(sample[0])
+                samplePath = sample[0]
             else:
                 raise NotImplementedError
-            samples.update({str(sample[0]): {'sumWeight': sumWeight, 'nEvents': nEvents, 'xsec': float(sample[1])}})
+            sumWeight, nEvents = readSumWeight(samplePath)
+            samples.update({str(sample[0]): {'sumWeight': sumWeight, 'nEvents': nEvents, 'xsec': float(sample[1]), 'name':name, 'path':samplePath}})
         #sample['sumWeight'] = sumWeight
         #sample[
 
