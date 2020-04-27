@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+cd /cvmfs/cms.cern.ch/slc6_amd64_gcc700/cms/cmssw/CMSSW_10_2_9/ ; cmsenv ; cd -
+
 [ -d virtualenv ] || pip install --target=`pwd`/virtualenv virtualenv
 [ -d myenv ] || virtualenv -p `which python3` coffeaEnv
 source coffeaEnv/bin/activate
