@@ -69,6 +69,7 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel       import C
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop       import Module
 
 from PhysicsTools.NanoAODTools.postprocessing.modules.tW_scattering.ObjectSelection import *
+from PhysicsTools.NanoAODTools.postprocessing.modules.tW_scattering.GenAnalyzer import *
 from PhysicsTools.NanoAODTools.postprocessing.modules.tW_scattering.lumiWeightProducer import *
 
 #json support to be added
@@ -76,10 +77,16 @@ from PhysicsTools.NanoAODTools.postprocessing.modules.tW_scattering.lumiWeightPr
 modules = [\
     lumiWeightProd("$SUMWEIGHT"),
     selector2018(),
+    genAnalyzer(),
     ]
 
-p = PostProcessor('./', ["$INPUTFILENAMES"], cut='nJet>2&&(nElectron+nMuon)>0', modules=modules,\
-    branchsel='PhysicsTools/NanoAODTools/python/postprocessing/modules/tW_scattering/keep_and_drop.txt',\
+# apply PV requirement
+cut  = 'PV_ndof>4 && sqrt(PV_x*PV_x+PV_y*PV_y)<=2 && abs(PV_z)<=24'
+# loose skim
+cut += '&& nJet>2&&(nElectron+nMuon)>0'
+
+p = PostProcessor('./', ["$INPUTFILENAMES"], cut=cut, modules=modules,\
+    branchsel='PhysicsTools/NanoAODTools/python/postprocessing/modules/tW_scattering/keep_and_drop_in.txt',\
     outputbranchsel='PhysicsTools/NanoAODTools/python/postprocessing/modules/tW_scattering/keep_and_drop.txt' )
 
 p.run()

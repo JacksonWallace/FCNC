@@ -68,8 +68,8 @@ class LHEDumper(Module):
     leptonic = False
     particles = Collection(event,'GenPart')
     #particles = Collection(event,'LHEPart')
-    print " \033[4m%7s %8s %10s %8s %8s %10s %8s %8s %8s %9s %10s  \033[0m"%(
-      "index","pdgId","particle","moth","mothid", "moth part", "dR","pt","status","prompt","last copy")
+    print " \033[4m%7s %8s %10s %8s %8s %10s %8s %8s %8s %9s %10s %11s  \033[0m"%(
+      "index","pdgId","particle","moth","mothid", "moth part", "dR","pt","status","prompt","last copy", "hard scatter")
     for i, particle in enumerate(particles):
       mothidx  = particle.genPartIdxMother
       if 0<=mothidx<len(particles):
@@ -81,6 +81,7 @@ class LHEDumper(Module):
         mothdR  = -1
       prompt    = hasBit(particle.statusFlags,0)
       lastcopy  = hasBit(particle.statusFlags,13)
+      hardprocess = hasBit(particle.statusFlags,7)
       try:
           particleName =  Particle.from_pdgid(int(particle.pdgId)).name
       except:
@@ -89,8 +90,8 @@ class LHEDumper(Module):
         motherName = Particle.from_pdgid(int(mothpid)).name if mothpid != 0 else 'initial'
       except:
           particleName = str(particle.pdgId)
-      print " %7d %8d %10s %8d %8d %10s %8.2f %8.2f %8d %9s %10s"%(
-        i,particle.pdgId,particleName,mothidx,mothpid,motherName,mothdR,particle.pt,particle.status,prompt,lastcopy)
+      print " %7d %8d %10s %8d %8d %10s %8.2f %8.2f %8d %9s %10s %11s"%(
+        i,particle.pdgId,particleName,mothidx,mothpid,motherName,mothdR,particle.pt,particle.status,prompt,lastcopy,hardprocess)
       if abs(particle.pdgId) in [11,13,15]:
         leptonic = True
     if leptonic:

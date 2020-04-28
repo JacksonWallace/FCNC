@@ -1,0 +1,3 @@
+
+cmsenv
+export PYTHONPATH=ProjectMetis
