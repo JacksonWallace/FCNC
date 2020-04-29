@@ -52,6 +52,8 @@ class exampleProcessor(processor.ProcessorABC):
             "Jet_eta" :         hist.Hist("Counts", dataset_axis, Jet_eta_axis),
             "Spectator_pt" :    hist.Hist("Counts", dataset_axis, Jet_pt_axis),
             "W_pt_notFromTop" : hist.Hist("Counts", dataset_axis, W_pt_axis),
+            'cutflow_bkg':      processor.defaultdict_accumulator(int),
+            'cutflow_signal':   processor.defaultdict_accumulator(int),
         })
 
     @property
@@ -67,9 +69,14 @@ class exampleProcessor(processor.ProcessorABC):
         # The dataset is written into the data frame
         # outside of this function
 
+        output['cutflow_bkg']['all events'] += sum(df['weight'][(df['dataset']=='TTW')].flatten())
+        output['cutflow_signal']['all events'] += sum(df['weight'][(df['dataset']=='tW_scattering')].flatten())
+
+        output['cutflow_bkg']['singleLep'] += sum(df['weight'][(df['dataset']=='TTW') & (df['nLepton']==1)].flatten())
+        output['cutflow_signal']['singleLep'] += sum(df['weight'][(df['dataset']=='tW_scattering') & (df['nLepton']==1)].flatten())
+
         # preselection of events
         selection = df['nLepton']>=1
-        #df = df[df['nLepton']==2]
 
         dataset = df["dataset"]
 
@@ -114,7 +121,7 @@ class exampleProcessor(processor.ProcessorABC):
 
 def main():
 
-    overwrite = False
+    overwrite = True
 
     # load the config and the cache
     cfg = loadConfig()
@@ -144,7 +151,7 @@ def main():
                                       treename='Events',
                                       processor_instance=exampleProcessor(),
                                       executor=processor.futures_executor,
-                                      executor_args={'workers': 1, 'function_args': {'flatten': False}},
+                                      executor_args={'workers': 8, 'function_args': {'flatten': False}},
                                       chunksize=500000,
                                      )
         cache['fileset']        = fileset
