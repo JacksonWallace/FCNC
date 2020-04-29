@@ -2,6 +2,13 @@ meta:
   version: 0.1.2
   localNano: /hadoop/cms/store/user/dspitzba/nanoAOD/
   localSkim: /hadoop/cms/store/user/dspitzba/nanoAOD/ttw_samples/
+  plots: /home/users/$USER/public_html/tW_scattering/
+
+
+caches:
+  base: $CMSSW_BASE/src/tW_scattering/caches/
+  simpleProcessor: simpleProcessor
+  
 
 signalSelection:
   met: 50
