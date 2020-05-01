@@ -50,8 +50,16 @@ class exampleProcessor(processor.ProcessorABC):
             "Jet_pt" :          hist.Hist("Counts", dataset_axis, Jet_pt_axis),
             "Jet_pt_fwd" :      hist.Hist("Counts", dataset_axis, Jet_pt_axis),
             "Jet_eta" :         hist.Hist("Counts", dataset_axis, Jet_eta_axis),
+            "GenJet_pt_fwd" :   hist.Hist("Counts", dataset_axis, Jet_pt_axis),
             "Spectator_pt" :    hist.Hist("Counts", dataset_axis, Jet_pt_axis),
+            "Spectator_eta" :   hist.Hist("Counts", dataset_axis, Jet_eta_axis),
             "W_pt_notFromTop" : hist.Hist("Counts", dataset_axis, W_pt_axis),
+            "Top_pt" :          hist.Hist("Counts", dataset_axis, Jet_pt_axis),
+            "Top_eta" :         hist.Hist("Counts", dataset_axis, Jet_eta_axis),
+            "Antitop_pt" :      hist.Hist("Counts", dataset_axis, Jet_pt_axis),
+            "Antitop_eta" :     hist.Hist("Counts", dataset_axis, Jet_eta_axis),
+            "W_pt" :            hist.Hist("Counts", dataset_axis, Jet_pt_axis),
+            "W_eta" :           hist.Hist("Counts", dataset_axis, Jet_eta_axis),
             'cutflow_bkg':      processor.defaultdict_accumulator(int),
             'cutflow_signal':   processor.defaultdict_accumulator(int),
         })
@@ -89,15 +97,45 @@ class exampleProcessor(processor.ProcessorABC):
                             W_pt=W_notFromTop['pt'][one_W_notFromTop].flatten(), weight=df['weight'][one_W_notFromTop] )
 
         # And fill the histograms
-        W_noTop_selection = df['W_fromTop']==0
-        #output['W_noTop_pt'].fill(dataset=dataset,
-        #                    wpt=df["W_pt"][W_noTop_selection].flatten(), weight=df['weight'][W_noTop_selection] )#, weight=df['weight'][W_noTop_selection])
         output['MET_pt'].fill(dataset=dataset,
                             MET_pt=df["MET_pt"][selection].flatten(), weight=df['weight'][selection])
         output['Jet_pt'].fill(dataset=dataset,
                             Jet_pt=df["Jet_pt"].max().flatten(), weight=df['weight']) # maximum jet pt
         output['Jet_eta'].fill(dataset=dataset,
                             Jet_eta=df["Jet_eta"].flatten())
+
+
+        ## Do some stuff with gen jets and particles
+        GenJets = awkward.JaggedArray.zip(pt=df['GenJet_pt'], eta=df['GenJet_eta'], phi=df['GenJet_phi'], hadronFlavour=df['GenJet_hadronFlavour'])
+        Forward_noB = (abs(GenJets['eta'])>2.0) & (GenJets['hadronFlavour']!=5)
+        GenJets_fwd = GenJets[Forward_noB]
+        hasGenJets_fwd = (GenJets_fwd.counts>0)
+
+        output['GenJet_pt_fwd'].fill(dataset=dataset, Jet_pt=GenJets_fwd['pt'][hasGenJets_fwd].max().flatten(), weight=df['weight'][hasGenJets_fwd] )
+
+        spectators = awkward.JaggedArray.zip(pt=df['Spectator_pt'], eta=df['Spectator_eta'], phi=df['Spectator_phi'], pdgId=df['Spectator_pdgId'])
+        spectators = spectators[spectators['pt']>40]
+        hasSpectator = (spectators.counts>0)
+
+        output['Spectator_pt'].fill(dataset=dataset, Jet_pt=spectators['pt'][hasSpectator].max().flatten(), weight=df['weight'][hasSpectator] )
+        output['Spectator_eta'].fill(dataset=dataset, Jet_eta=spectators['eta'][hasSpectator].max().flatten(), weight=df['weight'][hasSpectator] )
+
+        scatter = awkward.JaggedArray.zip(pt=df['Scatter_pt'], eta=df['Scatter_eta'], phi=df['Scatter_phi'], pdgId=df['Scatter_pdgId'])
+        top = scatter[scatter['pdgId']==6]
+        antitop = scatter[scatter['pdgId']==-6]
+        w = scatter[abs(scatter['pdgId'])==24]
+        hasTop = (top.counts>0)
+        hasAntitop = (antitop.counts>0)
+        hasW = (w.counts>0)
+
+        output['Top_pt'].fill(dataset=dataset, Jet_pt=top['pt'][hasTop].max().flatten(), weight=df['weight'][hasTop] )
+        output['Top_eta'].fill(dataset=dataset, Jet_eta=top['eta'][hasTop].max().flatten(), weight=df['weight'][hasTop] )
+        
+        output['Antitop_pt'].fill(dataset=dataset, Jet_pt=antitop['pt'][hasAntitop].max().flatten(), weight=df['weight'][hasAntitop] )
+        output['Antitop_eta'].fill(dataset=dataset, Jet_eta=antitop['eta'][hasAntitop].max().flatten(), weight=df['weight'][hasAntitop] )
+
+        output['W_pt'].fill(dataset=dataset, Jet_pt=w['pt'][hasW].max().flatten(), weight=df['weight'][hasW] )
+        output['W_eta'].fill(dataset=dataset, Jet_eta=w['eta'][hasW].max().flatten(), weight=df['weight'][hasW] )
 
         ## We can also do arbitrary transformations
         ## E.g.: Sum of MET and the leading jet PTs
@@ -135,7 +173,9 @@ def main():
     }
 
     # histograms
-    histograms = ["MET_pt", "Jet_pt", "Jet_eta", "Jet_pt_fwd", "W_pt_notFromTop"]
+    histograms = ["MET_pt", "Jet_pt", "Jet_eta", "Jet_pt_fwd", "W_pt_notFromTop", "GenJet_pt_fwd", "Spectator_pt", "Spectator_eta"]
+    histograms+= ["Top_pt", "Top_eta", "Antitop_pt", "Antitop_eta", "W_pt", "W_eta"]
+
 
     # initialize cache
     cache = dir_archive(os.path.join(os.path.expandvars(cfg['caches']['base']), cfg['caches']['simpleProcessor']), serialized=True)
@@ -166,6 +206,7 @@ def main():
         os.makedirs(outdir)
 
     for name in histograms:
+        print (name)
         histogram = output[name]
         if name == 'MET_pt':
             # rebin
