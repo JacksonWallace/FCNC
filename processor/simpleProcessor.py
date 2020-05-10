@@ -1,8 +1,8 @@
 '''
 Simple processor using coffea.
-[ ] weights
+[x] weights
 [ ] Missing pieces: appropriate sample handling
-[ ] Accumulator caching
+[x] Accumulator caching
 
 '''
 
@@ -39,27 +39,28 @@ class exampleProcessor(processor.ProcessorABC):
     def __init__(self):
 
         # we can use a large number of bins and rebin later
-        dataset_axis    = hist.Cat("dataset", "Primary dataset")
-        MET_pt_axis     = hist.Bin("MET_pt", r"$p_{T}^{miss}$ (GeV)", 600, 0, 1000)
-        Jet_pt_axis     = hist.Bin("Jet_pt", r"$p_{T}$", 600, 0, 1000)
-        Jet_eta_axis    = hist.Bin("Jet_eta", r"$\eta$", 60, -5.5, 5.5)
-        W_pt_axis       = hist.Bin("W_pt", r"$p_{T}(W)$", 500, 0, 500)
+        dataset_axis        = hist.Cat("dataset",   "Primary dataset")
+        pt_axis             = hist.Bin("pt",        r"$p_{T}$ (GeV)", 600, 0, 1000)
+        eta_axis            = hist.Bin("eta",       r"$\eta$", 60, -5.5, 5.5)
+        multiplicity_axis   = hist.Bin("multiplicity",         r"N", 20, -0.5, 19.5)
 
         self._accumulator = processor.dict_accumulator({
-            "MET_pt" :          hist.Hist("Counts", dataset_axis, MET_pt_axis),
-            "Jet_pt" :          hist.Hist("Counts", dataset_axis, Jet_pt_axis),
-            "Jet_pt_fwd" :      hist.Hist("Counts", dataset_axis, Jet_pt_axis),
-            "Jet_eta" :         hist.Hist("Counts", dataset_axis, Jet_eta_axis),
-            "GenJet_pt_fwd" :   hist.Hist("Counts", dataset_axis, Jet_pt_axis),
-            "Spectator_pt" :    hist.Hist("Counts", dataset_axis, Jet_pt_axis),
-            "Spectator_eta" :   hist.Hist("Counts", dataset_axis, Jet_eta_axis),
-            "W_pt_notFromTop" : hist.Hist("Counts", dataset_axis, W_pt_axis),
-            "Top_pt" :          hist.Hist("Counts", dataset_axis, Jet_pt_axis),
-            "Top_eta" :         hist.Hist("Counts", dataset_axis, Jet_eta_axis),
-            "Antitop_pt" :      hist.Hist("Counts", dataset_axis, Jet_pt_axis),
-            "Antitop_eta" :     hist.Hist("Counts", dataset_axis, Jet_eta_axis),
-            "W_pt" :            hist.Hist("Counts", dataset_axis, Jet_pt_axis),
-            "W_eta" :           hist.Hist("Counts", dataset_axis, Jet_eta_axis),
+            "MET_pt" :          hist.Hist("Counts", dataset_axis, pt_axis),
+            "Jet_pt" :          hist.Hist("Counts", dataset_axis, pt_axis),
+            "Jet_pt_fwd" :      hist.Hist("Counts", dataset_axis, pt_axis),
+            "Jet_eta" :         hist.Hist("Counts", dataset_axis, eta_axis),
+            "GenJet_pt_fwd" :   hist.Hist("Counts", dataset_axis, pt_axis),
+            "Spectator_pt" :    hist.Hist("Counts", dataset_axis, pt_axis),
+            "Spectator_eta" :   hist.Hist("Counts", dataset_axis, eta_axis),
+            "W_pt_notFromTop" : hist.Hist("Counts", dataset_axis, pt_axis),
+            "Top_pt" :          hist.Hist("Counts", dataset_axis, pt_axis),
+            "Top_eta" :         hist.Hist("Counts", dataset_axis, eta_axis),
+            "Antitop_pt" :      hist.Hist("Counts", dataset_axis, pt_axis),
+            "Antitop_eta" :     hist.Hist("Counts", dataset_axis, eta_axis),
+            "W_pt" :            hist.Hist("Counts", dataset_axis, pt_axis),
+            "W_eta" :           hist.Hist("Counts", dataset_axis, eta_axis),
+            "N_b" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_jet" :           hist.Hist("Counts", dataset_axis, multiplicity_axis),
             'cutflow_bkg':      processor.defaultdict_accumulator(int),
             'cutflow_signal':   processor.defaultdict_accumulator(int),
         })
@@ -93,17 +94,12 @@ class exampleProcessor(processor.ProcessorABC):
         
         W_notFromTop = W_bosons[W_bosons['fromTop']==0]
         one_W_notFromTop = (W_notFromTop.counts==1)
-        output['W_pt_notFromTop'].fill(dataset=dataset,
-                            W_pt=W_notFromTop['pt'][one_W_notFromTop].flatten(), weight=df['weight'][one_W_notFromTop] )
+        output['W_pt_notFromTop'].fill(dataset=dataset, pt=W_notFromTop['pt'][one_W_notFromTop].flatten(), weight=df['weight'][one_W_notFromTop] )
 
         # And fill the histograms
-        output['MET_pt'].fill(dataset=dataset,
-                            MET_pt=df["MET_pt"][selection].flatten(), weight=df['weight'][selection])
-        output['Jet_pt'].fill(dataset=dataset,
-                            Jet_pt=df["Jet_pt"].max().flatten(), weight=df['weight']) # maximum jet pt
-        output['Jet_eta'].fill(dataset=dataset,
-                            Jet_eta=df["Jet_eta"].flatten())
-
+        output['MET_pt'].fill(dataset=dataset, pt=df["MET_pt"][selection].flatten(), weight=df['weight'][selection])
+        output['Jet_pt'].fill(dataset=dataset, pt=df["Jet_pt"].max().flatten(), weight=df['weight']) # maximum jet pt
+        output['Jet_eta'].fill(dataset=dataset, eta=df["Jet_eta"].flatten())
 
         ## Do some stuff with gen jets and particles
         GenJets = awkward.JaggedArray.zip(pt=df['GenJet_pt'], eta=df['GenJet_eta'], phi=df['GenJet_phi'], hadronFlavour=df['GenJet_hadronFlavour'])
@@ -111,14 +107,14 @@ class exampleProcessor(processor.ProcessorABC):
         GenJets_fwd = GenJets[Forward_noB]
         hasGenJets_fwd = (GenJets_fwd.counts>0)
 
-        output['GenJet_pt_fwd'].fill(dataset=dataset, Jet_pt=GenJets_fwd['pt'][hasGenJets_fwd].max().flatten(), weight=df['weight'][hasGenJets_fwd] )
+        output['GenJet_pt_fwd'].fill(dataset=dataset, pt=GenJets_fwd['pt'][hasGenJets_fwd].max().flatten(), weight=df['weight'][hasGenJets_fwd] )
 
         spectators = awkward.JaggedArray.zip(pt=df['Spectator_pt'], eta=df['Spectator_eta'], phi=df['Spectator_phi'], pdgId=df['Spectator_pdgId'])
         spectators = spectators[spectators['pt']>40]
         hasSpectator = (spectators.counts>0)
 
-        output['Spectator_pt'].fill(dataset=dataset, Jet_pt=spectators['pt'][hasSpectator].max().flatten(), weight=df['weight'][hasSpectator] )
-        output['Spectator_eta'].fill(dataset=dataset, Jet_eta=spectators['eta'][hasSpectator].max().flatten(), weight=df['weight'][hasSpectator] )
+        output['Spectator_pt'].fill(dataset=dataset, pt=spectators['pt'][hasSpectator].max().flatten(), weight=df['weight'][hasSpectator] )
+        output['Spectator_eta'].fill(dataset=dataset, eta=spectators['eta'][hasSpectator].max().flatten(), weight=df['weight'][hasSpectator] )
 
         scatter = awkward.JaggedArray.zip(pt=df['Scatter_pt'], eta=df['Scatter_eta'], phi=df['Scatter_phi'], pdgId=df['Scatter_pdgId'])
         top = scatter[scatter['pdgId']==6]
@@ -128,14 +124,14 @@ class exampleProcessor(processor.ProcessorABC):
         hasAntitop = (antitop.counts>0)
         hasW = (w.counts>0)
 
-        output['Top_pt'].fill(dataset=dataset, Jet_pt=top['pt'][hasTop].max().flatten(), weight=df['weight'][hasTop] )
-        output['Top_eta'].fill(dataset=dataset, Jet_eta=top['eta'][hasTop].max().flatten(), weight=df['weight'][hasTop] )
+        output['Top_pt'].fill(dataset=dataset, pt=top['pt'][hasTop].max().flatten(), weight=df['weight'][hasTop] )
+        output['Top_eta'].fill(dataset=dataset, eta=top['eta'][hasTop].max().flatten(), weight=df['weight'][hasTop] )
         
-        output['Antitop_pt'].fill(dataset=dataset, Jet_pt=antitop['pt'][hasAntitop].max().flatten(), weight=df['weight'][hasAntitop] )
-        output['Antitop_eta'].fill(dataset=dataset, Jet_eta=antitop['eta'][hasAntitop].max().flatten(), weight=df['weight'][hasAntitop] )
+        output['Antitop_pt'].fill(dataset=dataset, pt=antitop['pt'][hasAntitop].max().flatten(), weight=df['weight'][hasAntitop] )
+        output['Antitop_eta'].fill(dataset=dataset, eta=antitop['eta'][hasAntitop].max().flatten(), weight=df['weight'][hasAntitop] )
 
-        output['W_pt'].fill(dataset=dataset, Jet_pt=w['pt'][hasW].max().flatten(), weight=df['weight'][hasW] )
-        output['W_eta'].fill(dataset=dataset, Jet_eta=w['eta'][hasW].max().flatten(), weight=df['weight'][hasW] )
+        output['W_pt'].fill(dataset=dataset, pt=w['pt'][hasW].max().flatten(), weight=df['weight'][hasW] )
+        output['W_eta'].fill(dataset=dataset, eta=w['eta'][hasW].max().flatten(), weight=df['weight'][hasW] )
 
         ## We can also do arbitrary transformations
         ## E.g.: Sum of MET and the leading jet PTs
@@ -144,12 +140,18 @@ class exampleProcessor(processor.ProcessorABC):
         #                    new_variable=new_variable)
 
         # To apply selections, simply mask
-        # Let's see events with MET > 100
         mask = abs(df["Jet_eta"]) > 2.4
 
         # And plot the leading jet pt for these events
-        output['Jet_pt_fwd'].fill(dataset=dataset,
-                            Jet_pt=df["Jet_pt"][mask].max().flatten())
+        output['Jet_pt_fwd'].fill(dataset=dataset, pt=df["Jet_pt"][mask].max().flatten())
+
+        # Example for jets / b-jets
+        jets = awkward.JaggedArray.zip(pt=df['Jet_pt'], eta=df['Jet_eta'], phi=df['Jet_phi'], btag=df['Jet_btagDeepB'], jetid=df['Jet_jetId'])
+        goodjets = jets[ (jets['pt']>30) & (abs(jets['eta'])<2.4) & (jets['jetid']>0) ]
+        bjets = jets[ (jets['pt']>30) & (abs(jets['eta'])<2.4) & (jets['jetid']>0) & (jets['btag']>0.4184) ]
+        output['N_b'].fill(dataset=dataset, multiplicity=bjets.counts, weight=df['weight'] )
+        output['N_jet'].fill(dataset=dataset, multiplicity=goodjets.counts, weight=df['weight'] )
+
 
         return output
 
@@ -175,7 +177,7 @@ def main():
 
     # histograms
     histograms = ["MET_pt", "Jet_pt", "Jet_eta", "Jet_pt_fwd", "W_pt_notFromTop", "GenJet_pt_fwd", "Spectator_pt", "Spectator_eta"]
-    histograms+= ["Top_pt", "Top_eta", "Antitop_pt", "Antitop_eta", "W_pt", "W_eta"]
+    histograms+= ["Top_pt", "Top_eta", "Antitop_pt", "Antitop_eta", "W_pt", "W_eta", "N_b", "N_jet"]
 
 
     # initialize cache
@@ -211,12 +213,12 @@ def main():
         histogram = output[name]
         if name == 'MET_pt':
             # rebin
-            new_met_bins = hist.Bin('MET_pt', r'$E_T^{miss} \ (GeV)$', 20, 0, 200)
-            histogram = histogram.rebin('MET_pt', new_met_bins)
+            new_met_bins = hist.Bin('pt', r'$E_T^{miss} \ (GeV)$', 20, 0, 200)
+            histogram = histogram.rebin('pt', new_met_bins)
         if name == 'W_pt_notFromTop':
             # rebin
-            new_pt_bins = hist.Bin('W_pt', r'$p_{T}(W) \ (GeV)$', 25, 0, 500)
-            histogram = histogram.rebin('W_pt', new_pt_bins)
+            new_pt_bins = hist.Bin('pt', r'$p_{T}(W) \ (GeV)$', 25, 0, 500)
+            histogram = histogram.rebin('pt', new_pt_bins)
 
         ax = hist.plot1d(histogram,overlay="dataset", density=False, stack=True) # make density plots because we don't care about x-sec differences
         ax.set_yscale('linear') # can be log
