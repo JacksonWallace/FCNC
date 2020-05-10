@@ -52,48 +52,48 @@ for name in histograms:
     histogram = output[name]
     if name == 'MET_pt':
         # rebin
-        new_met_bins = hist.Bin('MET_pt', r'$E_T^{miss} \ (GeV)$', 20, 0, 200)
-        histogram = histogram.rebin('MET_pt', new_met_bins)
+        new_met_bins = hist.Bin('pt', r'$E_T^{miss} \ (GeV)$', 20, 0, 200)
+        histogram = histogram.rebin('pt', new_met_bins)
     elif name == 'W_pt_notFromTop':
         # rebin
-        new_pt_bins = hist.Bin('W_pt', r'$p_{T}(W) \ (GeV)$', 25, 0, 500)
-        histogram = histogram.rebin('W_pt', new_pt_bins)
+        new_pt_bins = hist.Bin('pt', r'$p_{T}(W) \ (GeV)$', 25, 0, 500)
+        histogram = histogram.rebin('pt', new_pt_bins)
     elif name == 'GenJet_pt_fwd':
         # rebin
-        new_pt_bins = hist.Bin('Jet_pt', r'$p_{T} \ (GeV)$', 25, 0, 500)
-        histogram = histogram.rebin('Jet_pt', new_pt_bins)
+        new_pt_bins = hist.Bin('pt', r'$p_{T} \ (GeV)$', 25, 0, 500)
+        histogram = histogram.rebin('pt', new_pt_bins)
     elif name == 'Spectator_pt':
         # rebin
-        new_pt_bins = hist.Bin('Jet_pt', r'$p_{T} \ (GeV)$', 25, 0, 500)
-        histogram = histogram.rebin('Jet_pt', new_pt_bins)
+        new_pt_bins = hist.Bin('pt', r'$p_{T} \ (GeV)$', 25, 0, 500)
+        histogram = histogram.rebin('pt', new_pt_bins)
     elif name == 'Spectator_eta':
         # rebin
-        new_eta_bins = hist.Bin('Jet_eta', r'$\eta$', 30, -5.5, 5.5)
-        histogram = histogram.rebin('Jet_eta', new_eta_bins)
+        new_eta_bins = hist.Bin('eta', r'$\eta$', 30, -5.5, 5.5)
+        histogram = histogram.rebin('eta', new_eta_bins)
     elif name == 'W_pt':
         # rebin
-        new_pt_bins = hist.Bin('Jet_pt', r'$p_{T} \ (GeV)$', 25, 0, 500)
-        histogram = histogram.rebin('Jet_pt', new_pt_bins)
+        new_pt_bins = hist.Bin('pt', r'$p_{T} \ (GeV)$', 25, 0, 500)
+        histogram = histogram.rebin('pt', new_pt_bins)
     elif name == 'W_eta':
         # rebin
-        new_eta_bins = hist.Bin('Jet_eta', r'$\eta$', 30, -5.5, 5.5)
-        histogram = histogram.rebin('Jet_eta', new_eta_bins)
+        new_eta_bins = hist.Bin('eta', r'$\eta$', 30, -5.5, 5.5)
+        histogram = histogram.rebin('eta', new_eta_bins)
     elif name == 'Antitop_pt':
         # rebin
-        new_pt_bins = hist.Bin('Jet_pt', r'$p_{T} \ (GeV)$', 25, 0, 500)
-        histogram = histogram.rebin('Jet_pt', new_pt_bins)
+        new_pt_bins = hist.Bin('pt', r'$p_{T} \ (GeV)$', 25, 0, 500)
+        histogram = histogram.rebin('pt', new_pt_bins)
     elif name == 'Antitop_eta':
         # rebin
-        new_eta_bins = hist.Bin('Jet_eta', r'$\eta$', 30, -5.5, 5.5)
-        histogram = histogram.rebin('Jet_eta', new_eta_bins)
+        new_eta_bins = hist.Bin('eta', r'$\eta$', 30, -5.5, 5.5)
+        histogram = histogram.rebin('eta', new_eta_bins)
     elif name == 'Top_pt':
         # rebin
-        new_pt_bins = hist.Bin('Jet_pt', r'$p_{T} \ (GeV)$', 25, 0, 500)
-        histogram = histogram.rebin('Jet_pt', new_pt_bins)
+        new_pt_bins = hist.Bin('pt', r'$p_{T} \ (GeV)$', 25, 0, 500)
+        histogram = histogram.rebin('pt', new_pt_bins)
     elif name == 'Top_eta':
         # rebin
-        new_eta_bins = hist.Bin('Jet_eta', r'$\eta$', 30, -5.5, 5.5)
-        histogram = histogram.rebin('Jet_eta', new_eta_bins)
+        new_eta_bins = hist.Bin('eta', r'$\eta$', 30, -5.5, 5.5)
+        histogram = histogram.rebin('eta', new_eta_bins)
     else:
         skip = True
 
