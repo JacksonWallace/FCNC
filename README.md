@@ -1,13 +1,37 @@
 # Measuring tW scattering
 
-Currently lives within CMSSW_10_2_9. Recipe as follow:
+Currently lives within CMSSW_10_2_9. Set up in a fresh directory, recipe as follows:
 ```
+cmsrel CMSSW_10_2_9
+cd CMSSW_10_2_9/src
+cmsenv
+git cms-init
 
+git clone --branch tW_scattering https://github.com/danbarto/nanoAOD-tools.git NanoAODTools
+
+cd $CMSSW_BASE/src
 
 git clone --recursive https://github.com/danbarto/tW_scattering.git
 
+scram b -j 8
+cmsenv
 
 ```
+
+Then you can set up the tools to run coffea
+```
+cd tW_scattering
+source setup_environment.sh
+```
+
+Every time you want to use coffea you need to activate the environment
+```
+cmsenv
+source coffeaEnv/bin/activate
+```
+
+To deactivate the coffea environment, just type `deactivate`
+
 
 Use available nanoAOD tools to quickly process samples.
 
