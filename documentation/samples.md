@@ -17,7 +17,7 @@ Second column is the x-sec * BR in pb.
 
 ## Getting sample sumw:
 
-Run the script: scripts/getSampleInformation.py
+Run the script: `scripts/getSampleInformation.py`
 
 ## Submit the jobs:
 
