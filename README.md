@@ -36,7 +36,7 @@ To deactivate the coffea environment, just type `deactivate`
 Use available nanoAOD tools to quickly process samples.
 
 
-### Get combine
+### Get combine (for later)
 Latest recommendations at https://cms-analysis.github.io/HiggsAnalysis-CombinedLimit/#setting-up-the-environment-and-installation
 ```
 cd $CMSSW_BASE/src
@@ -47,7 +47,7 @@ git checkout v8.0.1
 scramv1 b clean; scramv1 b # always make a clean build
 ```
 
-### for combineTools
+### for combineTools (for later)
 ```
 cd $CMSSW_BASE/src
 wget https://raw.githubusercontent.com/cms-analysis/CombineHarvester/master/CombineTools/scripts/sparse-checkout-https.sh; source sparse-checkout-https.sh
