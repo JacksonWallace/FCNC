@@ -23,10 +23,12 @@ cmsenv
 
 ```
 
-Then you can set up the tools to run coffea
+Then you can set up the tools to run coffea, deactivate the environment again and recompile.
 ```
 cd tW_scattering
 source setup_environment.sh
+deactivate
+scram b -j 8
 ```
 
 Every time you want to use coffea you need to activate the environment
