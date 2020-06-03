@@ -1,5 +1,10 @@
 # Measuring tW scattering
 
+Prerequisite: if you haven't, add this line to your `~/.profile`:
+```
+source /cvmfs/cms.cern.ch/cmsset_default.sh
+```
+
 Currently lives within CMSSW_10_2_9. Set up in a fresh directory, recipe as follows:
 ```
 cmsrel CMSSW_10_2_9
@@ -18,10 +23,12 @@ cmsenv
 
 ```
 
-Then you can set up the tools to run coffea
+Then you can set up the tools to run coffea, deactivate the environment again and recompile.
 ```
 cd tW_scattering
 source setup_environment.sh
+deactivate
+scram b -j 8
 ```
 
 Every time you want to use coffea you need to activate the environment
