@@ -15,5 +15,7 @@ find . -type f -exec chmod a+r {} \;
 ```
 
 Run `python simplePlots.py`, plots can then be accessed using your web browser:
+
 [http://uaf-10.t2.ucsd.edu/~dspitzba/tW_scattering/](http://uaf-10.t2.ucsd.edu/~dspitzba/tW_scattering/)
-Replace your username accordingly.
+
+Replace your username accordingly. If no plots are visible, run the `chmod` command again.
