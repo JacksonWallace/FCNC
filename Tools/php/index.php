@@ -82,8 +82,8 @@ if ($_GET['noplots']) {
         if ($others) print "<p>Also as ".implode(', ',$others)."</p>";
         print "</div>";
     }
-    $other_exts = array('.png', '.cxx', '.eps', '.root', '.txt');
-    $filenames = glob("*.pdf"); sort($filenames);
+    $other_exts = array('.pdf', '.cxx', '.eps', '.root', '.txt');
+    $filenames = glob("*.png"); sort($filenames);
     foreach ($filenames as $filename) {
         if (isset($_GET['match']) && !fnmatch('*'.$_GET['match'].'*', $filename)) continue;
         if (in_array($filename,$used)) continue;

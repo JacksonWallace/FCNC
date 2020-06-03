@@ -26,6 +26,7 @@ def saveFig( ax, path, name, scale='linear' ):
     if scale == 'log':
         ax.set_ylim(0.001,1)
     ax.figure.savefig(os.path.join(outdir, "{}.pdf".format(name)))
+    ax.figure.savefig(os.path.join(outdir, "{}.png".format(name)))
     #ax.clear()
 
 # load the configuration

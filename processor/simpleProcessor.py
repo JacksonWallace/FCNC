@@ -110,7 +110,7 @@ class exampleProcessor(processor.ProcessorABC):
         output['GenJet_pt_fwd'].fill(dataset=dataset, pt=GenJets_fwd['pt'][hasGenJets_fwd].max().flatten(), weight=df['weight'][hasGenJets_fwd] )
 
         spectators = awkward.JaggedArray.zip(pt=df['Spectator_pt'], eta=df['Spectator_eta'], phi=df['Spectator_phi'], pdgId=df['Spectator_pdgId'])
-        spectators = spectators[spectators['pt']>40]
+        spectators = spectators[spectators['pt']>10]
         hasSpectator = (spectators.counts>0)
 
         output['Spectator_pt'].fill(dataset=dataset, pt=spectators['pt'][hasSpectator].max().flatten(), weight=df['weight'][hasSpectator] )
