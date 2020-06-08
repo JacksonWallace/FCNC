@@ -18,6 +18,7 @@ Now run `./bin/generate_events` and check the reported cross section.
 We can then modify the different Wilson coefficients in `Cards/param_card.dat` and see which ones have an impact on the cross section.
 Start by setting cpQ3, cpQM, cpt, ctp, ctZ, ctW to 10 individually and check by how much the cross section changes.
 
+## ttWq
 We can repeat the same exercise with the following process
 ```
 import model SMEFTatNLO_U2_2_U3_3_cG_4F_LO_UFO-LO
@@ -26,3 +27,6 @@ add process p p > t t~ w+ j QED=3 QCD=1 NP=2
 output ttW_EWK_NP2
 ```
 We expect to see a larger impact of most of the operators in this process.
+
+## Comparison
+Pay attention to the different diagrams of the ttW and ttWq process. What difference do you see?
