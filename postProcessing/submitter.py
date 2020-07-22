@@ -8,9 +8,6 @@ from metis.Utils import do_cmd
 
 from tW_scattering.Tools.helpers import *
 
-# example
-sample = DirectorySample(dataset='TTWJetsToLNu_Autumn18v4', location='/hadoop/cms/store/user/dspitzba/nanoAOD/TTWJetsToLNu_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/')
-
 # load samples
 import yaml
 from yaml import Loader, Dumper
@@ -19,13 +16,42 @@ data_path = os.path.expandvars('$CMSSW_BASE/src/tW_scattering/data/')
 with open(data_path+'samples.yaml') as f:
     samples = yaml.load(f, Loader=Loader)
 
-# define other stuff
+# load config
 cfg = loadConfig()
+
+print ("Loaded version %s from config."%cfg['meta']['version'])
+
+import argparse
+
+argParser = argparse.ArgumentParser(description = "Argument parser")
+argParser.add_argument('--version', action='store', default=None, help="")
+args = argParser.parse_args()
+
+
+# if no version is defined, increase last version number by one
+if not args.version:
+    tag_str = str(cfg['meta']['version'])
+    newVersion = '.'.join(tag_str.split('.')[:-1]+[str(int(tag_str.split('.')[-1])+1)])
+else:
+    newVersion = args.version
+    # should check that the format is the same
+
+tag = newVersion.replace('.','p')
+
+## create a new tag of nanoAOD-tools on the fly
+#import subprocess
+#subprocess.call("cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/; git commit -am 'latest'; 
+
+raise NotImplementedError
+
+# example
+sample = DirectorySample(dataset='TTWJetsToLNu_Autumn18v4', location='/hadoop/cms/store/user/dspitzba/nanoAOD/TTWJetsToLNu_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/')
+
 
 #metisSamples = []
 #for sample in samples.keys():   
 
-outDir = os.path.join(cfg['meta']['localSkim'], str(cfg['meta']['version']).replace('.','p'))
+outDir = os.path.join(newVersion, tag)
 
 maker_tasks = []
 merge_tasks = []
@@ -38,14 +64,14 @@ merge_tasks = []
 for s in samples.keys():
     sample = DirectorySample(dataset = samples[s]['name'], location = samples[s]['path'])
 
-    tag = str(cfg['meta']['version']).replace('.','p')
+    #tag = str(cfg['meta']['version']).replace('.','p')
     
     maker_task = CondorTask(
         sample = sample,
             #'/hadoop/cms/store/user/dspitzba/nanoAOD/TTWJetsToLNu_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/',
         # open_dataset = True, flush = True,
         executable = "executable.sh",
-        arguments = "%s %s"%(str(cfg['meta']['version']).replace('.','p'), samples[s]['xsec']/samples[s]['sumWeight']),
+        arguments = "%s %s"%(tag, samples[s]['xsec']/samples[s]['sumWeight']),
         #tarfile = "merge_scripts.tar.gz",
         files_per_output = 1,
         output_dir = os.path.join(outDir, sample.get_datasetname()),
@@ -73,7 +99,7 @@ for s in samples.keys():
         ),
         # open_dataset = True, flush = True,
         executable = "merge_executable.sh",
-        arguments = "%s %s"%(str(cfg['meta']['version']).replace('.','p'), samples[s]['xsec']/samples[s]['sumWeight']),
+        arguments = "%s %s"%(tag, samples[s]['xsec']/samples[s]['sumWeight']),
         #tarfile = "merge_scripts.tar.gz",
         files_per_output = 100000,
         output_dir = maker_task.get_outputdir() + "/merged",

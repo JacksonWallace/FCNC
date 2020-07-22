@@ -19,6 +19,7 @@ from tqdm.auto import tqdm
 import coffea.processor as processor
 from coffea.processor.accumulator import AccumulatorABC
 from coffea import hist
+from coffea.analysis_objects import JaggedCandidateArray
 import pandas as pd
 import uproot_methods
 import awkward
@@ -41,6 +42,7 @@ class exampleProcessor(processor.ProcessorABC):
         # we can use a large number of bins and rebin later
         dataset_axis        = hist.Cat("dataset",   "Primary dataset")
         pt_axis             = hist.Bin("pt",        r"$p_{T}$ (GeV)", 600, 0, 1000)
+        mass_axis           = hist.Bin("mass",        r"$p_{T}$ (GeV)", 250, 0, 500)
         eta_axis            = hist.Bin("eta",       r"$\eta$", 60, -5.5, 5.5)
         multiplicity_axis   = hist.Bin("multiplicity",         r"N", 20, -0.5, 19.5)
 
@@ -59,6 +61,10 @@ class exampleProcessor(processor.ProcessorABC):
             "Antitop_eta" :     hist.Hist("Counts", dataset_axis, eta_axis),
             "W_pt" :            hist.Hist("Counts", dataset_axis, pt_axis),
             "W_eta" :           hist.Hist("Counts", dataset_axis, eta_axis),
+            "dijet_mass" :      hist.Hist("Counts", dataset_axis, mass_axis),
+            "dijet_mass_bestW" :      hist.Hist("Counts", dataset_axis, mass_axis),
+            "dijet_mass_secondW" :      hist.Hist("Counts", dataset_axis, mass_axis),
+            "digenjet_mass" :   hist.Hist("Counts", dataset_axis, mass_axis),
             "N_b" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_jet" :           hist.Hist("Counts", dataset_axis, multiplicity_axis),
             'cutflow_bkg':      processor.defaultdict_accumulator(int),
@@ -108,6 +114,55 @@ class exampleProcessor(processor.ProcessorABC):
         hasGenJets_fwd = (GenJets_fwd.counts>0)
 
         output['GenJet_pt_fwd'].fill(dataset=dataset, pt=GenJets_fwd['pt'][hasGenJets_fwd].max().flatten(), weight=df['weight'][hasGenJets_fwd] )
+
+        # use physics objects instead of plain jagged arrays
+        genjets = JaggedCandidateArray.candidatesfromcounts(
+            df['nGenJet'],
+            pt=df['GenJet_pt'].content, 
+            eta=df['GenJet_eta'].content, 
+            phi=df['GenJet_phi'].content,
+            mass=df['GenJet_mass'].content, 
+            hadronFlavour=df['GenJet_hadronFlavour'].content, 
+            )
+
+        # choose only pairs of light jets
+        cut = ((genjets.pt > 25) & (abs(genjets.eta) < 2.4) & (genjets['hadronFlavour']!=5) )
+        digenjets = genjets[cut].choose(2)
+        output['digenjet_mass'].fill(dataset=dataset, mass=digenjets.mass.flatten())
+
+        # do some reco jet combinatorics
+        jets = JaggedCandidateArray.candidatesfromcounts(
+            df['nJet'],
+            pt=df['Jet_pt'].content, 
+            eta=df['Jet_eta'].content, 
+            phi=df['Jet_phi'].content,
+            mass=df['Jet_mass'].content, 
+            hadronFlavour=df['Jet_hadronFlavour'].content, 
+            isGoodJet=df['Jet_isGoodJet'].content, 
+            isGoodBJet=df['Jet_isGoodBJet'].content, 
+            )
+        
+        # choose any pair of light jets
+        cut = ((jets.pt > 30) & (abs(jets.eta) < 2.4) & (jets['isGoodJet']==1) & (jets['isGoodBJet']==0) )
+        dijets = jets[cut].choose(2) # should try distinct, too
+        output['dijet_mass'].fill(dataset=dataset, mass=dijets.mass.flatten())
+
+        #btag = ((jets.pt > 30) & (abs(jets.eta) < 2.4) & (jets['isGoodJet']==1) & (jets['isGoodBJet']==1) )
+        #anyjet = ((jets.pt > 25) & (abs(jets.eta) < 5.0) & (jets['isGoodJetAll']==1) )
+
+        #chi2_values = np.abs(dijets.mass - 80.) # some measure for fit with W
+        #sorted_masses = np.sort(chi2_values) # sort w.r.t chi2
+        #best_w_idx = np.where(chi2_values==sorted_masses[0])# now get the index of the minimum value
+        #second_best_w_idx = np.where(chi2_values==sorted_masses[1])
+
+        ## some weird hack because sorting seems to not be working
+        near_w = np.abs((dijets.mass - 80.)/(0.2*dijets.mass)).argmin() # this just gets the index!
+        dijets.mass[near_w] = dijets.mass[near_w] + 100
+        second_w = np.abs((dijets.mass - 80.)/(0.2*dijets.mass)).argmin()
+        dijets.mass[near_w] = dijets.mass[near_w] - 100
+
+        output['dijet_mass_bestW'].fill(dataset=dataset, mass=dijets.mass[near_w].flatten())
+        output['dijet_mass_secondW'].fill(dataset=dataset, mass=dijets.mass[second_w].flatten())
 
         spectators = awkward.JaggedArray.zip(pt=df['Spectator_pt'], eta=df['Spectator_eta'], phi=df['Spectator_phi'], pdgId=df['Spectator_pdgId'])
         spectators = spectators[spectators['pt']>10]
@@ -177,7 +232,7 @@ def main():
 
     # histograms
     histograms = ["MET_pt", "Jet_pt", "Jet_eta", "Jet_pt_fwd", "W_pt_notFromTop", "GenJet_pt_fwd", "Spectator_pt", "Spectator_eta"]
-    histograms+= ["Top_pt", "Top_eta", "Antitop_pt", "Antitop_eta", "W_pt", "W_eta", "N_b", "N_jet"]
+    histograms+= ["Top_pt", "Top_eta", "Antitop_pt", "Antitop_eta", "W_pt", "W_eta", "N_b", "N_jet", "dijet_mass", "dijet_mass_bestW",  "dijet_mass_secondW", "digenjet_mass"]
 
 
     # initialize cache
@@ -194,7 +249,7 @@ def main():
                                       treename='Events',
                                       processor_instance=exampleProcessor(),
                                       executor=processor.futures_executor,
-                                      executor_args={'workers': 12, 'function_args': {'flatten': False}},
+                                      executor_args={'workers': 1, 'function_args': {'flatten': False}},
                                       chunksize=500000,
                                      )
         cache['fileset']        = fileset
