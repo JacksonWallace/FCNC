@@ -80,10 +80,12 @@ def main():
 
     # load the config and the cache
 
+    # download file from eos in the future?
+
     # Inputs are defined in a dictionary
     # dataset : list of files
     fileset = {
-        'tW_scattering': glob.glob("../data/samples/*.root"),
+        'tW_scattering': glob.glob("data/samples/*.root"),
     }
 
     # histograms
