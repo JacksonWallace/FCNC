@@ -1,5 +1,12 @@
 stages:
+- greeting
 - build
+- run
+
+hello world:
+  stage: greeting
+  script:
+   - echo "Hey there! Let's do some physics."
 
 build_image:
   stage: build
@@ -9,3 +16,9 @@ build_image:
     - docker-image-build
   script:
     - ignore
+
+make_met:
+  stage: run
+  image: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA
+  script:
+    - python processor/minimal.py
