@@ -101,7 +101,7 @@ def main():
                                  )
 
     # Make a few plots
-    outdir = "/tmp_plots/"
+    outdir = "tmp_plots/"
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 

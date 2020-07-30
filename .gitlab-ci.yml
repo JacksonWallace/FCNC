@@ -24,5 +24,5 @@ make_met:
     - python processor/minimal.py
   artifacts:
     paths:
-      - /tmp_plots/MET_pt_shape.pdf
+      - tmp_plots/MET_pt_shape.pdf
     expire_in: 1 week
