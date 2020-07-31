@@ -58,12 +58,6 @@ my_labels = {
     'wjets': 'W+jets',
 }
 
-fillopts1 = {
-    'edgecolor': (0,0,0,0.3),
-    'facecolor': ['#ed0e2c', '#ed940e', '#0ebded', '#32a852'],
-    'alpha': 1.0
-}
-
 # load the configuration
 cfg = loadConfig()
 
