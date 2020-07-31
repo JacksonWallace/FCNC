@@ -2,8 +2,10 @@
 small script that reades histograms from an archive and saves figures in a public space
 
 ToDo:
-[ ] Cosmetics (labels etc)
+[x] Cosmetics (labels etc)
 [ ] ratio pad!
+  [ ] pseudo data
+[ ] uncertainty band
 
 '''
 
@@ -23,17 +25,20 @@ def saveFig( ax, path, name, scale='linear', shape=False ):
     outdir = os.path.join(path,scale)
     finalizePlotDir(outdir)
     ax.set_yscale(scale)
-    y_max = 0.5 if shape else 1000000
+    y_max = 0.5 if shape else 50000000
     if scale == 'log':
-        ax.set_ylim(0.001, y_max)
+        ax.set_ylim(0.05, y_max)
     else:
         ax.set_ylim(0.0, y_max)
 
     handles, labels = ax.get_legend_handles_labels()
     new_labels = []
     for handle, label in zip(handles, labels):
-        handle.set_color(colors[label])
-        new_labels.append(my_labels[label])
+        try:
+            handle.set_color(colors[label])
+            new_labels.append(my_labels[label])
+        except:
+            pass
 
     ax.legend(title='',ncol=1,handles=handles, labels=new_labels, frameon=False)
 
@@ -46,14 +51,23 @@ def saveFig( ax, path, name, scale='linear', shape=False ):
     #ax.clear()
 
 colors = {
-    'tW_scattering': '#ed0e2c',
-    'TTW': '#ed940e',
-    'ttbar': '#0ebded',
-    'wjets': '#32a852',
+    'tW_scattering': '#FF595E',
+    'TTW': '#8AC926',
+    'TTX': '#FFCA3A',
+    'ttbar': '#1982C4',
+    'wjets': '#6A4C93',
 }
+'''
+other colors (sets from coolers.com):
+#525B76 (gray)
+#34623F (hunter green)
+#0F7173 (Skobeloff)
+'''
+
 my_labels = {
     'tW_scattering': 'tW scattering',
     'TTW': r'$t\bar{t}$W+jets',
+    'TTX': r'$t\bar{t}$Z/H',
     'ttbar': r'$t\bar{t}$+jets',
     'wjets': 'W+jets',
 }
@@ -96,17 +110,21 @@ for name in histograms:
         # rebin
         new_n_bins = hist.Bin('multiplicity', r'$N_{b-jet}$', 5, -0.5, 4.5)
         histogram = histogram.rebin('multiplicity', new_n_bins)
+    elif name == 'b_nonb_massmax':
+        # rebin
+        new_mass_bins = hist.Bin('mass', r'$M(b, light) \ (GeV)$', 25, 0, 1500)
+        histogram = histogram.rebin('mass', new_mass_bins)
     else:
         skip = True
 
     if not skip:
-        ax = hist.plot1d(histogram,overlay="dataset", stack=True, overflow='over', order=['tW_scattering', 'TTW','ttbar','wjets'])
+        ax = hist.plot1d(histogram,overlay="dataset", stack=True, overflow='over', order=['tW_scattering', 'TTX', 'TTW','ttbar','wjets'])
         for l in ['linear', 'log']:
             saveFig(ax, plotDir, name, scale=l, shape=False)
         ax.clear()
 
-        #ax = hist.plot1d(histogram,overlay="dataset", density=True, stack=False) # make density plots because we don't care about x-sec differences
-        #for l in ['linear', 'log']:
-        #    saveFig(ax, plotDir, name+'_shape', scale=l, shape=True)
-        #ax.clear()
+        ax = hist.plot1d(histogram,overlay="dataset", density=True, stack=False, overflow='over') # make density plots because we don't care about x-sec differences
+        for l in ['linear', 'log']:
+            saveFig(ax, plotDir, name+'_shape', scale=l, shape=True)
+        ax.clear()
 
