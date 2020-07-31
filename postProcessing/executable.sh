@@ -76,14 +76,14 @@ from PhysicsTools.NanoAODTools.postprocessing.modules.tW_scattering.lumiWeightPr
 
 modules = [\
     lumiWeightProd("$SUMWEIGHT"),
-    selector2018(),
     genAnalyzer(),
+    selector2018(),
     ]
 
 # apply PV requirement
 cut  = 'PV_ndof>4 && sqrt(PV_x*PV_x+PV_y*PV_y)<=2 && abs(PV_z)<=24'
 # loose skim
-cut += '&& nJet>2&&(nElectron+nMuon)>0'
+cut += '&& (nElectron+nMuon)>0 && Sum\$(Jet_pt>25&&abs(Jet_eta)<2.4)>=4'
 
 p = PostProcessor('./', ["$INPUTFILENAMES"], cut=cut, modules=modules,\
     branchsel='PhysicsTools/NanoAODTools/python/postprocessing/modules/tW_scattering/keep_and_drop_in.txt',\

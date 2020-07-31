@@ -44,6 +44,7 @@ class exampleProcessor(processor.ProcessorABC):
         pt_axis             = hist.Bin("pt",        r"$p_{T}$ (GeV)", 600, 0, 1000)
         mass_axis           = hist.Bin("mass",        r"$p_{T}$ (GeV)", 250, 0, 500)
         eta_axis            = hist.Bin("eta",       r"$\eta$", 60, -5.5, 5.5)
+        deltaR_axis         = hist.Bin("deltaR",       r"$\Delta R$", 60, 0, 5)
         multiplicity_axis   = hist.Bin("multiplicity",         r"N", 20, -0.5, 19.5)
 
         self._accumulator = processor.dict_accumulator({
@@ -61,6 +62,7 @@ class exampleProcessor(processor.ProcessorABC):
             "Antitop_eta" :     hist.Hist("Counts", dataset_axis, eta_axis),
             "W_pt" :            hist.Hist("Counts", dataset_axis, pt_axis),
             "W_eta" :           hist.Hist("Counts", dataset_axis, eta_axis),
+            "dijet_deltaR" :    hist.Hist("Counts", dataset_axis, deltaR_axis),
             "dijet_mass" :      hist.Hist("Counts", dataset_axis, mass_axis),
             "dijet_mass_bestW" :      hist.Hist("Counts", dataset_axis, mass_axis),
             "dijet_mass_secondW" :      hist.Hist("Counts", dataset_axis, mass_axis),
@@ -197,8 +199,10 @@ class exampleProcessor(processor.ProcessorABC):
         # To apply selections, simply mask
         mask = abs(df["Jet_eta"]) > 2.4
 
+        
         # And plot the leading jet pt for these events
-        output['Jet_pt_fwd'].fill(dataset=dataset, pt=df["Jet_pt"][mask].max().flatten())
+        output['dijet_deltaR'].fill(dataset=dataset, deltaR=dijets.i0.p4.delta_r(dijets.i1.p4).flatten())
+        output['Jet_pt_fwd'].fill(dataset=dataset, pt=jets[jets.pt.argmax()].pt.flatten())
 
         # Example for jets / b-jets
         jets = awkward.JaggedArray.zip(pt=df['Jet_pt'], eta=df['Jet_eta'], phi=df['Jet_phi'], btag=df['Jet_btagDeepB'], jetid=df['Jet_jetId'])
@@ -227,12 +231,13 @@ def main():
         'tW_scattering': glob.glob("/hadoop/cms/store/user/dspitzba/nanoAOD/ttw_samples/0p1p2/tW_scattering__nanoAOD/merged/*.root"),
         "TTW":           glob.glob("/hadoop/cms/store/user/dspitzba/nanoAOD/ttw_samples/0p1p2/TTWJetsToLNu_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/merged/*.root") \
                         + glob.glob("/hadoop/cms/store/user/dspitzba/nanoAOD/ttw_samples/0p1p2/TTWJetsToQQ_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20-v1/merged/*.root"),
-        #"ttbar":        glob.glob("/hadoop/cms/store/user/dspitzba/nanoAOD/ttw_samples/0p1p2/TTJets_SingleLeptFromT_TuneCP5_13TeV-madgraphMLM-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20-v1/merged/*.root") # adding this is still surprisingly fast (20GB file!)
+#        "ttbar":        glob.glob("/hadoop/cms/store/user/dspitzba/nanoAOD/ttw_samples/0p1p3/TTJets_SingleLeptFromT_TuneCP5_13TeV-madgraphMLM-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20-v1/*.root") # adding this is still surprisingly fast (20GB file!)
+        "ttbar": glob.glob("/hadoop/cms/store/user/dspitzba/nanoAOD/ttw_samples/0p1p3/TTJets_SingleLeptFromTbar_TuneCP5_13TeV-madgraphMLM-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20-v1/merged/*.root")
     }
 
     # histograms
     histograms = ["MET_pt", "Jet_pt", "Jet_eta", "Jet_pt_fwd", "W_pt_notFromTop", "GenJet_pt_fwd", "Spectator_pt", "Spectator_eta"]
-    histograms+= ["Top_pt", "Top_eta", "Antitop_pt", "Antitop_eta", "W_pt", "W_eta", "N_b", "N_jet", "dijet_mass", "dijet_mass_bestW",  "dijet_mass_secondW", "digenjet_mass"]
+    histograms+= ["Top_pt", "Top_eta", "Antitop_pt", "Antitop_eta", "W_pt", "W_eta", "N_b", "N_jet", "dijet_mass", "dijet_mass_bestW",  "dijet_mass_secondW", "digenjet_mass", "dijet_deltaR"]
 
 
     # initialize cache

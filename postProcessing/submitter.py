@@ -24,25 +24,33 @@ print ("Loaded version %s from config."%cfg['meta']['version'])
 import argparse
 
 argParser = argparse.ArgumentParser(description = "Argument parser")
-argParser.add_argument('--version', action='store', default=None, help="")
+argParser.add_argument('--version', action='store', default=None, help="Define a new version number")
+argParser.add_argument('--newVersion', action='store_true', default=None, help="Create a version and tag automatically?")
+argParser.add_argument('--dryRun', action='store_true', default=None, help="Don't submit?")
 args = argParser.parse_args()
 
+version = str(cfg['meta']['version'])
 
 # if no version is defined, increase last version number by one
-if not args.version:
+if args.newVersion:
     tag_str = str(cfg['meta']['version'])
-    newVersion = '.'.join(tag_str.split('.')[:-1]+[str(int(tag_str.split('.')[-1])+1)])
-else:
-    newVersion = args.version
+    version = '.'.join(tag_str.split('.')[:-1]+[str(int(tag_str.split('.')[-1])+1)])
+    cfg['meta']['version'] = version
+elif args.version:
+    version = args.version
+    cfg['meta']['version'] = version
     # should check that the format is the same
 
-tag = newVersion.replace('.','p')
+tag = version.replace('.','p')
 
 ## create a new tag of nanoAOD-tools on the fly
-#import subprocess
-#subprocess.call("cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/; git commit -am 'latest'; 
-
-raise NotImplementedError
+if args.newVersion or args.version:
+    print ("Commiting and creating new tag: %s"%tag)
+    import subprocess
+    subprocess.call("cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/; git commit -am 'latest'; git tag %s; git push ownFork --tags; cd"%tag, shell=True)
+    dumpConfig(cfg)
+    
+    # Dumpong the config
 
 # example
 sample = DirectorySample(dataset='TTWJetsToLNu_Autumn18v4', location='/hadoop/cms/store/user/dspitzba/nanoAOD/TTWJetsToLNu_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/')
@@ -51,7 +59,10 @@ sample = DirectorySample(dataset='TTWJetsToLNu_Autumn18v4', location='/hadoop/cm
 #metisSamples = []
 #for sample in samples.keys():   
 
-outDir = os.path.join(newVersion, tag)
+#outDir = os.path.join(version, tag)
+outDir = os.path.join(cfg['meta']['localSkim'], tag)
+
+print ("Output will be here: %s"%outDir)
 
 maker_tasks = []
 merge_tasks = []
@@ -64,6 +75,8 @@ merge_tasks = []
 for s in samples.keys():
     sample = DirectorySample(dataset = samples[s]['name'], location = samples[s]['path'])
 
+    lumiWeightString = 1000*samples[s]['xsec']/samples[s]['sumWeight']
+
     #tag = str(cfg['meta']['version']).replace('.','p')
     
     maker_task = CondorTask(
@@ -71,7 +84,7 @@ for s in samples.keys():
             #'/hadoop/cms/store/user/dspitzba/nanoAOD/TTWJetsToLNu_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/',
         # open_dataset = True, flush = True,
         executable = "executable.sh",
-        arguments = "%s %s"%(tag, samples[s]['xsec']/samples[s]['sumWeight']),
+        arguments = "%s %s"%(tag, lumiWeightString),
         #tarfile = "merge_scripts.tar.gz",
         files_per_output = 1,
         output_dir = os.path.join(outDir, sample.get_datasetname()),
@@ -99,9 +112,9 @@ for s in samples.keys():
         ),
         # open_dataset = True, flush = True,
         executable = "merge_executable.sh",
-        arguments = "%s %s"%(tag, samples[s]['xsec']/samples[s]['sumWeight']),
+        arguments = "%s %s"%(tag, lumiWeightString),
         #tarfile = "merge_scripts.tar.gz",
-        files_per_output = 100000,
+        files_per_output = 50,
         output_dir = maker_task.get_outputdir() + "/merged",
         output_name = sample.get_datasetname() + ".root",
         output_is_tree = True,
@@ -120,7 +133,7 @@ for s in samples.keys():
 
     merge_tasks.append(merge_task)
 
-if True:
+if not args.dryRun:
     for i in range(100):
         total_summary = {}
     

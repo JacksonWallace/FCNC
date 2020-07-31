@@ -2,8 +2,14 @@
 Just a collection of useful functions
 '''
 
-import yaml
-from yaml import Loader, Dumper
+#import yaml
+from yaml import load, dump
+try:
+    from yaml import CLoader as Loader, CDumper as Dumper
+except ImportError:
+    from yaml import Loader, Dumper
+
+#from yaml import Loader, Dumper
 
 import os
 import shutil
@@ -14,8 +20,13 @@ data_path = os.path.expandvars('$CMSSW_BASE/src/tW_scattering/data/')
 
 def loadConfig():
     with open(data_path+'config.yaml') as f:
-        config = yaml.load(f, Loader=Loader)
+        config = load(f, Loader=Loader)
     return config
+
+def dumpConfig(cfg):
+    with open(data_path+'config.yaml', 'w') as f:
+        dump(cfg, f, Dumper=Dumper, default_flow_style=False)
+    return True
 
 def getName( DAS ):
     split = DAS.split('/')

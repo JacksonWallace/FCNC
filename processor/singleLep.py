@@ -1,0 +1,179 @@
+'''
+Simple processor using coffea.
+[x] weights
+[ ] Missing pieces: appropriate sample handling
+[x] Accumulator caching
+
+'''
+
+
+import os
+import time
+import glob
+import re
+from functools import reduce
+from klepto.archives import dir_archive
+
+import numpy as np
+from tqdm.auto import tqdm
+import coffea.processor as processor
+from coffea.processor.accumulator import AccumulatorABC
+from coffea.analysis_objects import JaggedCandidateArray
+from coffea import hist
+import pandas as pd
+import uproot_methods
+import awkward
+
+
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
+
+from tW_scattering.Tools.helpers import *
+
+# This just tells matplotlib not to open any
+# interactive windows.
+matplotlib.use('Agg')
+
+class exampleProcessor(processor.ProcessorABC):
+    """Dummy processor used to demonstrate the processor principle"""
+    def __init__(self):
+
+        # we can use a large number of bins and rebin later
+        dataset_axis        = hist.Cat("dataset",   "Primary dataset")
+        pt_axis             = hist.Bin("pt",        r"$p_{T}$ (GeV)", 600, 0, 1000)
+        mass_axis           = hist.Bin("mass",      r"M (GeV)", 100, 0, 200)
+        eta_axis            = hist.Bin("eta",       r"$\eta$", 60, -5.5, 5.5)
+        multiplicity_axis   = hist.Bin("multiplicity",         r"N", 20, -0.5, 19.5)
+
+        self._accumulator = processor.dict_accumulator({
+            "MET_pt" :          hist.Hist("Counts", dataset_axis, pt_axis),
+            "MT" :          hist.Hist("Counts", dataset_axis, pt_axis),
+            "N_b" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_jet" :           hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            'cutflow_wjets':      processor.defaultdict_accumulator(int),
+            'cutflow_ttbar':      processor.defaultdict_accumulator(int),
+            'cutflow_TTW':      processor.defaultdict_accumulator(int),
+            'cutflow_signal':   processor.defaultdict_accumulator(int),
+        })
+
+    @property
+    def accumulator(self):
+        return self._accumulator
+
+    def process(self, df):
+        """
+        Processing function. This is where the actual analysis happens.
+        """
+        output = self.accumulator.identity()
+        # We can access the data frame as usual
+        # The dataset is written into the data frame
+        # outside of this function
+
+        output['cutflow_wjets']['all events'] += sum(df['weight'][(df['dataset']=='wjets')].flatten())
+        output['cutflow_ttbar']['all events'] += sum(df['weight'][(df['dataset']=='ttbar')].flatten())
+        output['cutflow_TTW']['all events'] += sum(df['weight'][(df['dataset']=='TTW')].flatten())
+        output['cutflow_signal']['all events'] += sum(df['weight'][(df['dataset']=='tW_scattering')].flatten())
+
+        cutFlow = ((df['nLepton']==1) & (df['nVetoLepton']==1))
+
+        output['cutflow_wjets']['singleLep']  += sum(df['weight'][(df['dataset']=='wjets')         & cutFlow].flatten())
+        output['cutflow_ttbar']['singleLep']  += sum(df['weight'][(df['dataset']=='ttbar')         & cutFlow].flatten())
+        output['cutflow_TTW']['singleLep']    += sum(df['weight'][(df['dataset']=='TTW')           & cutFlow].flatten())
+        output['cutflow_signal']['singleLep'] += sum(df['weight'][(df['dataset']=='tW_scattering') & cutFlow].flatten())
+
+        cutFlow = ((df['nLepton']==1) & (df['nVetoLepton']==1) & (df['nGoodJet']>5))
+
+        output['cutflow_wjets']['5jets']  += sum(df['weight'][(df['dataset']=='wjets')         & cutFlow].flatten())
+        output['cutflow_ttbar']['5jets']  += sum(df['weight'][(df['dataset']=='ttbar')         & cutFlow].flatten())
+        output['cutflow_TTW']['5jets']    += sum(df['weight'][(df['dataset']=='TTW')           & cutFlow].flatten())
+        output['cutflow_signal']['5jets'] += sum(df['weight'][(df['dataset']=='tW_scattering') & cutFlow].flatten())
+
+        cutFlow = ((df['nLepton']==1) & (df['nVetoLepton']==1) & (df['nGoodJet']>5) & (df['nGoodBTag']==2))
+
+        output['cutflow_wjets']['btags']  += sum(df['weight'][(df['dataset']=='wjets')         & cutFlow].flatten())
+        output['cutflow_ttbar']['btags']  += sum(df['weight'][(df['dataset']=='ttbar')         & cutFlow].flatten())
+        output['cutflow_TTW']['btags']    += sum(df['weight'][(df['dataset']=='TTW')           & cutFlow].flatten())
+        output['cutflow_signal']['btags'] += sum(df['weight'][(df['dataset']=='tW_scattering') & cutFlow].flatten())
+
+        # preselection of events
+        selection = ((df['nLepton']==1) & (df['nVetoLepton']==1))
+        #df = df[((df['nLepton']==1) & (df['nGoodJet']>5) & (df['nGoodBTag']==2))]
+        dataset = df["dataset"]
+
+        # And fill the histograms
+        output['MET_pt'].fill(dataset=dataset, pt=df["MET_pt"][selection].flatten(), weight=df['weight'][selection])
+        output['MT'].fill(dataset=dataset, pt=df["MT"][selection].flatten(), weight=df['weight'][selection])
+        output['N_b'].fill(dataset=dataset, multiplicity=df["nGoodBTag"][selection], weight=df['weight'][selection] )
+        output['N_jet'].fill(dataset=dataset, multiplicity=df["nGoodJet"][selection], weight=df['weight'][selection] )
+
+
+        return output
+
+    def postprocess(self, accumulator):
+        return accumulator
+
+
+def main():
+
+    overwrite = True
+
+    # load the config and the cache
+    cfg = loadConfig()
+
+    # Inputs are defined in a dictionary
+    # dataset : list of files
+    fileset = {
+        'tW_scattering': glob.glob("/hadoop/cms/store/user/dspitzba/nanoAOD/ttw_samples/0p1p3/tW_scattering__nanoAOD/merged/*.root"),
+        "TTW":           glob.glob("/hadoop/cms/store/user/dspitzba/nanoAOD/ttw_samples/0p1p3/TTWJetsToLNu_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/merged/*.root") \
+                        + glob.glob("/hadoop/cms/store/user/dspitzba/nanoAOD/ttw_samples/0p1p3/TTWJetsToQQ_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20-v1/merged/*.root"),
+        "ttbar":        [] \
+                        + glob.glob("/hadoop/cms/store/user/dspitzba/nanoAOD/ttw_samples/0p1p3/TTJets_SingleLeptFromT_TuneCP5_13TeV-madgraphMLM-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20-v1/*.root") \
+                        + glob.glob("/hadoop/cms/store/user/dspitzba/nanoAOD/ttw_samples/0p1p3/TTJets_SingleLeptFromTbar_TuneCP5_13TeV-madgraphMLM-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20-v1/merged/*.root") \
+                        + glob.glob("/hadoop/cms/store/user/dspitzba/nanoAOD/ttw_samples/0p1p3/TTJets_DiLept_TuneCP5_13TeV-madgraphMLM-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20-v1/merged/*.root"),
+        "wjets":    [] \
+                    + glob.glob("/hadoop/cms/store/user/dspitzba/nanoAOD/ttw_samples/0p1p3/W1JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20-v1/merged/*.root") \
+                    + glob.glob("/hadoop/cms/store/user/dspitzba/nanoAOD/ttw_samples/0p1p3/W2JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20-v1/merged/*.root") \
+                    + glob.glob("/hadoop/cms/store/user/dspitzba/nanoAOD/ttw_samples/0p1p3/W3JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20-v1/merged/*.root") \
+                    + glob.glob("/hadoop/cms/store/user/dspitzba/nanoAOD/ttw_samples/0p1p3/W4JetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20-v1/merged/*.root"),
+    }
+
+    # histograms
+    histograms = ["MET_pt", "N_b", "N_jet", "MT"]
+
+
+    # initialize cache
+    cache = dir_archive(os.path.join(os.path.expandvars(cfg['caches']['base']), cfg['caches']['singleLep']), serialized=True)
+    if not overwrite:
+        cache.load()
+
+    if cfg == cache.get('cfg') and histograms == cache.get('histograms') and fileset == cache.get('fileset') and cache.get('simple_output'):
+        output = cache.get('simple_output')
+
+    else:
+        # Run the processor
+        output = processor.run_uproot_job(fileset,
+                                      treename='Events',
+                                      processor_instance=exampleProcessor(),
+                                      executor=processor.futures_executor,
+                                      executor_args={'workers': 8, 'function_args': {'flatten': False}},
+                                      chunksize=500000,
+                                     )
+        cache['fileset']        = fileset
+        cache['cfg']            = cfg
+        cache['histograms']     = histograms
+        cache['simple_output']  = output
+        cache.dump()
+
+    # Make a few plots
+    outdir = "./tmp_plots"
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+
+    return output
+
+if __name__ == "__main__":
+    output = main()
+
+
+
