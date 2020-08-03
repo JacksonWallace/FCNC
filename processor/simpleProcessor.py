@@ -29,7 +29,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 
-from tW_scattering.Tools.helpers import *
+from Tools.helpers import *
 
 # This just tells matplotlib not to open any
 # interactive windows.

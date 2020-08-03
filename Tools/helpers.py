@@ -16,7 +16,7 @@ import shutil
 
 import glob
 
-data_path = os.path.expandvars('$CMSSW_BASE/src/tW_scattering/data/')
+data_path = os.path.expandvars('$TWHOME/data/')
 
 def loadConfig():
     with open(data_path+'config.yaml') as f:
@@ -40,5 +40,5 @@ def finalizePlotDir( path ):
     path = os.path.expandvars(path)
     if not os.path.isdir(path):
         os.makedirs(path)
-    shutil.copy( os.path.expandvars( '$CMSSW_BASE/src/tW_scattering/Tools/php/index.php' ), path )
+    shutil.copy( os.path.expandvars( '$TWHOME/Tools/php/index.php' ), path )
     

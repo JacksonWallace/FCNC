@@ -1,5 +1,5 @@
 caches:
-  base: $CMSSW_BASE/src/tW_scattering/caches/
+  base: $TWBASE/caches/
   doublemuonProcessor: doublemuonProcessor
   simpleProcessor: simpleProcessor
   singleLep: singleLep

@@ -17,9 +17,9 @@ import uproot
 import glob
 from coffea.processor.dataframe import LazyDataFrame
 
-from tW_scattering.Tools.helpers import *
+from Tools.helpers import *
 
-data_path = os.path.expandvars('$CMSSW_BASE/src/tW_scattering/data/')
+data_path = os.path.expandvars('$TWBASE/data/')
 
 #def loadConfig():
 #    with open(data_path+'config.yaml') as f:
