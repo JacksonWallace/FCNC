@@ -3,10 +3,11 @@ small script that reades histograms from an archive and saves figures in a publi
 
 ToDo:
 [x] Cosmetics (labels etc)
-[ ] ratio pad!
-  [ ] pseudo data
-[ ] uncertainty band
-
+[x] ratio pad!
+  [x] pseudo data
+    [ ] -> move to processor to avoid drawing toys every time!
+[x] uncertainty band
+[ ] fix shapes
 '''
 
 
@@ -17,37 +18,54 @@ import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
+import numpy as np
 
 from tW_scattering.Tools.helpers import *
 from klepto.archives import dir_archive
 
-def saveFig( ax, path, name, scale='linear', shape=False ):
+def saveFig( fig, ax, rax, path, name, scale='linear', shape=False, y_max=-1 ):
     outdir = os.path.join(path,scale)
     finalizePlotDir(outdir)
     ax.set_yscale(scale)
-    y_max = 0.5 if shape else 50000000
+    ax.set_ylabel('Events')
+
+    y_min = 0.0005 if shape else 0.1 
+    if y_max>0:
+        y_max = 0.1 if shape else 300*y_max
     if scale == 'log':
-        ax.set_ylim(0.05, y_max)
+        ax.set_ylim(y_min, y_max)
+        #if shape:
+        #     ax.yaxis.set_ticks(np.array([10e-4,10e-3,10e-2,10e-1,10e0]))
+        #else:
+        #    ax.yaxis.set_ticks(np.array([10e-2,10e-1,10e0,10e1,10e2,10e3,10e4,10e5,10e6]))
     else:
         ax.set_ylim(0.0, y_max)
+
 
     handles, labels = ax.get_legend_handles_labels()
     new_labels = []
     for handle, label in zip(handles, labels):
+        #print (handle, label)
         try:
-            handle.set_color(colors[label])
             new_labels.append(my_labels[label])
+            if not label=='pseudodata':
+                handle.set_color(colors[label])
         except:
             pass
 
-    ax.legend(title='',ncol=1,handles=handles, labels=new_labels, frameon=False)
+    if rax:
+        plt.subplots_adjust(hspace=0)
+        rax.set_ylabel('Obs./Pred.')
+        rax.set_ylim(0.5,1.5)
 
-    ax.text(0., 0.995, '$\\bf{CMS}$', fontsize=20,  horizontalalignment='left', verticalalignment='bottom', transform=ax.transAxes )
-    ax.text(0.15, 1., '$\\it{Simulation}$', fontsize=14, horizontalalignment='left', verticalalignment='bottom', transform=ax.transAxes )
-    ax.text(0.8, 1., '13 TeV', fontsize=14, horizontalalignment='left', verticalalignment='bottom', transform=ax.transAxes )
+    ax.legend(title='',ncol=2,handles=handles, labels=new_labels, frameon=False)
 
-    ax.figure.savefig(os.path.join(outdir, "{}.pdf".format(name)))
-    ax.figure.savefig(os.path.join(outdir, "{}.png".format(name)))
+    fig.text(0., 0.995, '$\\bf{CMS}$', fontsize=20,  horizontalalignment='left', verticalalignment='bottom', transform=ax.transAxes )
+    fig.text(0.15, 1., '$\\it{Simulation}$', fontsize=14, horizontalalignment='left', verticalalignment='bottom', transform=ax.transAxes )
+    fig.text(0.8, 1., '13 TeV', fontsize=14, horizontalalignment='left', verticalalignment='bottom', transform=ax.transAxes )
+
+    fig.savefig(os.path.join(outdir, "{}.pdf".format(name)))
+    fig.savefig(os.path.join(outdir, "{}.png".format(name)))
     #ax.clear()
 
 colors = {
@@ -70,6 +88,29 @@ my_labels = {
     'TTX': r'$t\bar{t}$Z/H',
     'ttbar': r'$t\bar{t}$+jets',
     'wjets': 'W+jets',
+    'pseudodata': 'Pseudo-data',
+    'uncertainty': 'Uncertainty',
+}
+
+data_err_opts = {
+    'linestyle': 'none',
+    'marker': '.',
+    'markersize': 10.,
+    'color': 'k',
+    'elinewidth': 1,
+}
+
+error_opts = {
+    'label': 'uncertainty',
+    'hatch': '///',
+    'facecolor': 'none',
+    'edgecolor': (0,0,0,.5),
+    'linewidth': 0
+}
+
+fill_opts = {
+    'edgecolor': (0,0,0,0.3),
+    'alpha': 1.0
 }
 
 # load the configuration
@@ -96,35 +137,92 @@ for name in histograms:
     histogram = output[name]
     if name == 'MET_pt':
         # rebin
+        axis = 'pt'
         new_met_bins = hist.Bin('pt', r'$E_T^{miss} \ (GeV)$', 20, 0, 200)
         histogram = histogram.rebin('pt', new_met_bins)
     elif name == 'MT':
         # rebin
+        axis = 'pt'
         new_met_bins = hist.Bin('pt', r'$M_T \ (GeV)$', 20, 0, 200)
         histogram = histogram.rebin('pt', new_met_bins)
     elif name == 'N_jet':
         # rebin
+        axis = 'multiplicity'
         new_n_bins = hist.Bin('multiplicity', r'$N_{jet}$', 15, -0.5, 14.5)
         histogram = histogram.rebin('multiplicity', new_n_bins)
+    elif name == 'N_spec':
+        # rebin
+        axis = 'multiplicity'
+        new_n_bins = hist.Bin('multiplicity', r'$N_{jet, fwd}$', 15, -0.5, 14.5)
+        histogram = histogram.rebin('multiplicity', new_n_bins)
+    elif name == 'pt_spec_max':
+        # rebin
+        axis = 'pt'
+        new_pt_bins = hist.Bin('pt', r'$p_{T, fwd jet}\ (GeV)$', 20, 0, 400)
+        histogram = histogram.rebin('pt', new_pt_bins)
     elif name == 'N_b':
         # rebin
+        axis = 'multiplicity'
         new_n_bins = hist.Bin('multiplicity', r'$N_{b-jet}$', 5, -0.5, 4.5)
         histogram = histogram.rebin('multiplicity', new_n_bins)
     elif name == 'b_nonb_massmax':
         # rebin
+        axis = 'mass'
         new_mass_bins = hist.Bin('mass', r'$M(b, light) \ (GeV)$', 25, 0, 1500)
         histogram = histogram.rebin('mass', new_mass_bins)
     else:
         skip = True
 
     if not skip:
-        ax = hist.plot1d(histogram,overlay="dataset", stack=True, overflow='over', order=['tW_scattering', 'TTX', 'TTW','ttbar','wjets'])
+        y_max = histogram.sum("dataset").values(overflow='over')[()].max()
+        y_over = histogram.sum("dataset").values(overflow='over')[()][-1]
+
+        # get pseudo data
+        bin_values = histogram.axis(axis).centers(overflow='over')
+        poisson_means = histogram.sum('dataset').values(overflow='over')[()]
+        values = np.repeat(bin_values, np.random.poisson(poisson_means))
+        if axis == 'pt':
+            histogram.fill(dataset='pseudodata', pt=values)
+        elif axis == 'mass':
+            histogram.fill(dataset='pseudodata', mass=values)
+        elif axis == 'multiplicity':
+            histogram.fill(dataset='pseudodata', multiplicity=values)
+
+        
+        import re
+        notdata = re.compile('(?!pseudodata)')
+
+        fig, (ax, rax) = plt.subplots(2, 1, figsize=(7,7), gridspec_kw={"height_ratios": (3, 1)}, sharex=True)
+
+        # get axes
+        hist.plot1d(histogram[notdata],overlay="dataset", ax=ax, stack=True, overflow='over', clear=False, line_opts=None, fill_opts=fill_opts, error_opts=error_opts, order=['tW_scattering', 'TTX', 'TTW','ttbar','wjets']) #error_opts??
+        hist.plot1d(histogram['pseudodata'], overlay="dataset", ax=ax, overflow='over', error_opts=data_err_opts, clear=False)
+
+        # build ratio
+        hist.plotratio(
+            num=histogram['pseudodata'].sum("dataset"),
+            denom=histogram[notdata].sum("dataset"),
+            ax=rax,
+            error_opts=data_err_opts,
+            denom_fill_opts={},
+            guide_opts={},
+            unc='num',
+            overflow='over'
+        )
+
+
         for l in ['linear', 'log']:
-            saveFig(ax, plotDir, name, scale=l, shape=False)
+            saveFig(fig, ax, rax, plotDir, name, scale=l, shape=False, y_max=y_max)
+        fig.clear()
+        rax.clear()
+        #pd_ax.clear()
         ax.clear()
 
-        ax = hist.plot1d(histogram,overlay="dataset", density=True, stack=False, overflow='over') # make density plots because we don't care about x-sec differences
+        fig, ax = plt.subplots(1,1,figsize=(7,7))
+
+        hist.plot1d(histogram[notdata],overlay="dataset", density=True, stack=False, overflow='over', ax=ax) # make density plots because we don't care about x-sec differences
         for l in ['linear', 'log']:
-            saveFig(ax, plotDir, name+'_shape', scale=l, shape=True)
+            saveFig(fig, ax, None, plotDir, name+'_shape', scale=l, shape=True)
+        fig.clear()
         ax.clear()
 

@@ -48,10 +48,12 @@ class exampleProcessor(processor.ProcessorABC):
 
         self._accumulator = processor.dict_accumulator({
             "MET_pt" :          hist.Hist("Counts", dataset_axis, pt_axis),
+            "pt_spec_max" :          hist.Hist("Counts", dataset_axis, pt_axis),
             "MT" :          hist.Hist("Counts", dataset_axis, pt_axis),
             "b_nonb_massmax" :          hist.Hist("Counts", dataset_axis, mass_axis),
             "N_b" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_jet" :           hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_spec" :           hist.Hist("Counts", dataset_axis, multiplicity_axis),
             'cutflow_wjets':      processor.defaultdict_accumulator(int),
             'cutflow_ttbar':      processor.defaultdict_accumulator(int),
             'cutflow_TTW':      processor.defaultdict_accumulator(int),
@@ -122,14 +124,28 @@ class exampleProcessor(processor.ProcessorABC):
             mass = df['Jet_mass'].content,
             goodjet = df['Jet_isGoodJetAll'].content,
             bjet = df['Jet_isGoodBJet'].content,
+            jetId = df['Jet_jetId'].content,
+            puId = df['Jet_puId'].content,
+        )
+
+        Lepton = JaggedCandidateArray.candidatesfromcounts(
+            df['nLepton'],
+            pt = df['Lepton_pt'].content,
+            eta = df['Lepton_eta'].content,
+            phi = df['Lepton_phi'].content,
+            mass = df['Lepton_mass'].content,
+            pdgId = df['Lepton_pdgId'].content,
         )
         
         b = Jet[Jet['bjet']==1]
         nonb = Jet[(Jet['goodjet']==1) & (Jet['bjet']==0)]
-        
+        spectator = Jet[(abs(Jet.eta)>2.0) & (abs(Jet.eta)<4.7) & (Jet.pt>25) & (Jet['puId']>=7) & (Jet['jetId']>=6)] # 40 GeV seemed good. let's try going lower
+
         b_nonb_selection = (Jet.counts>5) & (b.counts>=2) & (nonb.counts>=4) & (df['nLepton']==1) & (df['nVetoLepton']==1)
         b_nonb_pair = b.cross(nonb)
         output['b_nonb_massmax'].fill(dataset=dataset, mass=b_nonb_pair[b_nonb_selection].mass.max().flatten(), weight=df['weight'][b_nonb_selection]*cfg['lumi'])
+        output['N_spec'].fill(dataset=dataset, multiplicity=spectator[b_nonb_selection].counts, weight=df['weight'][b_nonb_selection]*cfg['lumi'])
+        output['pt_spec_max'].fill(dataset=dataset, pt=spectator[b_nonb_selection & (spectator.counts>0)].pt.max().flatten(), weight=df['weight'][b_nonb_selection & (spectator.counts>0)]*cfg['lumi'])
 
         return output
 
@@ -163,7 +179,7 @@ def main():
     }
 
     # histograms
-    histograms = ["MET_pt", "N_b", "N_jet", "MT", "b_nonb_massmax"]
+    histograms = ["MET_pt", "N_b", "N_jet", "MT", "b_nonb_massmax", "N_spec", "pt_spec_max"]
 
 
     # initialize cache
