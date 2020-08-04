@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 import numpy as np
 
-from tW_scattering.Tools.helpers import *
+from Tools.helpers import *
 from klepto.archives import dir_archive
 
 def saveFig( fig, ax, rax, path, name, scale='linear', shape=False, y_max=-1 ):
@@ -29,9 +29,11 @@ def saveFig( fig, ax, rax, path, name, scale='linear', shape=False, y_max=-1 ):
     ax.set_yscale(scale)
     ax.set_ylabel('Events')
 
-    y_min = 0.0005 if shape else 0.1 
+    y_min = 0.0005 if shape else 0.05
     if y_max>0:
         y_max = 0.1 if shape else 300*y_max
+    else:
+        y_max = 3e7
     if scale == 'log':
         ax.set_ylim(y_min, y_max)
         #if shape:
@@ -180,7 +182,7 @@ for name in histograms:
         # get pseudo data
         bin_values = histogram.axis(axis).centers(overflow='over')
         poisson_means = histogram.sum('dataset').values(overflow='over')[()]
-        values = np.repeat(bin_values, np.random.poisson(poisson_means))
+        values = np.repeat(bin_values, np.random.poisson(np.maximum(np.zeros(len(poisson_means)), poisson_means)))
         if axis == 'pt':
             histogram.fill(dataset='pseudodata', pt=values)
         elif axis == 'mass':

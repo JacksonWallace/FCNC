@@ -183,7 +183,7 @@ def main():
                                       processor_instance=exampleProcessor(),
                                       executor=processor.futures_executor,
                                       executor_args={'workers': 8, 'function_args': {'flatten': False}},
-                                      chunksize=500000,
+                                      chunksize=100000,
                                      )
         cache['fileset']        = fileset
         cache['cfg']            = cfg
