@@ -1,3 +1,3 @@
 eval `scramv1 runtime -sh`
 #cmsenv
-export PYTHONPATH=ProjectMetis
+export PYTHONPATH=${PYTHONPATH}:ProjectMetis

@@ -162,7 +162,7 @@ def main():
 
     # Inputs are defined in a dictionary
     # dataset : list of files
-    from samples import fileset
+    from samples import fileset, fileset_small, fileset_1l
 
     # histograms
     histograms = ["MET_pt", "N_b", "N_jet", "MT", "b_nonb_massmax", "N_spec", "pt_spec_max"]
@@ -178,7 +178,7 @@ def main():
 
     else:
         # Run the processor
-        output = processor.run_uproot_job(fileset,
+        output = processor.run_uproot_job(fileset_1l,
                                       treename='Events',
                                       processor_instance=exampleProcessor(),
                                       executor=processor.futures_executor,

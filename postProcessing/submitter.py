@@ -6,13 +6,13 @@ from metis.CondorTask import CondorTask
 from metis.StatsParser import StatsParser
 from metis.Utils import do_cmd
 
-from tW_scattering.Tools.helpers import *
+from Tools.helpers import *
 
 # load samples
 import yaml
 from yaml import Loader, Dumper
 
-data_path = os.path.expandvars('$CMSSW_BASE/src/tW_scattering/data/')
+data_path = os.path.expandvars('$TWHOME/data/')
 with open(data_path+'samples.yaml') as f:
     samples = yaml.load(f, Loader=Loader)
 
@@ -114,7 +114,7 @@ for s in samples.keys():
         executable = "merge_executable.sh",
         arguments = "%s %s"%(tag, lumiWeightString),
         #tarfile = "merge_scripts.tar.gz",
-        files_per_output = 50,
+        files_per_output = 10,
         output_dir = maker_task.get_outputdir() + "/merged",
         output_name = sample.get_datasetname() + ".root",
         output_is_tree = True,

@@ -19,7 +19,7 @@ from coffea.processor.dataframe import LazyDataFrame
 
 from Tools.helpers import *
 
-data_path = os.path.expandvars('$TWBASE/data/')
+data_path = os.path.expandvars('$TWHOME/data/')
 
 #def loadConfig():
 #    with open(data_path+'config.yaml') as f:

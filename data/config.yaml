@@ -1,5 +1,5 @@
 caches:
-  base: $TWBASE/caches/
+  base: $TWHOME/caches/
   doublemuonProcessor: doublemuonProcessor
   simpleProcessor: simpleProcessor
   singleLep: singleLep
