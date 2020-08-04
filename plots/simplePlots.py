@@ -16,7 +16,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 
-from tW_scattering.Tools.helpers import *
+from Tools.helpers import *
 from klepto.archives import dir_archive
 
 def saveFig( ax, path, name, scale='linear' ):
