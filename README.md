@@ -31,10 +31,9 @@ deactivate
 scram b -j 8
 ```
 
-Every time you want to use coffea you need to activate the environment
+Every time you want to use coffea you need to activate the environment *this has changed in order to disentangle coffea from CMSSW*
 ```
-cmsenv
-source coffeaEnv/bin/activate
+source activate_environment.sh
 ```
 
 To deactivate the coffea environment, just type `deactivate`
