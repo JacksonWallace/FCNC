@@ -59,6 +59,8 @@ bins = {\
     'mlj_max':  {'axis': 'mass',            'bins': hist.Bin('mass', r'$M(b, light) \ (GeV)$', 25, 0, 1000)},
     'HT':       {'axis': 'ht',              'bins': hist.Bin('ht', r'$M(b, light) \ (GeV)$', 30, 0, 1500)},
     'ST':       {'axis': 'ht',              'bins': hist.Bin('ht', r'$M(b, light) \ (GeV)$', 30, 0, 1500)},
+    'FWMT1':    {'axis': 'norm',            'bins': hist.Bin('norm', r'FWMT1', 25, 0, 1)},
+    'FWMT2':    {'axis': 'norm',            'bins': hist.Bin('norm', r'FWMT2', 25, 0, 1)},
     }
 
 for name in histograms:
@@ -88,6 +90,8 @@ for name in histograms:
         histogram.fill(dataset='pseudodata', multiplicity=values)
     elif axis == 'ht':
         histogram.fill(dataset='pseudodata', ht=values)
+    elif axis == 'norm':
+        histogram.fill(dataset='pseudodata', norm=values)
 
     
     import re
@@ -130,6 +134,10 @@ for name in histograms:
     except ValueError:
         print ("Can't make shape plot for a weird reason")
 
+    fig.clear()
+    ax.clear()
+
+    plt.close()
 
 
 print ()

@@ -31,6 +31,35 @@ from matplotlib.colors import LogNorm
 
 from Tools.helpers import *
 
+## Event shape variables
+def cosTheta(obj):
+    return np.cos(obj.cross(obj).i0.phi - obj.cross(obj).i1.phi)
+
+def Wij(obj):
+    return obj.cross(obj).i0.pt * obj.cross(obj).i1.pt
+
+def FWMT1(obj):
+    '''
+    First Fox-Wolfram Moment reduced to transverse plane
+    '''
+    return (Wij(obj)*cosTheta(obj)).sum()/ (np.maximum(obj.pt.sum(), np.ones(len(obj.pt)))**2)
+
+def FWMT2(obj):
+    '''
+    Second Fox-Wolfram Moment reduced to transverse plane
+    '''
+    return (Wij(obj)*(3*cosTheta(obj)**2-np.ones(len(obj.pt)))/2.).sum() / (np.maximum(obj.pt.sum(), np.ones(len(obj.pt)))**2)
+    
+def sphericity(obj):
+    '''
+    Attempt to calculate sphericity. Need to figure out a way to do matrix caclulations with coffea
+    '''
+    row = np.array([[1, 3, 2]])
+    col = np.array([[1], [3], [2]])
+    M = col.dot(row)
+    np.linalg.eig(M)
+    # WIP!
+
 # This just tells matplotlib not to open any
 # interactive windows.
 matplotlib.use('Agg')
@@ -46,6 +75,7 @@ class exampleProcessor(processor.ProcessorABC):
         mass_axis           = hist.Bin("mass",      r"M (GeV)", 1000, 0, 2000)
         eta_axis            = hist.Bin("eta",       r"$\eta$", 60, -5.5, 5.5)
         multiplicity_axis   = hist.Bin("multiplicity",         r"N", 20, -0.5, 19.5)
+        norm_axis            = hist.Bin("norm",         r"N", 25, 0, 1)
 
         self._accumulator = processor.dict_accumulator({
             "MET_pt" :          hist.Hist("Counts", dataset_axis, pt_axis),
@@ -62,11 +92,16 @@ class exampleProcessor(processor.ProcessorABC):
             "N_b" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_jet" :           hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_spec" :           hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "FWMT1" :           hist.Hist("Counts", dataset_axis, norm_axis),
+            "FWMT2" :           hist.Hist("Counts", dataset_axis, norm_axis),
+            "FWMT3" :           hist.Hist("Counts", dataset_axis, norm_axis),
+            "FWMT4" :           hist.Hist("Counts", dataset_axis, norm_axis),
             'cutflow_wjets':      processor.defaultdict_accumulator(int),
             'cutflow_ttbar':      processor.defaultdict_accumulator(int),
             'cutflow_TTW':      processor.defaultdict_accumulator(int),
             'cutflow_TTX':      processor.defaultdict_accumulator(int),
             'cutflow_signal':   processor.defaultdict_accumulator(int),
+            'totalEvents':   processor.defaultdict_accumulator(int),
         })
 
     @property
@@ -83,6 +118,8 @@ class exampleProcessor(processor.ProcessorABC):
         # We can access the data frame as usual
         # The dataset is written into the data frame
         # outside of this function
+
+        output['totalEvents']['all'] += len(df['weight'])
 
         output['cutflow_wjets']['all events'] += sum(df['weight'][(df['dataset']=='wjets')].flatten())
         output['cutflow_ttbar']['all events'] += sum(df['weight'][(df['dataset']=='ttbar')].flatten())
@@ -145,6 +182,7 @@ class exampleProcessor(processor.ProcessorABC):
             pdgId = df['Lepton_pdgId'].content,
         )
         
+        alljet = Jet[(Jet['goodjet']==1)]
         b = Jet[Jet['bjet']==1]
         nonb = Jet[(Jet['goodjet']==1) & (Jet['bjet']==0)]
         spectator = Jet[(abs(Jet.eta)>2.0) & (abs(Jet.eta)<4.7) & (Jet.pt>25) & (Jet['puId']>=7) & (Jet['jetId']>=6)] # 40 GeV seemed good. let's try going lower
@@ -165,6 +203,9 @@ class exampleProcessor(processor.ProcessorABC):
         st = Jet[Jet['goodjet']==1].pt.sum() + lepton.pt.sum() + df['MET_pt']
         output['HT'].fill(dataset=dataset, ht=ht[event_selection].flatten(), weight=df['weight'][event_selection]*cfg['lumi'])
         output['ST'].fill(dataset=dataset, ht=st[event_selection].flatten(), weight=df['weight'][event_selection]*cfg['lumi'])
+
+        output['FWMT1'].fill(dataset=dataset, norm=FWMT1(alljet)[event_selection], weight=df['weight'][event_selection]*cfg['lumi'])
+        output['FWMT2'].fill(dataset=dataset, norm=FWMT2(alljet)[event_selection], weight=df['weight'][event_selection]*cfg['lumi'])
 
         # forward stuff
         output['N_spec'].fill(dataset=dataset, multiplicity=spectator[event_selection].counts, weight=df['weight'][event_selection]*cfg['lumi'])
@@ -190,6 +231,7 @@ def main():
     # histograms
     histograms = ["MET_pt", "N_b", "N_jet", "MT", "N_spec", "pt_spec_max", "HT", "ST"]
     histograms += ['mbj_max', 'mjj_max', 'mlb_min', 'mlb_max', 'mlj_min', 'mlj_max']
+    histograms += ['FWMT1', 'FWMT2']
 
 
     # initialize cache
@@ -202,7 +244,8 @@ def main():
 
     else:
         # Run the processor
-        output = processor.run_uproot_job(fileset_small,
+        fileset = fileset_small
+        output = processor.run_uproot_job(fileset,
                                       treename='Events',
                                       processor_instance=exampleProcessor(),
                                       executor=processor.futures_executor,
