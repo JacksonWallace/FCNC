@@ -52,13 +52,48 @@ def FWMT2(obj):
     
 def sphericity(obj):
     '''
-    Attempt to calculate sphericity. Need to figure out a way to do matrix caclulations with coffea
-    '''
+    Attempt to calculate sphericity.
+    S^{a,b} = sum_i(p_i^a p_i^b) / sum(|p_i|**2)
+    S = 3/2 * (l2 + l3)
+    with l2 and l3 the eigenvalues of S^{a,b}, l1>l2>l3, l1+l2+l3=1
+    S=1: isotropic event (l1=l2=l3=1/3)
+    S=0: linear event (l2=l3=0)
+    S is not infrared safe. There's a linearized version, too.
+    Circularity is C = 2*l2/(l1+l2)
+
+    Numpy lesson:
+    This is how you would easily get a 3x3 matrix from two vectors.
     row = np.array([[1, 3, 2]])
     col = np.array([[1], [3], [2]])
     M = col.dot(row)
-    np.linalg.eig(M)
-    # WIP!
+    '''
+    x, y, z = obj.p4.x, obj.p4.y, obj.p4.z
+    # calculate sphericity tensor by hand
+    S = np.array([[(x*x).sum(), (x*y).sum(), (x*z).sum()],[(x*y).sum(),(y*y).sum(),(z*y).sum()], [(x*z).sum(), (z*y).sum(),(z*z).sum()]] / np.maximum(np.ones(len(obj.p4)),(obj.p4.p**2).sum()) )
+    # S[:,:,0] shows you the first matrix
+    # np.linalg.eig(S[:,:,0])[0][1:].sum() * 3/2. gives the sphericity for the first event
+
+    # sorted eigenvalues, l0>l1>l2. S needs to be transposed for np.linalg.eig to work
+    l = -np.sort(-np.linalg.eig(S.transpose())[0])
+    return l[:,1:].sum(axis=1) * 3/2.
+    #return (l[:,1] + l[:,2]) * 3/2. # not sure why sum won't work
+
+def sphericityBasic(obj):
+    # same as above, but only using very basic AwkwardArray elements
+    x, y, z = obj.p4.fPt*np.cos(obj.p4.fPhi), obj.p4.fPt*np.sin(obj.p4.fPhi), obj.p4.fPt*np.sinh(obj.p4.fEta)
+    psq = x*x+y*y+z*z
+    S_ten = np.array([[(x*x).sum(), (x*y).sum(), (x*z).sum()],[(x*y).sum(),(y*y).sum(),(z*y).sum()], [(x*z).sum(), (z*y).sum(),(z*z).sum()]] / np.maximum(np.ones(len(obj.p4)),(psq).sum()) )
+    l = -np.sort(-np.linalg.eig(S_ten.transpose())[0])
+    return l[:,1:].sum(axis=1) * 3/2.
+
+def mergeArray(a1, a2):
+    a1_tags = awkward.JaggedArray(a1.starts, a1.stops, np.full(len(a1.content), 0, dtype=np.int64))
+    a1_index = awkward.JaggedArray(a1.starts, a1.stops, np.arange(len(a1.content), dtype=np.int64))
+    a2_tags = awkward.JaggedArray(a2.starts, a2.stops, np.full(len(a2.content), 1, dtype=np.int64))
+    a2_index = awkward.JaggedArray(a2.starts, a2.stops, np.arange(len(a2.content), dtype=np.int64))
+    tags = awkward.JaggedArray.concatenate([a1_tags, a2_tags], axis=1)
+    index = awkward.JaggedArray.concatenate([a1_index, a2_index], axis=1)
+    return awkward.JaggedArray(tags.starts, tags.stops, awkward.UnionArray(tags.content, index.content, [a1.content, a2.content]))
 
 # This just tells matplotlib not to open any
 # interactive windows.
@@ -96,6 +131,8 @@ class exampleProcessor(processor.ProcessorABC):
             "FWMT2" :           hist.Hist("Counts", dataset_axis, norm_axis),
             "FWMT3" :           hist.Hist("Counts", dataset_axis, norm_axis),
             "FWMT4" :           hist.Hist("Counts", dataset_axis, norm_axis),
+            "S" :               hist.Hist("Counts", dataset_axis, norm_axis),
+            "S_lep" :           hist.Hist("Counts", dataset_axis, norm_axis),
             'cutflow_wjets':      processor.defaultdict_accumulator(int),
             'cutflow_ttbar':      processor.defaultdict_accumulator(int),
             'cutflow_TTW':      processor.defaultdict_accumulator(int),
@@ -182,7 +219,7 @@ class exampleProcessor(processor.ProcessorABC):
             pdgId = df['Lepton_pdgId'].content,
         )
         
-        alljet = Jet[(Jet['goodjet']==1)]
+        alljet = Jet[(Jet['goodjet']==1)] # all jets with pt>25 and pt>60 in 2.7<|eta|<3.0 (noise suppression)
         b = Jet[Jet['bjet']==1]
         nonb = Jet[(Jet['goodjet']==1) & (Jet['bjet']==0)]
         spectator = Jet[(abs(Jet.eta)>2.0) & (abs(Jet.eta)<4.7) & (Jet.pt>25) & (Jet['puId']>=7) & (Jet['jetId']>=6)] # 40 GeV seemed good. let's try going lower
@@ -206,6 +243,10 @@ class exampleProcessor(processor.ProcessorABC):
 
         output['FWMT1'].fill(dataset=dataset, norm=FWMT1(alljet)[event_selection], weight=df['weight'][event_selection]*cfg['lumi'])
         output['FWMT2'].fill(dataset=dataset, norm=FWMT2(alljet)[event_selection], weight=df['weight'][event_selection]*cfg['lumi'])
+        output['S'].fill(dataset=dataset, norm=sphericityBasic(alljet)[event_selection], weight=df['weight'][event_selection]*cfg['lumi'])
+
+        all_obj = mergeArray(alljet, lepton)
+        output['S_lep'].fill(dataset=dataset, norm=sphericityBasic(all_obj)[event_selection], weight=df['weight'][event_selection]*cfg['lumi'])
 
         # forward stuff
         output['N_spec'].fill(dataset=dataset, multiplicity=spectator[event_selection].counts, weight=df['weight'][event_selection]*cfg['lumi'])
@@ -231,7 +272,7 @@ def main():
     # histograms
     histograms = ["MET_pt", "N_b", "N_jet", "MT", "N_spec", "pt_spec_max", "HT", "ST"]
     histograms += ['mbj_max', 'mjj_max', 'mlb_min', 'mlb_max', 'mlj_min', 'mlj_max']
-    histograms += ['FWMT1', 'FWMT2']
+    histograms += ['FWMT1', 'FWMT2', 'S', 'S_lep']
 
 
     # initialize cache

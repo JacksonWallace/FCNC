@@ -61,6 +61,8 @@ bins = {\
     'ST':       {'axis': 'ht',              'bins': hist.Bin('ht', r'$M(b, light) \ (GeV)$', 30, 0, 1500)},
     'FWMT1':    {'axis': 'norm',            'bins': hist.Bin('norm', r'FWMT1', 25, 0, 1)},
     'FWMT2':    {'axis': 'norm',            'bins': hist.Bin('norm', r'FWMT2', 25, 0, 1)},
+    'S':        {'axis': 'norm',            'bins': hist.Bin('norm', r'sphericity', 25, 0, 1)},
+    'S_lep':    {'axis': 'norm',            'bins': hist.Bin('norm', r'sphericity', 25, 0, 1)},
     }
 
 for name in histograms:
