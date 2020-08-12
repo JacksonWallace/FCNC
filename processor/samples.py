@@ -29,7 +29,7 @@ groups_1l = {
 }
 
 # Selection for dilep = no W+jets
-groups = {
+groups_2l = {
     'tW_scattering': ['/tW_scattering[-_]'],
     'TTX':           ['/TTZToLLNuNu[-_]', '/ST_tWll[-_]', '/ST_tWnunu[-_]', '/TH[W,Q][-_]', '/TT[T,W,Z][T,W,Z][-_]', '/tZq[-_]', '/ttHToNonbb[-_]'],
     'ttbar':         ['/TTJets_SingleLept', '/TTJets_DiLept', '/ST_[s,t]-channel', '/ST_tW'],
