@@ -24,6 +24,7 @@ import pandas as pd
 import uproot_methods
 import awkward
 
+from memory_profiler import profile
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -33,23 +34,56 @@ from Tools.helpers import *
 
 ## Event shape variables
 def cosTheta(obj):
+    '''
+    cos(Omega_{i,j}) -> projected on transverse plane
+    '''
     return np.cos(obj.cross(obj).i0.phi - obj.cross(obj).i1.phi)
+
+def cosOmega(obj):
+    '''
+    theta = 2*arctan(exp(-eta))
+    cos(Omega_{i,j}) = cos(theta_i)*cos(theta_j) + sin(theta_i)*sin(theta_j)*cos(phi_i - phi_j)
+    '''
+    return  np.cos(2*np.arctan(np.exp(-obj.cross(obj).i0.eta))) * np.cos(2*np.arctan(np.exp(-obj.cross(obj).i1.eta))) + \
+            np.sin(2*np.arctan(np.exp(-obj.cross(obj).i0.eta))) * np.sin(2*np.arctan(np.exp(-obj.cross(obj).i1.eta))) * \
+            np.cos(obj.cross(obj).i0.phi - obj.cross(obj).i1.phi)
 
 def Wij(obj):
     return obj.cross(obj).i0.pt * obj.cross(obj).i1.pt
 
 def FWMT1(obj):
     '''
-    First Fox-Wolfram Moment reduced to transverse plane
+    First Fox-Wolfram Moment reduced to transverse plane, uses simplified solid angle
     '''
     return (Wij(obj)*cosTheta(obj)).sum()/ (np.maximum(obj.pt.sum(), np.ones(len(obj.pt)))**2)
 
 def FWMT2(obj):
     '''
-    Second Fox-Wolfram Moment reduced to transverse plane
+    Second Fox-Wolfram Moment reduced to transverse plane, uses simplified solid angle
     '''
     return (Wij(obj)*(3*cosTheta(obj)**2-np.ones(len(obj.pt)))/2.).sum() / (np.maximum(obj.pt.sum(), np.ones(len(obj.pt)))**2)
     
+#@profile
+def FWMT(obj):
+    #res = {\
+    #    'FWMT1': (Wij(obj)*cosOmega(obj)).sum()/ (np.maximum(obj.pt.sum(), np.ones(len(obj.pt)))**2),\
+    #    'FWMT2': (Wij(obj)*(3*cosOmega(obj)**2-np.ones(len(obj.pt)))/2.).sum() / (np.maximum(obj.pt.sum(), np.ones(len(obj.pt)))**2)
+    #}
+    Wij_tmp = Wij(obj)
+    denom = (np.maximum(obj.pt.sum(), np.ones(len(obj.pt)))**2)
+    cosOmega_tmp = cosOmega(obj)
+    M0 = np.ones(len(obj.pt))
+    M1 = (Wij_tmp*cosOmega_tmp).sum() / denom
+    M2 = (Wij_tmp*(1/2.)*(3*cosOmega_tmp**2-1.)).sum() / denom
+    M3 = (Wij_tmp*(1/2.)*(5*cosOmega_tmp**3-3*cosOmega_tmp)).sum() / denom
+    M4 = (Wij_tmp*(1/8.)*(35*cosOmega_tmp**4-30*cosOmega_tmp**2+3)).sum() / denom
+    M5 = (Wij_tmp*(1/8.)*(63*cosOmega_tmp**5-70*cosOmega_tmp**3+15*cosOmega_tmp)).sum() / denom
+
+    del Wij_tmp, denom, cosOmega_tmp
+    #return (Wij_tmp*cosOmega_tmp).sum()/ (np.maximum(obj.pt.sum(), np.ones(len(obj.pt)))**2) , (Wij_tmp*(3*cosOmega_tmp**2-np.ones(len(obj.pt)))/2.).sum() / (np.maximum(obj.pt.sum(), np.ones(len(obj.pt)))**2)
+    return M0, M1, M2, M3, M4, M5
+
+
 def sphericity(obj):
     '''
     Attempt to calculate sphericity.
@@ -84,6 +118,7 @@ def sphericityBasic(obj):
     psq = x*x+y*y+z*z
     S_ten = np.array([[(x*x).sum(), (x*y).sum(), (x*z).sum()],[(x*y).sum(),(y*y).sum(),(z*y).sum()], [(x*z).sum(), (z*y).sum(),(z*z).sum()]] / np.maximum(np.ones(len(obj.p4)),(psq).sum()) )
     l = -np.sort(-np.linalg.eig(S_ten.transpose())[0])
+    del x, y, z, S_ten
     return l[:,1:].sum(axis=1) * 3/2.
 
 def mergeArray(a1, a2):
@@ -94,6 +129,13 @@ def mergeArray(a1, a2):
     tags = awkward.JaggedArray.concatenate([a1_tags, a2_tags], axis=1)
     index = awkward.JaggedArray.concatenate([a1_index, a2_index], axis=1)
     return awkward.JaggedArray(tags.starts, tags.stops, awkward.UnionArray(tags.content, index.content, [a1.content, a2.content]))
+
+def mt(pt1, phi1, pt2, phi2):
+    '''
+    Calculate MT
+    '''
+    return np.sqrt( 2*pt1*pt2 * (1 - np.cos(phi1-phi2)) )
+
 
 # This just tells matplotlib not to open any
 # interactive windows.
@@ -131,6 +173,7 @@ class exampleProcessor(processor.ProcessorABC):
             "FWMT2" :           hist.Hist("Counts", dataset_axis, norm_axis),
             "FWMT3" :           hist.Hist("Counts", dataset_axis, norm_axis),
             "FWMT4" :           hist.Hist("Counts", dataset_axis, norm_axis),
+            "FWMT5" :           hist.Hist("Counts", dataset_axis, norm_axis),
             "S" :               hist.Hist("Counts", dataset_axis, norm_axis),
             "S_lep" :           hist.Hist("Counts", dataset_axis, norm_axis),
             'cutflow_wjets':      processor.defaultdict_accumulator(int),
@@ -198,6 +241,9 @@ class exampleProcessor(processor.ProcessorABC):
         output['N_b'].fill(dataset=dataset, multiplicity=df["nGoodBTag"][loose_selection], weight=df['weight'][loose_selection]*cfg['lumi'] )
         output['N_jet'].fill(dataset=dataset, multiplicity=df["nGoodJet"][loose_selection], weight=df['weight'][loose_selection]*cfg['lumi'] )
 
+        met_pt = df["MET_pt"]
+        met_phi = df["MET_phi"]
+
         Jet = JaggedCandidateArray.candidatesfromcounts(
             df['nJet'],
             pt = df['Jet_pt'].content,
@@ -222,13 +268,26 @@ class exampleProcessor(processor.ProcessorABC):
         alljet = Jet[(Jet['goodjet']==1)] # all jets with pt>25 and pt>60 in 2.7<|eta|<3.0 (noise suppression)
         b = Jet[Jet['bjet']==1]
         nonb = Jet[(Jet['goodjet']==1) & (Jet['bjet']==0)]
+        leading_nonb = nonb[:,:6]
         spectator = Jet[(abs(Jet.eta)>2.0) & (abs(Jet.eta)<4.7) & (Jet.pt>25) & (Jet['puId']>=7) & (Jet['jetId']>=6)] # 40 GeV seemed good. let's try going lower
 
-        event_selection = (Jet.counts>5) & (b.counts>=2) & (nonb.counts>=4) & (df['nLepton']==1) & (df['nVetoLepton']==1)
         bj_pair = b.cross(nonb)
         jj_pair = nonb.cross(nonb)
         lb_pair = lepton.cross(b)
         lj_pair = lepton.cross(nonb)
+        ht = Jet[Jet['goodjet']==1].pt.sum()
+        st = Jet[Jet['goodjet']==1].pt.sum() + lepton.pt.sum() + df['MET_pt']
+        
+        # leading lepton
+        leading_lepton = lepton[lepton.pt.argmax()]
+
+        ## calculate mt
+        mt_lep_met = mt(leading_lepton.pt, leading_lepton.phi, met_pt, met_phi)
+
+        event_selection = (Jet.counts>5) & (b.counts>=2) & (nonb.counts>=4) & (df['nLepton']==1) & (df['nVetoLepton']==1)
+        tight_selection = (Jet.counts>5) & (b.counts>=2) & (nonb.counts>=4) & (df['nLepton']==1) & (df['nVetoLepton']==1) & (df['MET_pt']>50) & (ht>500) & (df['MT']>50) & (spectator.counts>=1) & (spectator.pt.max()>50) & (st>600) & (bj_pair.mass.max()>300) & (jj_pair.mass.max()>300)
+        #tight_selection = (Jet.counts>5) & (b.counts>=2) & (nonb.counts>=4) & (df['nLepton']==1) & (df['nVetoLepton']==1) & (df['MET_pt']>50) & (ht>500) & (df['MT']>50) & (spectator.counts>=1) & (st>600)
+
         output['mbj_max'].fill(dataset=dataset, mass=bj_pair[event_selection].mass.max().flatten(), weight=df['weight'][event_selection]*cfg['lumi'])
         output['mjj_max'].fill(dataset=dataset, mass=jj_pair[event_selection].mass.max().flatten(), weight=df['weight'][event_selection]*cfg['lumi'])
         output['mlb_min'].fill(dataset=dataset, mass=lb_pair[event_selection].mass.min().flatten(), weight=df['weight'][event_selection]*cfg['lumi'])
@@ -236,21 +295,30 @@ class exampleProcessor(processor.ProcessorABC):
         output['mlj_min'].fill(dataset=dataset, mass=lj_pair[event_selection].mass.min().flatten(), weight=df['weight'][event_selection]*cfg['lumi'])
         output['mlj_max'].fill(dataset=dataset, mass=lj_pair[event_selection].mass.max().flatten(), weight=df['weight'][event_selection]*cfg['lumi'])
 
-        ht = Jet[Jet['goodjet']==1].pt.sum()
-        st = Jet[Jet['goodjet']==1].pt.sum() + lepton.pt.sum() + df['MET_pt']
         output['HT'].fill(dataset=dataset, ht=ht[event_selection].flatten(), weight=df['weight'][event_selection]*cfg['lumi'])
         output['ST'].fill(dataset=dataset, ht=st[event_selection].flatten(), weight=df['weight'][event_selection]*cfg['lumi'])
 
-        output['FWMT1'].fill(dataset=dataset, norm=FWMT1(alljet)[event_selection], weight=df['weight'][event_selection]*cfg['lumi'])
-        output['FWMT2'].fill(dataset=dataset, norm=FWMT2(alljet)[event_selection], weight=df['weight'][event_selection]*cfg['lumi'])
-        output['S'].fill(dataset=dataset, norm=sphericityBasic(alljet)[event_selection], weight=df['weight'][event_selection]*cfg['lumi'])
+        ##output['FWMT1'].fill(dataset=dataset, norm=FWMT1(alljet)[event_selection], weight=df['weight'][event_selection]*cfg['lumi'])
+        ##output['FWMT2'].fill(dataset=dataset, norm=FWMT2(alljet)[event_selection], weight=df['weight'][event_selection]*cfg['lumi'])
+        #output['FWMT1'].fill(dataset=dataset, norm=FWMT(leading_nonb)[1][tight_selection], weight=df['weight'][tight_selection]*cfg['lumi'])
+        #output['FWMT2'].fill(dataset=dataset, norm=FWMT(leading_nonb)[2][tight_selection], weight=df['weight'][tight_selection]*cfg['lumi'])
+        #output['FWMT3'].fill(dataset=dataset, norm=FWMT(leading_nonb)[3][tight_selection], weight=df['weight'][tight_selection]*cfg['lumi'])
+        #output['FWMT4'].fill(dataset=dataset, norm=FWMT(leading_nonb)[4][tight_selection], weight=df['weight'][tight_selection]*cfg['lumi'])
+        #output['FWMT5'].fill(dataset=dataset, norm=FWMT(leading_nonb)[5][tight_selection], weight=df['weight'][tight_selection]*cfg['lumi'])
+        ##output['S'].fill(dataset=dataset, norm=sphericityBasic(alljet)[event_selection], weight=df['weight'][event_selection]*cfg['lumi'])
 
-        all_obj = mergeArray(alljet, lepton)
-        output['S_lep'].fill(dataset=dataset, norm=sphericityBasic(all_obj)[event_selection], weight=df['weight'][event_selection]*cfg['lumi'])
+        #all_obj = mergeArray(alljet, lepton)
+        #output['S_lep'].fill(dataset=dataset, norm=sphericityBasic(all_obj)[event_selection], weight=df['weight'][event_selection]*cfg['lumi'])
 
         # forward stuff
         output['N_spec'].fill(dataset=dataset, multiplicity=spectator[event_selection].counts, weight=df['weight'][event_selection]*cfg['lumi'])
         output['pt_spec_max'].fill(dataset=dataset, pt=spectator[event_selection & (spectator.counts>0)].pt.max().flatten(), weight=df['weight'][event_selection & (spectator.counts>0)]*cfg['lumi'])
+
+        output['cutflow_wjets']['tight']  += sum(df['weight'][(df['dataset']=='wjets')         & tight_selection].flatten())
+        output['cutflow_ttbar']['tight']  += sum(df['weight'][(df['dataset']=='ttbar')         & tight_selection].flatten())
+        output['cutflow_TTW']['tight']    += sum(df['weight'][(df['dataset']=='TTW')           & tight_selection].flatten())
+        output['cutflow_TTX']['tight']    += sum(df['weight'][(df['dataset']=='TTX')           & tight_selection].flatten())
+        output['cutflow_signal']['tight'] += sum(df['weight'][(df['dataset']=='tW_scattering') & tight_selection].flatten())
 
         return output
 
@@ -258,13 +326,17 @@ class exampleProcessor(processor.ProcessorABC):
         return accumulator
 
 
+#@profile
 def main():
 
     overwrite = True
+    small = True
 
     # load the config and the cache
     cfg = loadConfig()
 
+    cacheName = 'singleLep_small' if small else 'singleLep'
+    
     # Inputs are defined in a dictionary
     # dataset : list of files
     from samples import fileset, fileset_small, fileset_1l
@@ -272,11 +344,11 @@ def main():
     # histograms
     histograms = ["MET_pt", "N_b", "N_jet", "MT", "N_spec", "pt_spec_max", "HT", "ST"]
     histograms += ['mbj_max', 'mjj_max', 'mlb_min', 'mlb_max', 'mlj_min', 'mlj_max']
-    histograms += ['FWMT1', 'FWMT2', 'S', 'S_lep']
-
+    histograms += ['FWMT1', 'FWMT2', 'FWMT3', 'FWMT4', 'FWMT5']
+    #histograms += ['S', 'S_lep']
 
     # initialize cache
-    cache = dir_archive(os.path.join(os.path.expandvars(cfg['caches']['base']), cfg['caches']['singleLep']), serialized=True)
+    cache = dir_archive(os.path.join(os.path.expandvars(cfg['caches']['base']), cfg['caches'][cacheName]), serialized=True)
     if not overwrite:
         cache.load()
 
@@ -285,13 +357,18 @@ def main():
 
     else:
         # Run the processor
-        fileset = fileset_small
+        if small:
+            fileset = fileset_small
+            workers = 1
+        else:
+            fileset = fileset_1l
+            workers = 6
         output = processor.run_uproot_job(fileset,
                                       treename='Events',
                                       processor_instance=exampleProcessor(),
                                       executor=processor.futures_executor,
-                                      executor_args={'workers': 8, 'function_args': {'flatten': False}},
-                                      chunksize=100000,
+                                      executor_args={'workers': workers, 'function_args': {'flatten': False}},
+                                      chunksize=50000,
                                      )
         cache['fileset']        = fileset
         cache['cfg']            = cfg

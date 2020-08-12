@@ -3,6 +3,9 @@ caches:
   doublemuonProcessor: doublemuonProcessor
   simpleProcessor: simpleProcessor
   singleLep: singleLep
+  singleLep_small: singleLep_small
+  triLep: triLep
+  triLep_small: triLep_small
 meta:
   localNano: /hadoop/cms/store/user/dspitzba/nanoAOD/
   localSkim: /hadoop/cms/store/user/dspitzba/nanoAOD/ttw_samples/
