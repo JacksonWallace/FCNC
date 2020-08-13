@@ -41,6 +41,13 @@ To deactivate the coffea environment, just type `deactivate`
 
 Use available nanoAOD tools to quickly process samples.
 
+### Use jupyter notebooks
+
+Start the server:
+```
+jupyter notebook --no-browser --port=8893
+```
+
 
 ### Get combine (for later)
 Latest recommendations at https://cms-analysis.github.io/HiggsAnalysis-CombinedLimit/#setting-up-the-environment-and-installation
