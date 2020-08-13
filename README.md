@@ -43,11 +43,24 @@ Use available nanoAOD tools to quickly process samples.
 
 ### Use jupyter notebooks
 
-Start the server:
+To install jupyter inside the coffeaEnv do the following (now part of the setup script too):
+```
+python -m ipykernel install --user --name=coffeaEnv
+jupyter nbextension install --py widgetsnbextension --user
+jupyter nbextension enable widgetsnbextension --user --py
+```
+
+To start the server:
 ```
 jupyter notebook --no-browser --port=8893
 ```
 
+On your local machine do the following to connect to uaf
+```
+ssh -N -f -L localhost:8893:localhost:8893 uaf-10.t2.ucsd.edu
+```
+
+Then just paste the jupyter link into your browser and start working.
 
 ### Get combine (for later)
 Latest recommendations at https://cms-analysis.github.io/HiggsAnalysis-CombinedLimit/#setting-up-the-environment-and-installation
