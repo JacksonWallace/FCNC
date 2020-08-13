@@ -1,6 +1,9 @@
 '''
 Just a collection of useful functions
 '''
+import pandas as pd
+import numpy as np
+import awkward
 
 #import yaml
 from yaml import load, dump
@@ -52,15 +55,121 @@ def addRowToCutFlow( output, df, cfg, name, selection, processes=['TTW', 'TTX', 
         else:
             output[process][name] += ( sum(df['weight'][ (df['dataset']==process) ].flatten() )*cfg['lumi'] )
             
-def getCutFlowTable(cache, processes=['tW_scattering', 'TTW', 'ttbar'], lines=['skim', 'twoJet', 'oneBTag']):
+def getCutFlowTable(output, processes=['tW_scattering', 'TTW', 'ttbar'], lines=['skim', 'twoJet', 'oneBTag']):
     '''
     Takes a cache and returns a formated cut-flow table of processes.
     Lines and processes have to follow the naming of the coffea processor output.
     '''
     res = {}
     for proc in processes:
-        res[proc] = {line: cache.get('simple_output')[proc][line] for line in lines}
+        res[proc] = {line: output[proc][line] for line in lines}
     df = pd.DataFrame(res)
-    df = df.reindex(['skim', 'twoJet', 'oneBTag']) # restores the proper order
+    df = df.reindex(lines) # restores the proper order
     print (df[processes])
     return df
+
+## event shape variables. computing intensive
+def cosTheta(obj):
+    '''
+    cos(Omega_{i,j}) -> projected on transverse plane
+    '''
+    return np.cos(obj.cross(obj).i0.phi - obj.cross(obj).i1.phi)
+
+def cosOmega(obj):
+    '''
+    theta = 2*arctan(exp(-eta))
+    cos(Omega_{i,j}) = cos(theta_i)*cos(theta_j) + sin(theta_i)*sin(theta_j)*cos(phi_i - phi_j)
+    '''
+    return  np.cos(2*np.arctan(np.exp(-obj.cross(obj).i0.eta))) * np.cos(2*np.arctan(np.exp(-obj.cross(obj).i1.eta))) + \
+            np.sin(2*np.arctan(np.exp(-obj.cross(obj).i0.eta))) * np.sin(2*np.arctan(np.exp(-obj.cross(obj).i1.eta))) * \
+            np.cos(obj.cross(obj).i0.phi - obj.cross(obj).i1.phi)
+
+def Wij(obj):
+    return obj.cross(obj).i0.pt * obj.cross(obj).i1.pt
+
+def FWMT1(obj):
+    '''
+    First Fox-Wolfram Moment reduced to transverse plane, uses simplified solid angle
+    '''
+    return (Wij(obj)*cosTheta(obj)).sum()/ (np.maximum(obj.pt.sum(), np.ones(len(obj.pt)))**2)
+
+def FWMT2(obj):
+    '''
+    Second Fox-Wolfram Moment reduced to transverse plane, uses simplified solid angle
+    '''
+    return (Wij(obj)*(3*cosTheta(obj)**2-np.ones(len(obj.pt)))/2.).sum() / (np.maximum(obj.pt.sum(), np.ones(len(obj.pt)))**2)
+    
+def FWMT(obj):
+    '''
+    Calculate the first 5 fox wolfram moments for the given objects
+    '''
+    Wij_tmp = Wij(obj)
+    denom = (np.maximum(obj.pt.sum(), np.ones(len(obj.pt)))**2)
+    cosOmega_tmp = cosOmega(obj)
+    M0 = np.ones(len(obj.pt))
+    M1 = (Wij_tmp*cosOmega_tmp).sum() / denom
+    M2 = (Wij_tmp*(1/2.)*(3*cosOmega_tmp**2-1.)).sum() / denom
+    M3 = (Wij_tmp*(1/2.)*(5*cosOmega_tmp**3-3*cosOmega_tmp)).sum() / denom
+    M4 = (Wij_tmp*(1/8.)*(35*cosOmega_tmp**4-30*cosOmega_tmp**2+3)).sum() / denom
+    M5 = (Wij_tmp*(1/8.)*(63*cosOmega_tmp**5-70*cosOmega_tmp**3+15*cosOmega_tmp)).sum() / denom
+
+    del Wij_tmp, denom, cosOmega_tmp
+    return M0, M1, M2, M3, M4, M5
+
+
+def sphericity(obj):
+    '''
+    Attempt to calculate sphericity.
+    S^{a,b} = sum_i(p_i^a p_i^b) / sum(|p_i|**2)
+    S = 3/2 * (l2 + l3)
+    with l2 and l3 the eigenvalues of S^{a,b}, l1>l2>l3, l1+l2+l3=1
+    S=1: isotropic event (l1=l2=l3=1/3)
+    S=0: linear event (l2=l3=0)
+    S is not infrared safe. There's a linearized version, too.
+    Circularity is C = 2*l2/(l1+l2)
+
+    Numpy lesson:
+    This is how you would easily get a 3x3 matrix from two vectors.
+    row = np.array([[1, 3, 2]])
+    col = np.array([[1], [3], [2]])
+    M = col.dot(row)
+    '''
+    x, y, z = obj.p4.x, obj.p4.y, obj.p4.z
+    # calculate sphericity tensor by hand
+    S = np.array([[(x*x).sum(), (x*y).sum(), (x*z).sum()],[(x*y).sum(),(y*y).sum(),(z*y).sum()], [(x*z).sum(), (z*y).sum(),(z*z).sum()]] / np.maximum(np.ones(len(obj.p4)),(obj.p4.p**2).sum()) )
+    # S[:,:,0] shows you the first matrix
+    # np.linalg.eig(S[:,:,0])[0][1:].sum() * 3/2. gives the sphericity for the first event
+
+    # sorted eigenvalues, l0>l1>l2. S needs to be transposed for np.linalg.eig to work
+    l = -np.sort(-np.linalg.eig(S.transpose())[0])
+    return l[:,1:].sum(axis=1) * 3/2.
+    #return (l[:,1] + l[:,2]) * 3/2. # not sure why sum won't work
+
+def sphericityBasic(obj):
+    # same as above, but only using very basic AwkwardArray elements
+    x, y, z = obj.p4.fPt*np.cos(obj.p4.fPhi), obj.p4.fPt*np.sin(obj.p4.fPhi), obj.p4.fPt*np.sinh(obj.p4.fEta)
+    psq = x*x+y*y+z*z
+    S_ten = np.array([[(x*x).sum(), (x*y).sum(), (x*z).sum()],[(x*y).sum(),(y*y).sum(),(z*y).sum()], [(x*z).sum(), (z*y).sum(),(z*z).sum()]] / np.maximum(np.ones(len(obj.p4)),(psq).sum()) )
+    l = -np.sort(-np.linalg.eig(S_ten.transpose())[0])
+    del x, y, z, S_ten
+    return l[:,1:].sum(axis=1) * 3/2.
+
+def mergeArray(a1, a2):
+    '''
+    Merge two arrays into one, e.g. electrons and muons
+    '''
+    a1_tags = awkward.JaggedArray(a1.starts, a1.stops, np.full(len(a1.content), 0, dtype=np.int64))
+    a1_index = awkward.JaggedArray(a1.starts, a1.stops, np.arange(len(a1.content), dtype=np.int64))
+    a2_tags = awkward.JaggedArray(a2.starts, a2.stops, np.full(len(a2.content), 1, dtype=np.int64))
+    a2_index = awkward.JaggedArray(a2.starts, a2.stops, np.arange(len(a2.content), dtype=np.int64))
+    tags = awkward.JaggedArray.concatenate([a1_tags, a2_tags], axis=1)
+    index = awkward.JaggedArray.concatenate([a1_index, a2_index], axis=1)
+    return awkward.JaggedArray(tags.starts, tags.stops, awkward.UnionArray(tags.content, index.content, [a1.content, a2.content]))
+
+def mt(pt1, phi1, pt2, phi2):
+    '''
+    Calculate MT
+    '''
+    return np.sqrt( 2*pt1*pt2 * (1 - np.cos(phi1-phi2)) )
+
+
