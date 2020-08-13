@@ -51,3 +51,16 @@ def addRowToCutFlow( output, df, cfg, name, selection, processes=['TTW', 'TTX', 
             output[process][name] += ( sum(df['weight'][ (df['dataset']==process) & selection ].flatten() )*cfg['lumi'] )
         else:
             output[process][name] += ( sum(df['weight'][ (df['dataset']==process) ].flatten() )*cfg['lumi'] )
+            
+def getCutFlowTable(cache, processes=['tW_scattering', 'TTW', 'ttbar'], lines=['skim', 'twoJet', 'oneBTag']):
+    '''
+    Takes a cache and returns a formated cut-flow table of processes.
+    Lines and processes have to follow the naming of the coffea processor output.
+    '''
+    res = {}
+    for proc in processes:
+        res[proc] = {line: cache.get('simple_output')[proc][line] for line in lines}
+    df = pd.DataFrame(res)
+    df = df.reindex(['skim', 'twoJet', 'oneBTag']) # restores the proper order
+    print (df[processes])
+    return df
