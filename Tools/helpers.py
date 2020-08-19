@@ -3,7 +3,6 @@ Just a collection of useful functions
 '''
 import pandas as pd
 import numpy as np
-import awkward
 
 #import yaml
 from yaml import load, dump
@@ -158,6 +157,7 @@ def mergeArray(a1, a2):
     '''
     Merge two arrays into one, e.g. electrons and muons
     '''
+    import awkward
     a1_tags = awkward.JaggedArray(a1.starts, a1.stops, np.full(len(a1.content), 0, dtype=np.int64))
     a1_index = awkward.JaggedArray(a1.starts, a1.stops, np.arange(len(a1.content), dtype=np.int64))
     a2_tags = awkward.JaggedArray(a2.starts, a2.stops, np.full(len(a2.content), 1, dtype=np.int64))

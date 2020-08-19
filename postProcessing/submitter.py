@@ -12,6 +12,35 @@ from Tools.helpers import *
 import yaml
 from yaml import Loader, Dumper
 
+import os
+
+def getMeta(file):
+    import ROOT
+    c = ROOT.TChain("Runs")
+    c.Add(file)
+    c.GetEntry(0)
+    res = c.genEventCount_, c.genEventSumw_, c.genEventSumw2_
+    del c
+    return res
+
+def dasWrapper(DASname, query='file'):
+    sampleName = DASname.rstrip('/')
+
+    dbs='dasgoclient -query="%s dataset=%s"'%(query, sampleName)
+    dbsOut = os.popen(dbs).readlines()
+    dbsOut = [ l.replace('\n','') for l in dbsOut ]
+    return dbsOut
+
+def getSampleNorm(name):
+    files = [ 'root://cmsxrootd.fnal.gov/'+f for f in dasWrapper(name) ]
+    nEvents, sumw, sumw2 = 0,0,0
+    for f in files:
+        res = getMeta(f)
+        nEvents += res[0]
+        sumw += res[1]
+        sumw2 += res[2]
+    return nEvents, sumw, sumw2
+
 data_path = os.path.expandvars('$TWHOME/data/')
 with open(data_path+'samples.yaml') as f:
     samples = yaml.load(f, Loader=Loader)

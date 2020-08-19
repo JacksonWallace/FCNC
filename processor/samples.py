@@ -13,17 +13,18 @@ data_path = os.path.join(cfg['meta']['localSkim'], tag)
 groups = {
     'tW_scattering': ['/tW_scattering[-_]'],
     'TTX':           ['/TTZToLLNuNu[-_]', '/ST_tWll[-_]', '/ST_tWnunu[-_]', '/TH[W,Q][-_]', '/TT[T,W,Z][T,W,Z][-_]', '/tZq[-_]', '/ttHToNonbb[-_]'],
-    'ttbar':         ['/TTJets_SingleLept', '/TTJets_DiLept', '/ST_[s,t]-channel', '/ST_tW'],
+    'ttbar':         ['/TTJets_SingleLept', '/TTJets_DiLept', '/ST_[s,t]-channel', '/ST_tW[-_]'],
     'TTW':           ['/TTWJets'],
     'wjets':         ['/W[1-4]JetsToLNu[-_]'],
-    'diboson':       ['/[W,Z][W,Z]To', '/[W,Z][W,Z][W,Z][-_]']
+    'diboson':       ['/[W,Z][W,Z]To', '/[W,Z][W,Z][W,Z][-_]'],
+    'DY':            ['/DYJetsToLL']
 }
 
 # Selection for single lep
 groups_1l = {
     'tW_scattering': ['/tW_scattering[-_]'],
     'TTX':           ['/TTZToLLNuNu[-_]', '/ST_tWnunu[-_]', '/TH[W,Q][-_]', '/TT[T,W,Z][T,W,Z][-_]', '/tZq[-_]', '/ttHToNonbb[-_]'],
-    'ttbar':         ['/TTJets_SingleLept', '/ST_[s,t]-channel', '/ST_tW'],
+    'ttbar':         ['/TTJets_SingleLept', '/ST_[s,t]-channel', '/ST_tW[-_]'],
     'TTW':           ['/TTWJets'],
     'wjets':         ['/W[1-4]JetsToLNu[-_]'],
 }
@@ -32,18 +33,20 @@ groups_1l = {
 groups_2l = {
     'tW_scattering': ['/tW_scattering[-_]'],
     'TTX':           ['/TTZToLLNuNu[-_]', '/ST_tWll[-_]', '/ST_tWnunu[-_]', '/TH[W,Q][-_]', '/TT[T,W,Z][T,W,Z][-_]', '/tZq[-_]', '/ttHToNonbb[-_]'],
-    'ttbar':         ['/TTJets_SingleLept', '/TTJets_DiLept', '/ST_[s,t]-channel', '/ST_tW'],
+    'ttbar':         ['/TTJets_SingleLept', '/TTJets_DiLept', '/ST_[s,t]-channel', '/ST_tW[-_]'],
     'TTW':           ['/TTWJets'],
-    'diboson':       ['/[W,Z][W,Z]To', '/[W,Z][W,Z][W,Z][-_]']
+    'diboson':       ['/[W,Z][W,Z]To', '/[W,Z][W,Z][W,Z][-_]'],
+    'DY':            ['/DYJetsToLL']
 }
 
 # Selection for trilep - no W+jets and single lepton tt/t
 groups_3l = {
     'tW_scattering': ['/tW_scattering[-_]'],
     'TTX':           ['/TTZToLLNuNu[-_]', '/ST_tWll[-_]', '/ST_tWnunu[-_]', '/TH[W,Q][-_]', '/TT[T,W,Z][T,W,Z][-_]', '/tZq[-_]', '/ttHToNonbb[-_]'],
-    'ttbar':         ['/TTJets_DiLept', '/ST_tW'],
+    'ttbar':         ['/TTJets_DiLept', '/ST_tW[-_]'],
     'TTW':           ['/TTWJets'],
-    'diboson':       ['/[W,Z][W,Z]To', '/[W,Z][W,Z][W,Z][-_]']
+    'diboson':       ['/[W,Z][W,Z]To', '/[W,Z][W,Z][W,Z][-_]'],
+    'DY':            ['/DYJetsToLL']
 }
 
 

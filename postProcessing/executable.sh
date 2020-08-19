@@ -72,10 +72,15 @@ from PhysicsTools.NanoAODTools.postprocessing.modules.tW_scattering.ObjectSelect
 from PhysicsTools.NanoAODTools.postprocessing.modules.tW_scattering.GenAnalyzer import *
 from PhysicsTools.NanoAODTools.postprocessing.modules.tW_scattering.lumiWeightProducer import *
 
+from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetHelperRun2       import *
+
+jetmet = createJMECorrector(isMC=True, dataYear=2018, jesUncert="Total", jetType = "AK4PFchs", applySmearing = True, isFastSim = False )
+
 #json support to be added
 
 modules = [\
     lumiWeightProd("$SUMWEIGHT"),
+    jetmet(),
     genAnalyzer(),
     selector2018(),
     ]
