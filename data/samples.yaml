@@ -11,6 +11,23 @@
   path: null
   sumWeight: 1690091.782056603
   xsec: 0.2043
+? /ZZTo2L2Nu_TuneCP5_13TeV_powheg_pythia8/RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/NANOAODSIM
+: files: [/store/mc/RunIIAutumn18NanoAODv6/ZZTo2L2Nu_TuneCP5_13TeV_powheg_pythia8/NANOAODSIM/Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/240000/C16B8C76-1896-F145-BA9D-2838AD4457DB.root,
+    /store/mc/RunIIAutumn18NanoAODv6/ZZTo2L2Nu_TuneCP5_13TeV_powheg_pythia8/NANOAODSIM/Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/40000/3BB1580F-C109-C342-833F-969C47625D1B.root,
+    /store/mc/RunIIAutumn18NanoAODv6/ZZTo2L2Nu_TuneCP5_13TeV_powheg_pythia8/NANOAODSIM/Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/40000/BE5FF3DD-2EF2-C64F-92EF-00EAE4E55A88.root,
+    /store/mc/RunIIAutumn18NanoAODv6/ZZTo2L2Nu_TuneCP5_13TeV_powheg_pythia8/NANOAODSIM/Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/40000/F399B071-40F8-D749-9A34-6A59A6AD119F.root,
+    /store/mc/RunIIAutumn18NanoAODv6/ZZTo2L2Nu_TuneCP5_13TeV_powheg_pythia8/NANOAODSIM/Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/40000/CF6093FF-CFE4-C346-B487-7A24BE31BBAE.root,
+    /store/mc/RunIIAutumn18NanoAODv6/ZZTo2L2Nu_TuneCP5_13TeV_powheg_pythia8/NANOAODSIM/Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/40000/6F9AF53F-3DCD-FF41-ACCE-A34ABD1AF4E3.root,
+    /store/mc/RunIIAutumn18NanoAODv6/ZZTo2L2Nu_TuneCP5_13TeV_powheg_pythia8/NANOAODSIM/Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/40000/78C24D4C-3D2A-A84F-9533-34D359873785.root,
+    /store/mc/RunIIAutumn18NanoAODv6/ZZTo2L2Nu_TuneCP5_13TeV_powheg_pythia8/NANOAODSIM/Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/40000/CB94002F-C6C2-EB44-9C1E-919CB99D5D35.root,
+    /store/mc/RunIIAutumn18NanoAODv6/ZZTo2L2Nu_TuneCP5_13TeV_powheg_pythia8/NANOAODSIM/Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/40000/49878780-7039-354F-9EFF-62E86D1CAE7F.root,
+    /store/mc/RunIIAutumn18NanoAODv6/ZZTo2L2Nu_TuneCP5_13TeV_powheg_pythia8/NANOAODSIM/Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/40000/BF1D48D2-20FA-184E-A694-B35552F7E206.root,
+    /store/mc/RunIIAutumn18NanoAODv6/ZZTo2L2Nu_TuneCP5_13TeV_powheg_pythia8/NANOAODSIM/Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/40000/42B5B24A-9F9E-8E44-B5DB-236CDC31473B.root]
+  nEvents: !!python/long '8382600'
+  name: ZZTo2L2Nu_TuneCP5_13TeV_powheg_pythia8_RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1
+  path: null
+  sumWeight: 5036332.623579639
+  xsec: 0.564
 /hadoop/cms/store/user/dspitzba/tW_scattering/tW_scattering/nanoAOD/:
   files: [/hadoop/cms/store/user/dspitzba/tW_scattering/tW_scattering/nanoAOD/tW_scattering_nanoAOD_100.root,
     /hadoop/cms/store/user/dspitzba/tW_scattering/tW_scattering/nanoAOD/tW_scattering_nanoAOD_123.root,
