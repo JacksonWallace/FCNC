@@ -1,7 +1,7 @@
 
 import time
 
-from metis.Sample import DirectorySample
+from metis.Sample import DirectorySample, DBSSample
 from metis.CondorTask import CondorTask
 from metis.StatsParser import StatsParser
 from metis.Utils import do_cmd
@@ -14,32 +14,6 @@ from yaml import Loader, Dumper
 
 import os
 
-def getMeta(file):
-    import ROOT
-    c = ROOT.TChain("Runs")
-    c.Add(file)
-    c.GetEntry(0)
-    res = c.genEventCount_, c.genEventSumw_, c.genEventSumw2_
-    del c
-    return res
-
-def dasWrapper(DASname, query='file'):
-    sampleName = DASname.rstrip('/')
-
-    dbs='dasgoclient -query="%s dataset=%s"'%(query, sampleName)
-    dbsOut = os.popen(dbs).readlines()
-    dbsOut = [ l.replace('\n','') for l in dbsOut ]
-    return dbsOut
-
-def getSampleNorm(name):
-    files = [ 'root://cmsxrootd.fnal.gov/'+f for f in dasWrapper(name) ]
-    nEvents, sumw, sumw2 = 0,0,0
-    for f in files:
-        res = getMeta(f)
-        nEvents += res[0]
-        sumw += res[1]
-        sumw2 += res[2]
-    return nEvents, sumw, sumw2
 
 data_path = os.path.expandvars('$TWHOME/data/')
 with open(data_path+'samples.yaml') as f:
@@ -102,7 +76,10 @@ merge_tasks = []
 
 #if True:
 for s in samples.keys():
-    sample = DirectorySample(dataset = samples[s]['name'], location = samples[s]['path'])
+    if samples[s]['path'] is not None:
+        sample = DirectorySample(dataset = samples[s]['name'], location = samples[s]['path'])
+    else:
+        sample = DBSSample(dataset = s) # should we make use of the files??
 
     lumiWeightString = 1000*samples[s]['xsec']/samples[s]['sumWeight']
 
@@ -117,7 +94,7 @@ for s in samples.keys():
         #tarfile = "merge_scripts.tar.gz",
         files_per_output = 1,
         output_dir = os.path.join(outDir, sample.get_datasetname()),
-        output_name = sample.get_datasetname() + ".root",
+        output_name = samples[s]['name'] + ".root",
         output_is_tree = True,
         # check_expectedevents = True,
         tag = tag,
@@ -145,7 +122,7 @@ for s in samples.keys():
         #tarfile = "merge_scripts.tar.gz",
         files_per_output = 10,
         output_dir = maker_task.get_outputdir() + "/merged",
-        output_name = sample.get_datasetname() + ".root",
+        output_name = samples[s]['name'] + ".root",
         output_is_tree = True,
         # check_expectedevents = True,
         tag = tag,

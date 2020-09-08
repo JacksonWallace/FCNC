@@ -33,9 +33,9 @@ def dumpConfig(cfg):
 def getName( DAS ):
     split = DAS.split('/')
     if split[-1].count('AOD'):
-        return '__'.join(DAS.split('/')[1:3])
+        return '_'.join(DAS.split('/')[1:3])
     else:
-        return '__'.join(DAS.split('/')[-3:-1])
+        return '_'.join(DAS.split('/')[-3:-1])
         #return'dummy'
 
 def finalizePlotDir( path ):

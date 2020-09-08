@@ -62,51 +62,9 @@ OUTFILE=$(python -c "print('$INPUTFILENAMES'.split('/')[-1].split('.root')[0]+'_
 
 echo $OUTFILE
 
-python << EOL
-from importlib import import_module
-from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor   import PostProcessor
-from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel       import Collection
-from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop       import Module
+python PhysicsTools/NanoAODTools/scripts/run_processor.py $INPUTFILENAMES $SUMWEIGHT 
 
-from PhysicsTools.NanoAODTools.postprocessing.modules.tW_scattering.ObjectSelection import *
-from PhysicsTools.NanoAODTools.postprocessing.modules.tW_scattering.GenAnalyzer import *
-from PhysicsTools.NanoAODTools.postprocessing.modules.tW_scattering.lumiWeightProducer import *
-
-from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetHelperRun2       import *
-
-jetmet = createJMECorrector(isMC=True, dataYear=2018, jesUncert="Total", jetType = "AK4PFchs", applySmearing = True, isFastSim = False )
-
-#json support to be added
-
-modules = [\
-    lumiWeightProd("$SUMWEIGHT"),
-    jetmet(),
-    genAnalyzer(),
-    selector2018(),
-    ]
-
-# apply PV requirement
-cut  = 'PV_ndof>4 && sqrt(PV_x*PV_x+PV_y*PV_y)<=2 && abs(PV_z)<=24'
-# loose skim
-cut += '&& (Sum\$(Electron_pt>30&&abs(Electron_eta)<2.4&&Electron_miniPFRelIso_all<0.1&&Electron_cutBased>=3)+Sum\$(Muon_pt>25&&abs(Muon_eta)<2.4&&Muon_mediumId>0&&Muon_miniPFRelIso_all<0.1))>0'
-cut += '&& ( (Sum\$(Jet_pt>25&&abs(Jet_eta)<2.4)>=4) || (Sum\$(Jet_pt>25&&abs(Jet_eta)<2.4)>=2 && (Sum\$(Electron_pt>10&&abs(Electron_eta)<2.4)+Sum\$(Muon_pt>10&&abs(Muon_eta)<2.4&&Muon_mediumId>0))>=3) )'
-
-
-p = PostProcessor('./', ["$INPUTFILENAMES"], cut=cut, modules=modules,\
-    branchsel='PhysicsTools/NanoAODTools/python/postprocessing/modules/tW_scattering/keep_and_drop_in.txt',\
-    outputbranchsel='PhysicsTools/NanoAODTools/python/postprocessing/modules/tW_scattering/keep_and_drop.txt' )
-
-p.run()
-EOL
-
-#python PhysicsTools/NanoAODTools/scripts/nano_postproc.py ./ $INPUTFILENAMES \
-#    --branch-selection PhysicsTools/NanoAODTools/python/postprocessing/modules/tW_scattering/keep_and_drop.txt \
-#    --cut='nJet>0&&(nElectron+nMuon)>0' \
-#    -I PhysicsTools.NanoAODTools.postprocessing.modules.tW_scattering.ObjectSelection selector2018,\
-#       PhysicsTools.NanoAODTools.postprocessing.modules.tW_scattering.lumiWeightProducer lumiWeightProd(0.5)
-
-
-mv $OUTFILE ${OUTPUTNAME}_${IFILE}.root
+mv tree.root ${OUTPUTNAME}_${IFILE}.root
 
 # Rigorous sweeproot which checks ALL branches for ALL events.
 # If GetEntry() returns -1, then there was an I/O problem, so we will delete it
