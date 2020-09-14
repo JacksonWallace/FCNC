@@ -127,6 +127,7 @@ class exampleProcessor(processor.ProcessorABC):
         b            = Jet[Jet['bjet']==1]
         nonb         = Jet[(Jet['goodjet']==1) & (Jet['bjet']==0)]
         leading_nonb = nonb[:,:6] # first six non-b-tagged jets
+        lead_light   = nonb[nonb.pt.argmax()]
         spectator    = Jet[(abs(Jet.eta)>2.0) & (abs(Jet.eta)<4.7) & (Jet.pt>25) & (Jet['puId']>=7) & (Jet['jetId']>=6)] # 40 GeV seemed good. let's try going lower
         
         bj_pair = b.cross(nonb)
@@ -144,7 +145,9 @@ class exampleProcessor(processor.ProcessorABC):
         ### define selections here, using the objects defined above
         singlelep = ((df['nLepton']==1) & (df['nVetoLepton']==1))
         sixjet    = (alljet.counts >= 6 )
-        sevenjet    = (alljet.counts >= 7)
+        sevenjet  = (alljet.counts >= 7)
+        two_b     = ( b.counts >= 2)
+        eta_lead  = ((lead_light.eta>-.5).counts>0) & ((lead_light.eta<0.5).counts>0)
         
         # selections used for the histograms below
         event_selection = (Jet.counts>5) & (b.counts>=2) & (nonb.counts>=4) & (df['nLepton']==1) & (df['nVetoLepton']==1)
@@ -155,6 +158,9 @@ class exampleProcessor(processor.ProcessorABC):
         addRowToCutFlow( output, df, cfg, 'singlelep',   singlelep )
         addRowToCutFlow( output, df, cfg, 'sixjet',      singlelep & sixjet )
         addRowToCutFlow( output, df, cfg, 'sevenjet',    singlelep & sevenjet )
+        addRowToCutFlow( output, df, cfg, 'twob',        singlelep & sevenjet & two_b )
+        addRowToCutFlow( output, df, cfg, 'etalead',     singlelep & sevenjet & eta_lead ) # this is a weird cut
+        addRowToCutFlow( output, df, cfg, 'everything',  singlelep & sevenjet & two_b & eta_lead ) # this is a weird cut
         
         ### fill all the histograms
         

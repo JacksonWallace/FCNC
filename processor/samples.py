@@ -6,6 +6,7 @@ cfg = loadConfig()
 
 version = cfg['meta']['version']
 tag = version.replace('.','p')
+tag = '0p1p5'
 
 data_path = os.path.join(cfg['meta']['localSkim'], tag)
 
@@ -39,6 +40,16 @@ groups_2l = {
     'DY':            ['/DYJetsToLL']
 }
 
+# 2l OS (ttZ to 2l study)
+groups_2lOS = {
+    'TTZ':           ['/TTZToLLNuNu[-_]'],
+    'TTX':           [ '/ST_tWll[-_]', '/ST_tWnunu[-_]', '/TH[W,Q][-_]', '/TT[T,W,Z][T,W,Z][-_]', '/tZq[-_]', '/ttHToNonbb[-_]'],
+    'ttbar':         ['/TTJets_SingleLept', '/TTJets_DiLept', '/ST_[s,t]-channel', '/ST_tW[-_]'],
+    'TTW':           ['/TTWJets'],
+    'diboson':       ['/[W,Z][W,Z]To', '/[W,Z][W,Z][W,Z][-_]'],
+    'DY':            ['/DYJetsToLL']
+}
+
 # Selection for trilep - no W+jets and single lepton tt/t
 groups_3l = {
     'tW_scattering': ['/tW_scattering[-_]'],
@@ -54,6 +65,7 @@ samples = glob.glob(data_path + '/*')
 fileset = { group: [] for group in groups.keys() }
 fileset_1l = { group: [] for group in groups_1l.keys() }
 fileset_2l = { group: [] for group in groups_2l.keys() }
+fileset_2lOS = { group: [] for group in groups_2lOS.keys() }
 fileset_3l = { group: [] for group in groups_3l.keys() }
 
 for sample in samples:
@@ -72,6 +84,11 @@ for sample in samples:
         for process in groups_2l[group]:
             if re.search(process, sample):
                 fileset_2l[group] += glob.glob(sample+'/*.root')
+                
+    for group in groups_2lOS.keys():
+        for process in groups_2lOS[group]:
+            if re.search(process, sample):
+                fileset_2lOS[group] += glob.glob(sample+'/*.root')
 
     for group in groups_3l.keys():
         for process in groups_3l[group]:

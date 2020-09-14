@@ -6,6 +6,9 @@ caches:
   singleLep_small: singleLep_small
   triLep: triLep
   triLep_small: triLep_small
+  diLepOS: diLepOS
+  diLepOS_small: diLepOS_small
+  example: example
 lumi: 137
 meta:
   localNano: /hadoop/cms/store/user/dspitzba/nanoAOD/
