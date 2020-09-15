@@ -51,8 +51,10 @@ def addRowToCutFlow( output, df, cfg, name, selection, processes=['TTW', 'TTX', 
     for process in processes:
         if selection is not None:
             output[process][name] += ( sum(df['weight'][ (df['dataset']==process) & selection ].flatten() )*cfg['lumi'] )
+            output[process][name+'_w2'] += ( sum((df['weight'][ (df['dataset']==process) & selection ]**2).flatten() )*cfg['lumi']**2 )
         else:
             output[process][name] += ( sum(df['weight'][ (df['dataset']==process) ].flatten() )*cfg['lumi'] )
+            output[process][name+'_w2'] += ( sum((df['weight'][ (df['dataset']==process) ]**2).flatten() )*cfg['lumi']**2 )
             
 def getCutFlowTable(output, processes=['tW_scattering', 'TTW', 'ttbar'], lines=['skim', 'twoJet', 'oneBTag']):
     '''
