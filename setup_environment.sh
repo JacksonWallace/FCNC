@@ -9,6 +9,7 @@ pip3 install --upgrade numpy
 pip3 install --upgrade matplotlib
 pip3 install uproot coffea jupyter tqdm pandas backports.lzma pyyaml klepto
 pip3 install --upgrade tqdm
+pip3 install lbn
 pip install -U memory_profiler
 python -m ipykernel install --user --name=coffeaEnv
 jupyter nbextension install --py widgetsnbextension --user

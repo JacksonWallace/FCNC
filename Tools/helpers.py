@@ -15,6 +15,7 @@ except ImportError:
 
 import os
 import shutil
+import math
 
 import glob
 
@@ -56,14 +57,14 @@ def addRowToCutFlow( output, df, cfg, name, selection, processes=['TTW', 'TTX', 
             output[process][name] += ( sum(df['weight'][ (df['dataset']==process) ].flatten() )*cfg['lumi'] )
             output[process][name+'_w2'] += ( sum((df['weight'][ (df['dataset']==process) ]**2).flatten() )*cfg['lumi']**2 )
             
-def getCutFlowTable(output, processes=['tW_scattering', 'TTW', 'ttbar'], lines=['skim', 'twoJet', 'oneBTag']):
+def getCutFlowTable(output, processes=['tW_scattering', 'TTW', 'ttbar'], lines=['skim', 'twoJet', 'oneBTag'], significantFigures=3):
     '''
     Takes a cache and returns a formated cut-flow table of processes.
     Lines and processes have to follow the naming of the coffea processor output.
     '''
     res = {}
     for proc in processes:
-        res[proc] = {line: output[proc][line] for line in lines}
+        res[proc] = {line: "%s +/- %s"%(round(output[proc][line], significantFigures-len(str(int(output[proc][line])))), round(math.sqrt(output[proc][line+'_w2']), significantFigures-len(str(int(output[proc][line]))))) for line in lines}
     df = pd.DataFrame(res)
     df = df.reindex(lines) # restores the proper order
     print (df[processes])
