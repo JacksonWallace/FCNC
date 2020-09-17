@@ -1,6 +1,8 @@
 
 # NanoAOD tools
 
+If you ran the recipe correctly you should have a copy of NanoAOD-tools checked out in `$CMSSW_BASE/src/PhysicsTools/NanoAOD/`.
+
 We use the following fork for producing babies: [danbarto/nanoAOD-tools/tree/tW_scattering](https://github.com/danbarto/nanoAOD-tools/tree/tW_scattering).
 Each submission is done with a unique tag for reproducibility.
 
