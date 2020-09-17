@@ -1,21 +1,3 @@
-```
-export PYTHONPATH=ProjectMetis
-```
-
-
-Start submission in screen session:
-```
-screen -S sbm
-```
-Then do
-```
-source setup.sh
-```
-
-
-Disconnect screen:
-ctrl+A, ctrl+D
-
 
 # NanoAOD tools
 
@@ -44,3 +26,22 @@ For tests you can use e.g.:
 
 ## ToDo
 - [ ] Implement years
+
+
+## Condor submission
+
+```
+export PYTHONPATH=ProjectMetis
+```
+
+Start submission in screen session:
+```
+screen -S sbm
+```
+Then do
+```
+source setup.sh
+```
+
+Disconnect screen:
+ctrl+A, ctrl+D
