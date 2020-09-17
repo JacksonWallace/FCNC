@@ -33,6 +33,9 @@ For tests you can use e.g.:
 
 ## Condor submission
 
+All latest developments in NanoAOD-tools will be pushed to your `ownFork` fork and a new version tag created when running the submitter with the --newVersion option.
+Therefore, make sure you have a corresponding fork and git remote set up.
+
 ```
 export PYTHONPATH=ProjectMetis
 ```
