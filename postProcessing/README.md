@@ -36,6 +36,10 @@ For local tests just run
 python scripts/run_processor.py INPUTFILENAMES LUMIWEIGHT
 ```
 where INPUTFILENAMES is any NanoAOD file (list), and LUMIWEIGHT can be any float number and doesn't really matter for tests (it will only mess up your *weight* branch.
+For tests you can use e.g.:
+```
+/hadoop/cms/store/user/dspitzba/tW_scattering/tW_scattering/nanoAOD/tW_scattering_nanoAOD_177.root
+```
 
 ## ToDo
 - [ ] Implement years
