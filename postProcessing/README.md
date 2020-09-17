@@ -33,9 +33,9 @@ Run the code locally:
 
 For local tests just run
 ```==
-python scripts/run_processor.py LUMIWEIGHT
+python scripts/run_processor.py INPUTFILENAMES LUMIWEIGHT
 ```
-where LUMIWEIGHT can be any float number and doesn't really matter for tests (it will only mess up your *weight* branch.
+where INPUTFILENAMES is any NanoAOD file (list), and LUMIWEIGHT can be any float number and doesn't really matter for tests (it will only mess up your *weight* branch.
 
 ## ToDo
 - [ ] Implement years
