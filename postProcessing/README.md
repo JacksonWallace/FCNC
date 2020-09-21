@@ -28,7 +28,8 @@ For tests you can use e.g.:
 :exclamation: NanoAOD-tools is python2, while the coffea environment is python3. Make sure to deactivate the environment with `deactivate` and do `cmsenv` again to ensure NanoAOD-tools to run properly.
 
 ## ToDo
-- [ ] Implement years
+- [ ] Implement year branch into babies
+- [ ] Keep deepJet branch
 
 
 ## Condor submission
