@@ -1,0 +1,81 @@
+Electron:
+  tight:
+    pt:
+      min: 25
+    etaSC:
+      max: 2.5
+      extra: abs
+    convVeto: 1
+    lostHits: 0
+    tightCharge: 2
+    dxy:
+      max: 0.05
+      extra: abs
+    dz:
+      max: 0.1
+      extra: abs
+    sip3d:
+      max: 4.0
+      extra: abs
+    
+  veto:
+    pt:
+      min: 10
+    etaSC:
+      max: 2.5
+      extra: abs
+    convVeto: 1
+    lostHits: 0
+    tightCharge: 2
+    dxy:
+      max: 0.05
+      extra: abs
+    dz:
+      max: 0.1
+      extra: abs
+    sip3d:
+      max: 4.0
+      extra: abs
+    
+        
+
+Muon:
+  tight:
+    pt:
+      min: 25
+    eta:
+      max: 2.4
+      extra: abs
+    mediumId: 1
+    looseId: 1
+    dxy:
+      max: 0.05
+      extra: abs
+    dz:
+      max: 0.05
+      extra: abs
+    sip3d:
+      max: 4
+      extra: abs
+    ptErrRel:
+      max: 0.2
+      
+  veto:
+    pt:
+      min: 10
+    eta:
+      max: 2.4
+      extra: abs
+    mediumId: 1
+    looseId: 1
+    dxy:
+      max: 0.05
+      extra: abs
+    dz:
+      max: 0.05
+      extra: abs
+    sip3d:
+      max: 4
+      extra: abs
+    ptErrRel:
+      max: 0.2

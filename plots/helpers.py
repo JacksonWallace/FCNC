@@ -63,6 +63,7 @@ colors = {
     'ttbar': '#1982C4',
     'wjets': '#6A4C93',
     'diboson': '#525B76',
+    'DY': '#6A4C93',
 }
 '''
 other colors (sets from coolers.com):
@@ -78,6 +79,7 @@ my_labels = {
     'TTZ': r'$t\bar{t}$Z',
     'ttbar': r'$t\bar{t}$+jets',
     'wjets': 'W+jets',
+    'DY': 'Drell-Yan',
     'diboson': 'VV/VVV',
     'pseudodata': 'Pseudo-data',
     'uncertainty': 'Uncertainty',
