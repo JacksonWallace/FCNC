@@ -15,6 +15,39 @@ SUMWEIGHT=$8
 
 OUTPUTNAME=$(echo $OUTPUTNAME | sed 's/\.root//')
 
+## from https://github.com/aminnj/ProjectMetis/blob/master/metis/executables/condor_cmssw_exe.sh#L76
+function stageout {
+    COPY_SRC=$1
+    COPY_DEST=$2
+    retries=0
+    COPY_STATUS=1
+    until [ $retries -ge 5 ]
+    do
+        echo "Stageout attempt $((retries+1)): env -i X509_USER_PROXY=${X509_USER_PROXY} gfal-copy -p -f -t 7200 --verbose --checksum ADLER32 ${COPY_SRC} ${COPY_DEST}"
+        env -i X509_USER_PROXY=${X509_USER_PROXY} gfal-copy -p -f -t 7200 --verbose --checksum ADLER32 ${COPY_SRC} ${COPY_DEST}
+        COPY_STATUS=$?
+        if [ $COPY_STATUS -ne 0 ]; then
+            echo "Failed stageout attempt $((retries+1))"
+        else
+            echo "Successful stageout with $retries retries"
+            break
+        fi
+        retries=$[$retries+1]
+        echo "Sleeping for 15m"
+        sleep 15m
+    done
+    if [ $COPY_STATUS -ne 0 ]; then
+        echo "Removing output file because gfal-copy crashed with code $COPY_STATUS"
+        env -i X509_USER_PROXY=${X509_USER_PROXY} gfal-rm --verbose ${COPY_DEST}
+        REMOVE_STATUS=$?
+        if [ $REMOVE_STATUS -ne 0 ]; then
+            echo "Uhh, gfal-copy crashed and then the gfal-rm also crashed with code $REMOVE_STATUS"
+            echo "You probably have a corrupt file sitting on hadoop now."
+            exit 1
+        fi
+    fi
+}
+
 echo -e "\n--- begin header output ---\n" #                     <----- section division
 echo "OUTPUTDIR: $OUTPUTDIR"
 echo "OUTPUTNAME: $OUTPUTNAME"
@@ -101,22 +134,9 @@ echo -e "\n--- end running ---\n" #                             <----- section d
 
 # Copy back the output file
 
-if [[ $(hostname) == "uaf"* ]]; then
-    mkdir -p ${OUTPUTDIR}
-    echo cp ${OUTPUTNAME}_${IFILE}.root ${OUTPUTDIR}/${OUTPUTNAME}_${IFILE}.root
-    cp ${OUTPUTNAME}_${IFILE}.root ${OUTPUTDIR}/${OUTPUTNAME}_${IFILE}.root
-    if [ ! -z $EXTRAOUT ]; then
-        echo cp ${EXTRAOUT}_${IFILE}.root ${OUTPUTDIR}/${EXTRAOUT}/${EXTRAOUT}_${IFILE}.root
-        cp ${EXTRAOUT}_${IFILE}.root ${OUTPUTDIR}/${EXTRAOUT}/${EXTRAOUT}_${IFILE}.root
-    fi
-else
-    echo ${OUTPUTDIR}/${OUTPUTNAME}_${IFILE}.root
-    export LD_PRELOAD=/usr/lib64/gfal2-plugins//libgfal_plugin_xrootd.so # needed in cmssw versions later than 9_3_X
-    env -i X509_USER_PROXY=${X509_USER_PROXY} gfal-copy -p -f -t 4200 --verbose file://`pwd`/${OUTPUTNAME}_${IFILE}.root gsiftp://gftp.t2.ucsd.edu${OUTPUTDIR}/${OUTPUTNAME}_${IFILE}.root --checksum ADLER32
-    if [ ! -z $EXTRAOUT ]; then
-        env -i X509_USER_PROXY=${X509_USER_PROXY} gfal-copy -p -f -t 4200 --verbose file://`pwd`/${EXTRAOUT}_${IFILE}.root gsiftp://gftp.t2.ucsd.edu${OUTPUTDIR}/${EXTRAOUT}/${EXTRAOUT}_${IFILE}.root --checksum ADLER32
-    fi
-fi
+COPY_SRC="file://`pwd`/${OUTPUTNAME}_${IFILE}.root"
+COPY_DEST="gsiftp://gftp.t2.ucsd.edu${OUTPUTDIR}/${OUTPUTNAME}_${IFILE}.root"
+stageout $COPY_SRC $COPY_DEST
 
 
 echo -e "\n--- cleaning up ---\n" #                             <----- section division

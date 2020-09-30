@@ -7,15 +7,15 @@ caches:
   simpleProcessor: simpleProcessor
   singleLep: singleLep
   singleLep_small: singleLep_small
-  triLep: triLep
-  triLep_small: triLep_small
   strong_tW: strong_tW
   strong_tW_small: strong_tW_small
+  triLep: triLep
+  triLep_small: triLep_small
 lumi: 137
 meta:
   localNano: /hadoop/cms/store/user/dspitzba/nanoAOD/
   localSkim: /hadoop/cms/store/user/dspitzba/nanoAOD/ttw_samples/
   plots: /home/users/$USER/public_html/tW_scattering/
-  version: 0.1.9
+  version: 0.1.10
 signalSelection:
   met: 50
