@@ -1,5 +1,7 @@
 # Measuring tW scattering
 
+## Setting up the code
+
 Prerequisite: if you haven't, add this line to your `~/.profile`:
 ```
 source /cvmfs/cms.cern.ch/cmsset_default.sh
@@ -41,7 +43,7 @@ To deactivate the coffea environment, just type `deactivate`
 
 Use available nanoAOD tools to quickly process samples.
 
-### Use jupyter notebooks
+## Usage of jupyter notebooks
 
 To install jupyter inside the coffeaEnv do the following (now part of the setup script too):
 ```
@@ -79,7 +81,7 @@ ssh -N -f -L localhost:8893:localhost:8893 uaf-10.t2.ucsd.edu
 
 Then just paste the jupyter link into your browser and start working.
 
-#### Troubleshooting
+### Troubleshooting
 - If the ssh command does not work, you might need to add a username like `ssh -N -f -L localhost:8893:localhost:8893 YOUR_UAF_USER@uaf-10.t2.ucsd.edu`, where YOUR_UAF_USER is your username on the uaf.
 - If you already have a jupyter server running **on the uaf**, another port will be used instead of 8893. In this case, alter the `ssh -N -f ...` command so that it matches the ports. To stop a running jupyter server that is running but you can't find anymore, run `ps aux | grep $USER`. This will return you the list of processes attributed to your user. You should also find sth like
 ```
@@ -93,7 +95,7 @@ daniel           27709   0.0  0.0  4318008    604   ??  Ss    8:11AM   0:00.00 s
 Similarly, you can stop the process by running `kill 27709`.
 
 
-### Get combine (for later)
+## Get combine (for later)
 Latest recommendations at https://cms-analysis.github.io/HiggsAnalysis-CombinedLimit/#setting-up-the-environment-and-installation
 ```
 cd $CMSSW_BASE/src
@@ -104,7 +106,7 @@ git checkout v8.0.1
 scramv1 b clean; scramv1 b # always make a clean build
 ```
 
-### for combineTools (for later)
+## for combineTools (for later)
 ```
 cd $CMSSW_BASE/src
 wget https://raw.githubusercontent.com/cms-analysis/CombineHarvester/master/CombineTools/scripts/sparse-checkout-https.sh; source sparse-checkout-https.sh
