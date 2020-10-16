@@ -68,6 +68,11 @@ bins = {\
     #'S_lep':    {'axis': 'norm',            'bins': hist.Bin('norm', r'sphericity', 25, 0, 1)},
     }
 
+separateSignal = False
+scaleSignal = 0
+usePseudoData = True
+
+
 for name in histograms:
     print (name)
     skip = False
@@ -83,48 +88,74 @@ for name in histograms:
     y_max = histogram.sum("dataset").values(overflow='over')[()].max()
     y_over = histogram.sum("dataset").values(overflow='over')[()][-1]
 
-    # get pseudo data
-    bin_values = histogram.axis(axis).centers(overflow=bins[name]['overflow'])
-    poisson_means = histogram.sum('dataset').values(overflow=bins[name]['overflow'])[()]
-    values = np.repeat(bin_values, np.random.poisson(np.maximum(np.zeros(len(poisson_means)), poisson_means)))
-    if axis == 'pt':
-        histogram.fill(dataset='pseudodata', pt=values)
-    elif axis == 'mass':
-        histogram.fill(dataset='pseudodata', mass=values)
-    elif axis == 'multiplicity':
-        histogram.fill(dataset='pseudodata', multiplicity=values)
-    elif axis == 'ht':
-        histogram.fill(dataset='pseudodata', ht=values)
-    elif axis == 'norm':
-        histogram.fill(dataset='pseudodata', norm=values)
 
-    
+    if usePseudoData:
+        # get pseudo data
+        bin_values = histogram.axis(axis).centers(overflow=bins[name]['overflow'])
+        poisson_means = histogram.sum('dataset').values(overflow=bins[name]['overflow'])[()]
+        values = np.repeat(bin_values, np.random.poisson(np.maximum(np.zeros(len(poisson_means)), poisson_means)))
+
+        if axis == 'pt':
+            histogram.fill(dataset='pseudodata', pt=values)
+        elif axis == 'mass':
+            histogram.fill(dataset='pseudodata', mass=values)
+        elif axis == 'multiplicity':
+            histogram.fill(dataset='pseudodata', multiplicity=values)
+        elif axis == 'ht':
+            histogram.fill(dataset='pseudodata', ht=values)
+        elif axis == 'norm':
+            histogram.fill(dataset='pseudodata', norm=values)
+
     import re
     notdata = re.compile('(?!pseudodata)')
+    notsignal = re.compile('(?!tW_scattering)')
 
-    fig, (ax, rax) = plt.subplots(2, 1, figsize=(7,7), gridspec_kw={"height_ratios": (3, 1)}, sharex=True)
+    if usePseudoData:
+        fig, (ax, rax) = plt.subplots(2, 1, figsize=(7,7), gridspec_kw={"height_ratios": (3, 1)}, sharex=True)
+    else:
+        fig, ax = plt.subplots(1,1,figsize=(7,7))
+
+    if scaleSignal:
+        scales = { 'tW_scattering': scaleSignal, }
+        my_labels['tW_scattering'] =  r'$%s \times $ tW scattering'%scaleSignal
+        histogram.scale(scales, axis='dataset')
+
+    processes = ['TTX', 'TTW', 'ttbar', 'wjets']
+    if not separateSignal:
+        processes = ['tW_scattering'] + processes
 
     # get axes
-    hist.plot1d(histogram[notdata],overlay="dataset", ax=ax, stack=True, overflow=bins[name]['overflow'], clear=False, line_opts=None, fill_opts=fill_opts, error_opts=error_opts, order=['tW_scattering', 'TTX', 'TTW','ttbar','wjets']) #error_opts??
-    hist.plot1d(histogram['pseudodata'], overlay="dataset", ax=ax, overflow=bins[name]['overflow'], error_opts=data_err_opts, clear=False)
+    if usePseudoData:
+        hist.plot1d(histogram[notdata],overlay="dataset", ax=ax, stack=True, overflow=bins[name]['overflow'], clear=False, line_opts=None, fill_opts=fill_opts, error_opts=error_opts, order=processes)
+        hist.plot1d(histogram['pseudodata'], overlay="dataset", ax=ax, overflow=bins[name]['overflow'], error_opts=data_err_opts, clear=False)
 
-    # build ratio
-    hist.plotratio(
-        num=histogram['pseudodata'].sum("dataset"),
-        denom=histogram[notdata].sum("dataset"),
-        ax=rax,
-        error_opts=data_err_opts,
-        denom_fill_opts={},
-        guide_opts={},
-        unc='num',
-        overflow=bins[name]['overflow']
-    )
+    if separateSignal:
+        hist.plot1d(histogram[notsignal],overlay="dataset", ax=ax, stack=True, overflow=bins[name]['overflow'], clear=False, line_opts=None, fill_opts=fill_opts, error_opts=error_opts, order=processes)
+        hist.plot1d(histogram['tW_scattering'], overlay="dataset", ax=ax, overflow=bins[name]['overflow'], line_opts={'linewidth':3}, clear=False)
+
+    if usePseudoData:
+        # build ratio
+        hist.plotratio(
+            num=histogram['pseudodata'].sum("dataset"),
+            #num=histogram['tW_scattering'].sum("dataset"),
+            denom=histogram[notdata].sum("dataset"),
+            ax=rax,
+            error_opts=data_err_opts,
+            denom_fill_opts={},
+            guide_opts={},
+            unc='num',
+            overflow=bins[name]['overflow']
+        )
 
 
     for l in ['linear', 'log']:
-        saveFig(fig, ax, rax, plotDir, name, scale=l, shape=False, y_max=y_max)
+        if usePseudoData:
+            saveFig(fig, ax, rax, plotDir, name, scale=l, shape=False, y_max=y_max)
+        else:
+            saveFig(fig, ax, None, plotDir, name, scale=l, shape=False, y_max=y_max)
     fig.clear()
-    rax.clear()
+    if usePseudoData:
+        rax.clear()
     ax.clear()
 
     

@@ -91,6 +91,20 @@ def getSampleNorm(files, local=True):
         sumw2 += res[2]
     return nEvents, sumw, sumw2
 
+def getSignalModels(files):
+    import ROOT
+    norms = {}
+    for f in files:
+        print ("Adding file")
+        c = ROOT.TChain("Runs")
+        c.Add(f)
+        c.GetEntry(0)
+        print ("Reading norms")
+        norms[f] = { x.GetName().replace('genEventCount_',''):  for x in c.GetListOfBranches() if x.GetName().count('genEventCount') }
+
+    return norms
+
+
 def main():
 
     config = loadConfig()
