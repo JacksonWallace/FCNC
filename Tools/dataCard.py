@@ -424,3 +424,9 @@ class dataCard:
         shutil.rmtree(uniqueDirname)
 
         return res
+
+    def cleanUp(self):
+        for d in os.listdir(self.releaseLocation):
+            if len(d) == len('43a8a7c4-0086-4ae8-94df-b1162165ddf4'):
+                print ("Deleting: ", d)
+                shutil.rmtree(d)
