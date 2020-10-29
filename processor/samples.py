@@ -14,7 +14,9 @@ data_path = os.path.join(cfg['meta']['localSkim'], tag)
 groups = {
     'tW_scattering': ['/tW_scattering[-_]'],
     'TTX':           ['/TTZToLLNuNu[-_]', '/ST_tWll[-_]', '/ST_tWnunu[-_]', '/TH[W,Q][-_]', '/TT[T,W,Z][T,W,Z][-_]', '/tZq[-_]', '/ttHToNonbb[-_]'],
+    'TTW':           ['/TTWJets'],
     'ttbar':         ['/TTJets_SingleLept', '/TTJets_DiLept', '/ST_[s,t]-channel', '/ST_tW[-_]'],
+    'ttbar1l':       ['/TTJets_SingleLept', '/ST_[s,t]-channel'],
     'TTW':           ['/TTWJets'],
     'wjets':         ['/W[1-4]JetsToLNu[-_]'],
     'diboson':       ['/[W,Z][W,Z]To', '/[W,Z][W,Z][W,Z][-_]'],
