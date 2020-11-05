@@ -188,7 +188,7 @@ def mt(pt1, phi1, pt2, phi2):
     return np.sqrt( 2*pt1*pt2 * (1 - np.cos(phi1-phi2)) )
 
 
-from coffea.hist.hist_tools import SparseAxis, DenseAxis
+#from coffea.hist.hist_tools import SparseAxis, DenseAxis
 from uproot_methods.classes.TH1 import Methods as TH1Methods
 from uproot_methods.classes import TH1
 

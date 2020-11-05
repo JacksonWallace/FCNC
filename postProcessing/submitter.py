@@ -6,7 +6,7 @@ from metis.CondorTask import CondorTask
 from metis.StatsParser import StatsParser
 from metis.Utils import do_cmd
 
-from Tools.helpers import *
+from Tools.config_helpers import *
 
 # load samples
 import yaml
