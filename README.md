@@ -1,5 +1,11 @@
 # Measuring tW scattering
 
+## Sample version history
+
+- v0p1p11: **dilep/trilep skim only!** added variables for ttH lepton ID
+- v0p1p10: intermediate version
+- v0p1p9: used for initial tW scattering studies presented in SnT
+
 ## Setting up the code
 
 Prerequisite: if you haven't, add this line to your `~/.profile`:
