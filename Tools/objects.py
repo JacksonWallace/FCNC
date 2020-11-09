@@ -175,7 +175,7 @@ class Collections:
         return self.cand[self.selection]
         #return selection
         
-   def getSigmaIEtaIEta(self):
+    def getSigmaIEtaIEta(self):
         return ((abs(self.cand.etaSC)<=1.479) & (self.cand.sieie<0.011)) | ((abs(self.cand.etaSC)>1.479) & (self.cand.sieie<0.030))
         
     def getMVAscore(self):

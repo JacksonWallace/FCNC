@@ -6,7 +6,7 @@ cfg = loadConfig()
 
 version = cfg['meta']['version']
 tag = version.replace('.','p')
-tag = '0p1p9'
+#tag = '0p1p11' #!FIXME update this!
 
 data_path = os.path.join(cfg['meta']['localSkim'], tag)
 
