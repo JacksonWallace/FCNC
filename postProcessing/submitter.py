@@ -17,7 +17,7 @@ import os
 def getYearFromDAS(DASname):
     isData = True if DASname.count('Run20') else False
     isFastSim = False if not DASname.count('Fast') else True
-    era = DASname[sampleName.find("Run"):sampleName.find("Run")+len('Run2000A')]
+    era = DASname[DASname.find("Run"):DASname.find("Run")+len('Run2000A')]
     if DASname.count('Autumn18') or DASname.count('Run2018'):
         return 2018, era, isData, isFastSim
     elif DASname.count('Fall17') or DASname.count('Run2017'):
