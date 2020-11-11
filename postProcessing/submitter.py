@@ -17,7 +17,7 @@ import os
 def getYearFromDAS(DASname):
     isData = True if DASname.count('Run20') else False
     isFastSim = False if not DASname.count('Fast') else True
-    era = DASname[DASname.find("Run"):DASname.find("Run")+len('Run2000A')]
+    era = DASname[DASname.find("Run")+len('Run2000'):DASname.find("Run")+len('Run2000A')]
     if DASname.count('Autumn18') or DASname.count('Run2018'):
         return 2018, era, isData, isFastSim
     elif DASname.count('Fall17') or DASname.count('Run2017'):
@@ -111,6 +111,8 @@ for s in sample_list:
 
     print ("Sample: %s"%s)
     print ("The sample is %s, corresponding to year %s. %s simulation is used."%('Data' if isData else 'MC', year, 'Fast' if isFastSim else 'Full'  ) )
+    if isData:
+        print ("The era is: %s"%era)
 
     lumiWeightString = 1000*samples[s]['xsec']/samples[s]['sumWeight'] if not isData else 1
 
@@ -121,7 +123,7 @@ for s in sample_list:
             #'/hadoop/cms/store/user/dspitzba/nanoAOD/TTWJetsToLNu_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/',
         # open_dataset = True, flush = True,
         executable = "executable.sh",
-        arguments = "%s %s"%(tag, lumiWeightString, isData, year, era, isFastSim),
+        arguments = " ".join([ str(x) for x in [tag, lumiWeightString, isData, year, era, isFastSim]] ),
         #tarfile = "merge_scripts.tar.gz",
         files_per_output = 3,
         output_dir = os.path.join(outDir, samples[s]['name']),
