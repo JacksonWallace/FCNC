@@ -31,12 +31,12 @@ cmsenv
 
 ```
 
-Then you can set up the tools to run coffea, deactivate the environment again and recompile.
+Then you can set up the tools to run coffea. You might get some error messages about packages that couldn't get uninstalled that you can ignore.
 ```
 cd tW_scattering
 source setup_environment.sh
 deactivate
-scram b -j 8
+source activate_environment.sh
 ```
 
 Every time you want to use coffea you need to activate the environment *this has changed in order to disentangle coffea from CMSSW*
