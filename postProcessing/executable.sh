@@ -12,6 +12,10 @@ SCRAM_ARCH=$6
 
 VERSION=$7
 SUMWEIGHT=$8
+ISDATA=$9
+YEAR=$10
+ERA=$11
+ISFASTSIM=$12
 
 OUTPUTNAME=$(echo $OUTPUTNAME | sed 's/\.root//')
 
@@ -95,7 +99,7 @@ OUTFILE=$(python -c "print('$INPUTFILENAMES'.split('/')[-1].split('.root')[0]+'_
 
 echo $OUTFILE
 
-python PhysicsTools/NanoAODTools/scripts/run_processor.py $INPUTFILENAMES $SUMWEIGHT 
+python PhysicsTools/NanoAODTools/scripts/run_processor.py $INPUTFILENAMES $SUMWEIGHT $ISDATA $YEAR $ERA $ISFASTSIM
 
 mv tree.root ${OUTPUTNAME}_${IFILE}.root
 

@@ -17,7 +17,7 @@ import uproot
 import glob
 #from coffea.processor.dataframe import LazyDataFrame
 
-from Tools.helpers import *
+from Tools.config_helpers import *
 
 data_path = os.path.expandvars('$TWHOME/data/')
 
@@ -38,6 +38,19 @@ def readSampleNames( sampleFile ):
         samples = [ tuple(line.split()) for line in f.readlines() ]
     return samples
     
+def getYearFromDAS(DASname):
+    isData = True if DASname.count('Run20') else False
+    isFastSim = False if not DASname.count('Fast') else True
+    era = DASname[DASname.find("Run"):DASname.find("Run")+len('Run2000A')]
+    if DASname.count('Autumn18') or DASname.count('Run2018'):
+        return 2018, era, isData, isFastSim
+    elif DASname.count('Fall17') or DASname.count('Run2017'):
+        return 2017, era, isData, isFastSim
+    elif DASname.count('Summer16') or DASname.count('Run2016'):
+        return 2016, era, isData, isFastSim
+    else:
+        return -1, era, isData, isFastSim
+
 #def readSumWeight( samplePath ):
 #    # for central nanoAOD
 #    sumWeight = 0.
@@ -66,12 +79,15 @@ def getMeta(file, local=True):
     c = ROOT.TChain("Runs")
     c.Add(file)
     c.GetEntry(0)
-    if local:
-        res = c.genEventCount, c.genEventSumw, c.genEventSumw2
-    else:
-        res = c.genEventCount_, c.genEventSumw_, c.genEventSumw2_
-    del c
-    return res
+    try:
+        if local:
+            res = c.genEventCount, c.genEventSumw, c.genEventSumw2
+        else:
+            res = c.genEventCount_, c.genEventSumw_, c.genEventSumw2_
+        del c
+        return res
+    except:
+        return 0,0,0
 
 def dasWrapper(DASname, query='file'):
     sampleName = DASname.rstrip('/')
@@ -91,18 +107,18 @@ def getSampleNorm(files, local=True):
         sumw2 += res[2]
     return nEvents, sumw, sumw2
 
-def getSignalModels(files):
-    import ROOT
-    norms = {}
-    for f in files:
-        print ("Adding file")
-        c = ROOT.TChain("Runs")
-        c.Add(f)
-        c.GetEntry(0)
-        print ("Reading norms")
-        norms[f] = { x.GetName().replace('genEventCount_',''):  for x in c.GetListOfBranches() if x.GetName().count('genEventCount') }
-
-    return norms
+#def getSignalModels(files):
+#    import ROOT
+#    norms = {}
+#    for f in files:
+#        print ("Adding file")
+#        c = ROOT.TChain("Runs")
+#        c.Add(f)
+#        c.GetEntry(0)
+#        print ("Reading norms")
+#        norms[f] = { x.GetName().replace('genEventCount_',''):  for x in c.GetListOfBranches() if x.GetName().count('genEventCount') }
+#
+#    return norms
 
 
 def main():
@@ -120,11 +136,17 @@ def main():
         samples = {}
 
     for sample in sampleList:
+        print ("Checking if sample info for sample: %s is here already"%sample[0])
+        if sample[0] in samples.keys(): continue
         sample_dict = {}
+
+        print ("Will get info now.")
 
         # First, get the name
         name = getName(sample[0])
         print (name)
+
+        isData, year, era, isFastSim = getYearFromDAS(sample[0])
 
         # local/private sample?
         local = (sample[0].count('hadoop') + sample[0].count('home'))
@@ -141,7 +163,10 @@ def main():
         print (allFiles)
         sample_dict['files'] = allFiles
 
-        nEvents, sumw, sumw2 = getSampleNorm(allFiles, local=local)
+        if not isData:
+            nEvents, sumw, sumw2 = getSampleNorm(allFiles, local=local)
+        else:
+            nEvents, sumw, sumw2 = 0,0,0
 
         sample_dict.update({'sumWeight': sumw, 'nEvents': nEvents, 'xsec': float(sample[1]), 'name':name})
         

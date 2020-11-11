@@ -195,7 +195,7 @@ class analysisProcessor(processor.ProcessorABC):
             'signal':   signal_label,
             'weight':   df['weight'][baseline]
         })
-        df_out.to_hdf('data_X.h5', key='df', format='table', mode='a', append=True)
+        df_out.to_hdf('data/data_X.h5', key='df', format='table', mode='a', append=True)
         
         return output
 
@@ -228,7 +228,7 @@ df_out = {
 
 
 small = False
-overwrite = False
+overwrite = True
 
 # load the config and the cache
 cfg = loadConfig()

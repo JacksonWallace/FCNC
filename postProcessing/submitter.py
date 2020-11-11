@@ -14,6 +14,19 @@ from yaml import Loader, Dumper
 
 import os
 
+def getYearFromDAS(DASname):
+    isData = True if DASname.count('Run20') else False
+    isFastSim = False if not DASname.count('Fast') else True
+    era = DASname[sampleName.find("Run"):sampleName.find("Run")+len('Run2000A')]
+    if DASname.count('Autumn18') or DASname.count('Run2018'):
+        return 2018, era, isData, isFastSim
+    elif DASname.count('Fall17') or DASname.count('Run2017'):
+        return 2017, era, isData, isFastSim
+    elif DASname.count('Summer16') or DASname.count('Run2016'):
+        return 2016, era, isData, isFastSim
+    else:
+        ### our private samples right now are all Autumn18 but have no identifier.
+        return 2018, 'X', False, False
 
 data_path = os.path.expandvars('$TWHOME/data/')
 with open(data_path+'samples.yaml') as f:
@@ -86,13 +99,20 @@ print ("Will run over the following samples:")
 print (sample_list)
 print ()
 
+
+
 for s in sample_list:
     if samples[s]['path'] is not None:
         sample = DirectorySample(dataset = samples[s]['name'], location = samples[s]['path'])
     else:
         sample = DBSSample(dataset = s) # should we make use of the files??
 
-    lumiWeightString = 1000*samples[s]['xsec']/samples[s]['sumWeight']
+    year, era, isData, isFastSim = getYearFromDAS(s)
+
+    print ("Sample: %s"%s)
+    print ("The sample is %s, corresponding to year %s. %s simulation is used."%('Data' if isData else 'MC', year, 'Fast' if isFastSim else 'Full'  ) )
+
+    lumiWeightString = 1000*samples[s]['xsec']/samples[s]['sumWeight'] if not isData else 1
 
     #tag = str(cfg['meta']['version']).replace('.','p')
     
@@ -101,7 +121,7 @@ for s in sample_list:
             #'/hadoop/cms/store/user/dspitzba/nanoAOD/TTWJetsToLNu_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/',
         # open_dataset = True, flush = True,
         executable = "executable.sh",
-        arguments = "%s %s"%(tag, lumiWeightString),
+        arguments = "%s %s"%(tag, lumiWeightString, isData, year, era, isFastSim),
         #tarfile = "merge_scripts.tar.gz",
         files_per_output = 3,
         output_dir = os.path.join(outDir, samples[s]['name']),
