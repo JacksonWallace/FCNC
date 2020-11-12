@@ -42,6 +42,7 @@ import argparse
 argParser = argparse.ArgumentParser(description = "Argument parser")
 argParser.add_argument('--version', action='store', default=None, help="Define a new version number")
 argParser.add_argument('--newVersion', action='store_true', default=None, help="Create a version and tag automatically?")
+argParser.add_argument('--updateConfig', action='store_true', default=None, help="Dump the updated config?")
 argParser.add_argument('--dryRun', action='store_true', default=None, help="Don't submit?")
 argParser.add_argument('--small', action='store_true', default=None, help="Only submit first two samples?")
 argParser.add_argument('--only', action='store', default='', help="Just select one sample")
@@ -66,7 +67,8 @@ if args.newVersion or args.version:
     print ("Commiting and creating new tag: %s"%tag)
     import subprocess
     subprocess.call("cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools/; git commit -am 'latest'; git tag %s; git push ownFork --tags; cd"%tag, shell=True)
-    dumpConfig(cfg)
+    if args.updateConfig:
+        dumpConfig(cfg)
     
     # Dumpong the config
 
@@ -123,7 +125,7 @@ for s in sample_list:
             #'/hadoop/cms/store/user/dspitzba/nanoAOD/TTWJetsToLNu_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8__RunIIAutumn18NanoAODv6-Nano25Oct2019_102X_upgrade2018_realistic_v20_ext1-v1/',
         # open_dataset = True, flush = True,
         executable = "executable.sh",
-        arguments = " ".join([ str(x) for x in [tag, lumiWeightString, isData, year, era, isFastSim]] ),
+        arguments = " ".join([ str(x) for x in [tag, lumiWeightString, 1 if isData else 0, year, era, 1 if isFastSim else 0 ]] ),
         #tarfile = "merge_scripts.tar.gz",
         files_per_output = 3,
         output_dir = os.path.join(outDir, samples[s]['name']),
