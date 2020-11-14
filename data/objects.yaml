@@ -60,7 +60,7 @@ Electron:
 
   tightTTH:
     pt:
-      min: 15
+      min: 10
     etaSC:
       max: 2.5
       extra: abs
@@ -151,7 +151,7 @@ Muon:
 
   tightTTH:
     pt:
-      min: 15
+      min: 10
     eta:
       max: 2.4
       extra: abs
