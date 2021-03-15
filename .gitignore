@@ -3,3 +3,6 @@
 *.png
 *.pdf
 *.cmd
+
+#ignore large files
+*.pkl
