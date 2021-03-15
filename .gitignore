@@ -5,4 +5,4 @@
 *.cmd
 
 #ignore large files
-*.pkl
+caches/nano_analysis/K_simple_output/output.pkl
