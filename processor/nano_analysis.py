@@ -22,7 +22,7 @@ class nano_analysis(processor.ProcessorABC):
         
         self.btagSF = btag_scalefactor(year)
         
-        self.leptonSF = LeptonSF(year=year)
+        #self.SF = SF(year=year)
         
         self._accumulator = processor.dict_accumulator( accumulator )
 
@@ -52,16 +52,34 @@ class nano_analysis(processor.ProcessorABC):
         
         ## Electrons
         electron     = ev.Electron
+        electron = electron[(abs(electron.eta+electron.deltaEtaSC) < 2.4) & (abs(electron.dxy) < 0.05) & (abs(electron.dz) < 0.1) & (electron.tightCharge == 2) & (electron.convVeto) & (electron.lostHits == 0) & (abs(electron.sip3d) < 4) & (electron.miniPFRelIso_all < 0.12) & (electron.pt > 20) & (abs(electron.eta) < 2.4)]
+        # & (electron.tightID == 1)
+                            
+        gen_electron = electron[electron.genPartIdx >= 0]
+        
+        is_flipped = (ev.GenPart[gen_electron.genPartIdx].pdgId/abs(ev.GenPart[gen_electron.genPartIdx].pdgId) != gen_electron.pdgId/abs(gen_electron.pdgId))
+        flipped_electron = gen_electron[is_flipped]
+        n_flips = ak.num(flipped_electron)
+        
+        #diflipped_electrons = choose(flipped_electrons, 2)
+        
+        #flip_0_idx = (ev.GenPart[diflipped_electrons['0'].genPartIdx].pdgId/abs(ev.GenPart[diflipped_electrons['0'].genPartIdx].pdgId) != diflipped_electrons['0'].pdgId/abs(diflipped_electrons['0'].pdgId))
+        #flip_1_idx = (ev.GenPart[diflipped_electrons['1'].genPartIdx].pdgId/abs(ev.GenPart[diflipped_electrons['1'].genPartIdx].pdgId) != diflipped_electrons['1'].pdgId/abs(diflipped_electrons['1'].pdgId))
+        
+        #diflipped_electrons = diflipped_electrons[ak.any(flip_0_idx or flip_1_idx, axis=1)]
+        
+        #flipped_electron = cross(diflipped_electrons['0'][flip_0_idx], diflipped_electrons['1'][flip_1_idx])
 
         ## Merge electrons and muons - this should work better now in ak1
-        dilepton = cross(muon, electron)
-        SSlepton = ak.any((dilepton['0'].charge * dilepton['1'].charge)>0, axis=1)
-
-        lepton   = ak.concatenate([muon, electron], axis=1)
-        leading_lepton_idx = ak.singletons(ak.argmax(lepton.pt, axis=1))
-        leading_lepton = lepton[leading_lepton_idx]
-        trailing_lepton_idx = ak.singletons(ak.argmin(lepton.pt, axis=1))
-        trailing_lepton = lepton[trailing_lepton_idx]
+        
+        dielectron = choose(electron, 2)
+        SSelectron = ak.any((dielectron['0'].charge * dielectron['1'].charge)>0, axis=1)
+         
+        leading_electron_idx = ak.singletons(ak.argmax(electron.pt, axis=1))
+        leading_electron = electron[leading_electron_idx]
+        
+        leading_flipped_electron_idx = ak.singletons(ak.argmax(flipped_electron.pt, axis=1))
+        leading_flipped_electron = electron[leading_flipped_electron_idx]
         
         ## MET -> can switch to puppi MET
         met_pt  = ev.MET.pt
@@ -76,25 +94,50 @@ class nano_analysis(processor.ProcessorABC):
             
         filters   = getFilters(ev, year=self.year, dataset=dataset)
         dilep     = ((ak.num(electron) + ak.num(muon))==2)
+        electr = ((ak.num(electron) >= 2))
+        ss = (SSelectron)
+        #flip2 = (ak.any(flip_0_idx, axis=1))
+        flip = (n_flips >= 1)
+        
         
         selection = PackedSelection()
-        selection.add('dilep',         dilep )
+        #selection.add('dilep',         dilep )
         selection.add('filter',        (filters) )
+        selection.add('electr',        electr  )
+        selection.add('ss',        ss)
+        selection.add('flip',          flip)
+        #selection.add('flip2',          flip2)
         
-        bl_reqs = ['dilep', 'filter']
+        bl_reqs = ['filter', 'electr', 'ss']
 
         bl_reqs_d = { sel: True for sel in bl_reqs }
         baseline = selection.require(**bl_reqs_d)
-
+        
+        f_reqs = bl_reqs + ['flip']
+        f_reqs_d = { sel: True for sel in f_reqs }
+        flip_sel = selection.require(**f_reqs_d)
+        
+        #f2_reqs = bl_reqs + ['flip2']
+        #f2_reqs_d = { sel: True for sel in f2_reqs }
+        #flip_sel2 = selection.require(**f2_reqs_d)
+                                        
         output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(electron)[baseline], weight=weight.weight()[baseline])
-        output['N_mu'].fill(dataset=dataset, multiplicity=ak.num(muon)[baseline], weight=weight.weight()[baseline])
+        output['electron_flips'].fill(dataset=dataset, multiplicity=n_flips[baseline], weight=weight.weight()[baseline])
 
-        output['lead_lep'].fill(
+        output["electron"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(leading_lepton[baseline].pt)),
-            eta = ak.to_numpy(ak.flatten(leading_lepton[baseline].eta)),
-            phi = ak.to_numpy(ak.flatten(leading_lepton[baseline].phi)),
+            pt  = ak.to_numpy(ak.flatten(leading_electron[baseline].pt)),
+            eta = ak.to_numpy(ak.flatten(leading_electron[baseline].eta)),
+            phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
             weight = weight.weight()[baseline]
+        )
+        
+        output["flipped_electron"].fill(
+            dataset = dataset,
+            pt  = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].pt)),
+            eta = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].eta)),
+            phi = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].phi)),
+            weight = weight.weight()[flip_sel]
         )
         
         return output
