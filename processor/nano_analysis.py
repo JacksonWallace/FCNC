@@ -16,7 +16,7 @@ from Tools.btag_scalefactors import *
 from Tools.lepton_scalefactors import *
 
 class nano_analysis(processor.ProcessorABC):
-    def __init__(self, year=2016, variations=[], accumulator={}):
+    def __init__(self, year=2018, variations=[], accumulator={}):
         self.variations = variations
         self.year = year
         
@@ -53,8 +53,8 @@ class nano_analysis(processor.ProcessorABC):
         ## Electrons
         electron     = ev.Electron
         electron = electron[(abs(electron.eta+electron.deltaEtaSC) < 2.4) & (abs(electron.dxy) < 0.05) & (abs(electron.dz) < 0.1) & (electron.tightCharge == 2) & (electron.convVeto) & (electron.lostHits == 0) & (abs(electron.sip3d) < 4) & (electron.miniPFRelIso_all < 0.12) & (electron.pt > 20) & (abs(electron.eta) < 2.4)]
-        # & (electron.tightID == 1)
-                            
+        electron = electron[(abs(electron.eta) < 0.8 & electron.mva = 0.52) | (0.8 < abs(electron.eta) < 1.479 & electron.mva = 0.11) | (1.479< abs(electron.eta) < 2.5 & electron.mva = -0.01)
+        electron = electron[(abs(electron.eta) < 0.8 & electron.pt < 25 & electron.mvaFall17V2Iso_WP90 = 4.277+0.122*(electron.pt-25)) | (abs(electron.eta) < 0.8 & electron.pt > 25 & electron.mvaFall17V2Iso_WP90 = 4.277) | (0.8 < abs(electron.eta) < 1.479 & electron.pt < 25 & electron.mvaFall17V2Iso_WP90 = 3.152+0.060*(electron.pt-25)) | (0.8 < abs(electron.eta) < 1.479 & electron.pt > 25 & electron.mvaFall17V2Iso_WP90 = 3.152) | (1.479< abs(electron.eta) < 2.5 & electron.pt < 25 & electron.mvaFall17V2Iso_WP90 = 2.359+0.087*(electron.pt-25)) | (1.479< abs(electron.eta) < 2.5 & electron.pt < 25 & electron.mvaFall17V2Iso_WP90 = 2.359)]                   
         gen_electron = electron[electron.genPartIdx >= 0]
         
         is_flipped = (ev.GenPart[gen_electron.genPartIdx].pdgId/abs(ev.GenPart[gen_electron.genPartIdx].pdgId) != gen_electron.pdgId/abs(gen_electron.pdgId))
