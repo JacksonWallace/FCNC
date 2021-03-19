@@ -138,8 +138,8 @@ class nano_analysis(processor.ProcessorABC):
             eta = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].eta)),
             phi = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].phi)),
             weight = weight.weight()[flip_sel]
-        )
-        
+        )      
+
         return output
 
     def postprocess(self, accumulator):
@@ -151,7 +151,7 @@ class nano_analysis(processor.ProcessorABC):
 if __name__ == '__main__':
 
     from klepto.archives import dir_archive
-    from processor.std_acumulators import desired_output, add_processes_to_output
+    from processor.default_accumulators import desired_output, add_processes_to_output
 
     from Tools.helpers import get_samples
     from Tools.config_helpers import redirector_ucsd, redirector_fnal

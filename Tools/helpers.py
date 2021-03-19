@@ -4,7 +4,7 @@ Most of these functions need to be updated for awkward1.
 '''
 import pandas as pd
 import numpy as np
-import awkward1 as ak
+#mport awkward1 as ak
 
 #import yaml
 from yaml import load, dump
@@ -204,7 +204,9 @@ def mt(pt1, phi1, pt2, phi2):
     return np.sqrt( 2*pt1*pt2 * (1 - np.cos(phi1-phi2)) )
 
 def pad_and_flatten(val): 
+    import awkward1 as ak
     try:
-        return val.pad(1, clip=True).fillna(0.).flatten()#.reshape(-1, 1)
-    except AttributeError:
-        return val.flatten()
+        return ak.flatten(ak.fill_none(ak.pad_none(val, 1, clip=True), 0))
+        #return val.pad(1, clip=True).fillna(0.).flatten()#.reshape(-1, 1)
+    except ValueError:
+        return ak.flatten(val)
