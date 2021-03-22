@@ -54,7 +54,9 @@ class nano_analysis(processor.ProcessorABC):
         electron     = ev.Electron
         electron = electron[(abs(electron.eta+electron.deltaEtaSC) < 2.4) & (abs(electron.dxy) < 0.05) & (abs(electron.dz) < 0.1) & (electron.tightCharge == 2) & (electron.convVeto) & (electron.lostHits == 0) & (abs(electron.sip3d) < 4) & (electron.miniPFRelIso_all < 0.12) & (electron.pt > 20) & (abs(electron.eta) < 2.4)]
 
-        electron = electron[(abs(electron.eta) < 0.8 & electron.pt < 25 & electron.mvaFall17V2Iso_WP90 == 4.277+0.122*(electron.pt-25)) | (abs(electron.eta) < 0.8 & electron.pt > 25 & electron.mvaFall17V2Iso_WP90 == 4.277) | (0.8 < abs(electron.eta) < 1.479 & electron.pt < 25 & electron.mvaFall17V2Iso_WP90 == 3.152+0.060*(electron.pt-25)) | (0.8 < abs(electron.eta) < 1.479 & electron.pt > 25 & electron.mvaFall17V2Iso_WP90 == 3.152) | (1.479< abs(electron.eta) < 2.5 & electron.pt < 25 & electron.mvaFall17V2Iso_WP90 == 2.359+0.087*(electron.pt-25)) | (1.479< abs(electron.eta) < 2.5 & electron.pt < 25 & electron.mvaFall17V2Iso_WP90 == 2.359)]                   
+        #electron = electron[ak.any((abs(electron.eta) < 0.8) & (electron.pt < 25) & (electron.mvaFall17V2Iso_WP90 == 4.277+0.122*(electron.pt-25))) | ak.any((abs(electron.eta) < 0.8) & (electron.pt > 25) & (electron.mvaFall17V2Iso_WP90 == 4.277)) | ak.any((0.8 < abs(electron.eta) < 1.479) & (electron.pt < 25) & (electron.mvaFall17V2Iso_WP90 == 3.152+0.060*(electron.pt-25))) | ak.any((0.8 < abs(electron.eta) < 1.479) & (electron.pt > 25) & (electron.mvaFall17V2Iso_WP90 == 3.152))| ak.any((1.479 < abs(electron.eta) < 2.5) & (electron.pt < 25) & (electron.mvaFall17V2Iso_WP90 == 2.359+0.087*(electron.pt-25))) | ak.any((1.479 < abs(electron.eta) < 2.5) & (electron.pt < 25) & (electron.mvaFall17V2Iso_WP90 == 2.359))]
+        
+   
         gen_electron = electron[electron.genPartIdx >= 0]
         
         is_flipped = (ev.GenPart[gen_electron.genPartIdx].pdgId/abs(ev.GenPart[gen_electron.genPartIdx].pdgId) != gen_electron.pdgId/abs(gen_electron.pdgId))
@@ -128,7 +130,7 @@ class nano_analysis(processor.ProcessorABC):
             dataset = dataset,
             pt  = ak.to_numpy(ak.flatten(leading_electron[baseline].pt)),
             eta = ak.to_numpy(ak.flatten(leading_electron[baseline].eta)),
-            phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
+            #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
             weight = weight.weight()[baseline]
         )
         
@@ -136,7 +138,7 @@ class nano_analysis(processor.ProcessorABC):
             dataset = dataset,
             pt  = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].pt)),
             eta = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].eta)),
-            phi = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].phi)),
+            #phi = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].phi)),
             weight = weight.weight()[flip_sel]
         )      
 
