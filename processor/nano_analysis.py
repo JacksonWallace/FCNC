@@ -51,7 +51,7 @@ class nano_analysis(processor.ProcessorABC):
         muon     = ev.Muon
         
         ## Electrons
-        electron     = Collections(ev, "Electron", "tightSSTTH").get()
+        electron     = Collections(ev, "Electron", "tight").get()
         electron = electron[(electron.miniPFRelIso_all < 0.12) & (electron.pt > 20) & (abs(electron.eta) < 2.4)]
 
         gen_electron = electron[electron.genPartIdx >= 0]
@@ -82,7 +82,7 @@ class nano_analysis(processor.ProcessorABC):
             
         filters   = getFilters(ev, year=self.year, dataset=dataset)
         dilep     = ((ak.num(electron) + ak.num(muon))==2)
-        electr = ((ak.num(electron) >= 2))
+        electr = ((ak.num(electron) >= 1))
         ss = (SSelectron)
         #flip2 = (ak.any(flip_0_idx, axis=1))
         flip = (n_flips >= 1)

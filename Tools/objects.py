@@ -143,11 +143,8 @@ class Collections:
         if self.obj == "Muon" and self.wp == "tight":
             self.selection = self.selection & self.getIsolation(0.11, 0.74, 6.8)
             if self.v>0: print (" - custom multi-isolation")
-        if self.obj == "Electron" and (self.wp == "tightTTH" or self.wp == 'fakeableTTH' or self.wp == 'fakeableSSTTH'):
-            self.selection = self.selection & self.getSigmaIEtaIEta()
-            if self.v>0: print (" - SigmaIEtaIEta")
-        if self.obj == "Electron" and self.wp == "tightSSTTH":
-            self.selection = self.selection & self.getSigmaIEtaIEta() & self.getElectronMVAID()
+        if self.obj == "Electron" and (self.wp == "tightTTH" or self.wp == 'fakeableTTH' or self.wp == "tightSSTTH" or self.wp == 'fakeableSSTTH'):
+            self.selection = self.selection & self.getSigmaIEtaIEta
             if self.v>0: print (" - SigmaIEtaIEta")
         if self.obj == 'Muon' and (self.wp == 'fakeableTTH' or self.wp == 'fakeableSSTTH'):
             self.selection = self.selection & (self.cand.deepJet < self.getThreshold(self.cand.conePt, min_pt=20, max_pt=45, low=0.2770, high=0.0494))
