@@ -36,7 +36,7 @@ class nano_analysis(processor.ProcessorABC):
         output = self.accumulator.identity()
         
         # we can use a very loose preselection to filter the events. nothing is done with this presel, though
-        presel = ak.num(events.Jet)>=0
+        presel = ak.num(events.Jet)>0
         
         ev = events[presel]
         dataset = ev.metadata['dataset']
@@ -51,28 +51,14 @@ class nano_analysis(processor.ProcessorABC):
         muon     = ev.Muon
         
         ## Electrons
-        electron     = ev.Electron
-        electron = electron[(abs(electron.eta+electron.deltaEtaSC) < 2.4) & (abs(electron.dxy) < 0.05) & (abs(electron.dz) < 0.1) & (electron.tightCharge == 2) & (electron.convVeto) & (electron.lostHits == 0) & (abs(electron.sip3d) < 4) & (electron.miniPFRelIso_all < 0.12) & (electron.pt > 20) & (abs(electron.eta) < 2.4)]
+        electron     = Collections(ev, "Electron", "tightSSTTH").get()
+        electron = electron[(electron.miniPFRelIso_all < 0.12) & (electron.pt > 20) & (abs(electron.eta) < 2.4)]
 
-        #electron = electron[ak.any((abs(electron.eta) < 0.8) & (electron.pt < 25) & (electron.mvaFall17V2Iso_WP90 == 4.277+0.122*(electron.pt-25))) | ak.any((abs(electron.eta) < 0.8) & (electron.pt > 25) & (electron.mvaFall17V2Iso_WP90 == 4.277)) | ak.any((0.8 < abs(electron.eta) < 1.479) & (electron.pt < 25) & (electron.mvaFall17V2Iso_WP90 == 3.152+0.060*(electron.pt-25))) | ak.any((0.8 < abs(electron.eta) < 1.479) & (electron.pt > 25) & (electron.mvaFall17V2Iso_WP90 == 3.152))| ak.any((1.479 < abs(electron.eta) < 2.5) & (electron.pt < 25) & (electron.mvaFall17V2Iso_WP90 == 2.359+0.087*(electron.pt-25))) | ak.any((1.479 < abs(electron.eta) < 2.5) & (electron.pt < 25) & (electron.mvaFall17V2Iso_WP90 == 2.359))]
-        
-   
         gen_electron = electron[electron.genPartIdx >= 0]
         
         is_flipped = (ev.GenPart[gen_electron.genPartIdx].pdgId/abs(ev.GenPart[gen_electron.genPartIdx].pdgId) != gen_electron.pdgId/abs(gen_electron.pdgId))
         flipped_electron = gen_electron[is_flipped]
         n_flips = ak.num(flipped_electron)
-        
-        #diflipped_electrons = choose(flipped_electrons, 2)
-        
-        #flip_0_idx = (ev.GenPart[diflipped_electrons['0'].genPartIdx].pdgId/abs(ev.GenPart[diflipped_electrons['0'].genPartIdx].pdgId) != diflipped_electrons['0'].pdgId/abs(diflipped_electrons['0'].pdgId))
-        #flip_1_idx = (ev.GenPart[diflipped_electrons['1'].genPartIdx].pdgId/abs(ev.GenPart[diflipped_electrons['1'].genPartIdx].pdgId) != diflipped_electrons['1'].pdgId/abs(diflipped_electrons['1'].pdgId))
-        
-        #diflipped_electrons = diflipped_electrons[ak.any(flip_0_idx or flip_1_idx, axis=1)]
-        
-        #flipped_electron = cross(diflipped_electrons['0'][flip_0_idx], diflipped_electrons['1'][flip_1_idx])
-
-        ## Merge electrons and muons - this should work better now in ak1
         
         dielectron = choose(electron, 2)
         SSelectron = ak.any((dielectron['0'].charge * dielectron['1'].charge)>0, axis=1)
@@ -110,7 +96,7 @@ class nano_analysis(processor.ProcessorABC):
         selection.add('flip',          flip)
         #selection.add('flip2',          flip2)
         
-        bl_reqs = ['filter', 'electr', 'ss']
+        bl_reqs = ['filter', 'electr']
 
         bl_reqs_d = { sel: True for sel in bl_reqs }
         baseline = selection.require(**bl_reqs_d)

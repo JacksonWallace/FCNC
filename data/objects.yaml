@@ -3,7 +3,7 @@ Electron:
     pt:
       min: 15
     etaSC:
-      max: 2.5
+      max: 2.4
       extra: abs
     convVeto: 1
     lostHits: 0
