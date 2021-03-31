@@ -54,10 +54,10 @@ class nano_analysis(processor.ProcessorABC):
         electron     = Collections(ev, "Electron", "tight").get()
         electron = electron[(electron.miniPFRelIso_all < 0.12) & (electron.pt > 20) & (abs(electron.eta) < 2.4)]
 
-        gen_electron = electron[electron.genPartIdx >= 0]
+        gen_matched_electron = electron[electron.genPartIdx >= 0]
         
-        is_flipped = (ev.GenPart[gen_electron.genPartIdx].pdgId/abs(ev.GenPart[gen_electron.genPartIdx].pdgId) != gen_electron.pdgId/abs(gen_electron.pdgId))
-        flipped_electron = gen_electron[is_flipped]
+        is_flipped = (ev.GenPart[gen_matched_electron.genPartIdx].pdgId/abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId) != gen_matched_electron.pdgId/abs(gen_matched_electron.pdgId))
+        flipped_electron = gen_matched_electron[is_flipped]
         n_flips = ak.num(flipped_electron)
         
         dielectron = choose(electron, 2)
@@ -84,17 +84,14 @@ class nano_analysis(processor.ProcessorABC):
         dilep     = ((ak.num(electron) + ak.num(muon))==2)
         electr = ((ak.num(electron) >= 1))
         ss = (SSelectron)
-        #flip2 = (ak.any(flip_0_idx, axis=1))
         flip = (n_flips >= 1)
         
         
         selection = PackedSelection()
-        #selection.add('dilep',         dilep )
         selection.add('filter',        (filters) )
         selection.add('electr',        electr  )
         selection.add('ss',        ss)
         selection.add('flip',          flip)
-        #selection.add('flip2',          flip2)
         
         bl_reqs = ['filter', 'electr']
 
@@ -104,10 +101,7 @@ class nano_analysis(processor.ProcessorABC):
         f_reqs = bl_reqs + ['flip']
         f_reqs_d = { sel: True for sel in f_reqs }
         flip_sel = selection.require(**f_reqs_d)
-        
-        #f2_reqs = bl_reqs + ['flip2']
-        #f2_reqs_d = { sel: True for sel in f2_reqs }
-        #flip_sel2 = selection.require(**f2_reqs_d)
+    
                                         
         output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(electron)[baseline], weight=weight.weight()[baseline])
         output['electron_flips'].fill(dataset=dataset, multiplicity=n_flips[baseline], weight=weight.weight()[baseline])
