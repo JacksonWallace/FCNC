@@ -112,6 +112,7 @@ class nano_analysis(processor.ProcessorABC):
         output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(electron)[baseline], weight=weight.weight()[baseline])
         output['electron_flips'].fill(dataset=dataset, multiplicity=n_flips[baseline], weight=weight.weight()[baseline])
 
+        
         output["electron"].fill(
             dataset = dataset,
             pt  = ak.to_numpy(ak.flatten(leading_electron[baseline].pt)),
@@ -120,10 +121,26 @@ class nano_analysis(processor.ProcessorABC):
             weight = weight.weight()[baseline]
         )
         
+        output["electron2"].fill(
+            dataset = dataset,
+            pt  = ak.to_numpy(ak.flatten(leading_electron[baseline].pt)),
+            eta = ak.to_numpy(ak.flatten(abs(leading_electron[baseline].eta))),
+            #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
+            weight = weight.weight()[baseline]
+        )
+        
         output["flipped_electron"].fill(
             dataset = dataset,
             pt  = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].pt)),
             eta = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].eta)),
+            #phi = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].phi)),
+            weight = weight.weight()[flip_sel]
+        ) 
+        
+        output["flipped_electron2"].fill(
+            dataset = dataset,
+            pt  = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].pt)),
+            eta = ak.to_numpy(ak.flatten(abs(flipped_electron[flip_sel].eta))),
             #phi = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].phi)),
             weight = weight.weight()[flip_sel]
         )      

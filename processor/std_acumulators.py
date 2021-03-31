@@ -47,6 +47,8 @@ desired_output = {
                         
             "electron":           hist.Hist("Counts", dataset_axis, pt_axis, eta_axis),
             "flipped_electron":   hist.Hist("Counts", dataset_axis, pt_axis, eta_axis),
+            "electron2":           hist.Hist("Counts", dataset_axis, pt_axis, eta_axis),
+            "flipped_electron2":   hist.Hist("Counts", dataset_axis, pt_axis, eta_axis),
             "electron_flips":     hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "muon":               hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
             "lead_lep":           hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
