@@ -1,0 +1,51 @@
+000 (51379.000.000) 04/04 20:47:28 Job submitted from host: <169.228.130.74:9615?addrs=169.228.130.74-9615&noUDP&sock=2807279_7918_3>
+...
+028 (51379.000.000) 04/04 20:47:28 Job ad information event triggered.
+JOB_GLIDEIN_Name = "$$(GLIDEIN_Name:Unknown)"
+JOB_Site = "$$(GLIDEIN_Site:Unknown)"
+JOB_GLIDEIN_Entry_Name = "$$(GLIDEIN_Entry_Name:Unknown)"
+EventTime = "2021-04-04T20:47:28"
+TriggerEventTypeName = "ULOG_SUBMIT"
+SubmitHost = "<169.228.130.74:9615?addrs=169.228.130.74-9615&noUDP&sock=2807279_7918_3>"
+Proc = 0
+Cluster = 51379
+JOB_GLIDEIN_Factory = "$$(GLIDEIN_Factory:Unknown)"
+MyType = "SubmitEvent"
+Subproc = 0
+EventTypeNumber = 28
+JOB_GLIDEIN_Schedd = "$$(GLIDEIN_Schedd:Unknown)"
+JOB_GLIDEIN_ClusterId = "$$(GLIDEIN_ClusterId:Unknown)"
+JOB_GLIDEIN_ProcId = "$$(GLIDEIN_ProcId:Unknown)"
+JOB_GLIDEIN_Site = "$$(GLIDEIN_Site:Unknown)"
+JOB_GLIDEIN_SiteWMS = "$$(GLIDEIN_SiteWMS:Unknown)"
+JOB_GLIDEIN_SiteWMS_Slot = "$$(GLIDEIN_SiteWMS_Slot:Unknown)"
+JOB_GLIDEIN_SiteWMS_JobId = "$$(GLIDEIN_SiteWMS_JobId:Unknown)"
+JOB_GLIDEIN_SiteWMS_Queue = "$$(GLIDEIN_SiteWMS_Queue:Unknown)"
+TriggerEventTypeNumber = 0
+...
+009 (51379.000.000) 04/04 20:50:16 Job was aborted by the user.
+	via condor_rm (by user ewallace)
+...
+028 (51379.000.000) 04/04 20:50:16 Job ad information event triggered.
+JOB_GLIDEIN_Name = "$$(GLIDEIN_Name:Unknown)"
+JOB_Site = "$$(GLIDEIN_Site:Unknown)"
+Reason = "via condor_rm (by user ewallace)"
+JOB_GLIDEIN_SiteWMS_Slot = "$$(GLIDEIN_SiteWMS_Slot:Unknown)"
+JOB_GLIDEIN_Entry_Name = "$$(GLIDEIN_Entry_Name:Unknown)"
+EventTime = "2021-04-04T20:50:16"
+TriggerEventTypeName = "ULOG_JOB_ABORTED"
+Proc = 0
+Cluster = 51379
+JOB_GLIDEIN_Factory = "$$(GLIDEIN_Factory:Unknown)"
+MyType = "JobAbortedEvent"
+Subproc = 0
+EventTypeNumber = 28
+JOB_GLIDEIN_Schedd = "$$(GLIDEIN_Schedd:Unknown)"
+JOB_GLIDEIN_ClusterId = "$$(GLIDEIN_ClusterId:Unknown)"
+JOB_GLIDEIN_ProcId = "$$(GLIDEIN_ProcId:Unknown)"
+JOB_GLIDEIN_Site = "$$(GLIDEIN_Site:Unknown)"
+JOB_GLIDEIN_SiteWMS = "$$(GLIDEIN_SiteWMS:Unknown)"
+JOB_GLIDEIN_SiteWMS_JobId = "$$(GLIDEIN_SiteWMS_JobId:Unknown)"
+JOB_GLIDEIN_SiteWMS_Queue = "$$(GLIDEIN_SiteWMS_Queue:Unknown)"
+TriggerEventTypeNumber = 9
+...
