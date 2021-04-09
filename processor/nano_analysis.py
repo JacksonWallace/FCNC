@@ -9,6 +9,8 @@ from coffea.nanoevents import NanoEventsFactory, NanoAODSchema
 from coffea.analysis_tools import Weights, PackedSelection
 
 import numpy as np
+import gzip
+import pickle
 
 # this is all very bad practice
 from Tools.objects import *
@@ -18,6 +20,7 @@ from Tools.config_helpers import *
 from Tools.triggers import *
 from Tools.btag_scalefactors import *
 from Tools.lepton_scalefactors import *
+from Tools.charge_flip import *
 
 class nano_analysis(processor.ProcessorABC):
     def __init__(self, year=2018, variations=[], accumulator={}):
@@ -83,6 +86,12 @@ class nano_analysis(processor.ProcessorABC):
         if not dataset=='MuonEG':
             # generator weight
             weight.add("weight", ev.genWeight)
+            
+        path = 'histos/chargeflip.pkl.gz'
+        with gzip.open(path) as fin:
+            ratio= pickle.load(fin)
+            
+        weight.add("charge flip", flip_ratio(ratio, dielectron['0'], dielectron['1']))
             
         filters   = getFilters(ev, year=self.year, dataset=dataset)
         dilep     = ((ak.num(electron) + ak.num(muon))==2)
