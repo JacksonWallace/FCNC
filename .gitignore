@@ -4,6 +4,8 @@
 *.pdf
 *.cmd
 
+Tools/logs/worker*
+
 #ignore large files
 caches/nano_analysis/K_simple_output/output.pkl
 coffeaEnv/lib/python3.6/site-packages/llvmlite/binding/libllvmlite.so

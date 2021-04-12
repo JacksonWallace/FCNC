@@ -8,9 +8,6 @@ from coffea import processor, hist
 from coffea.nanoevents import NanoEventsFactory, NanoAODSchema
 from coffea.analysis_tools import Weights, PackedSelection
 
-import numpy as np
-import gzip
-import pickle
 
 # this is all very bad practice
 from Tools.objects import *
@@ -30,6 +27,8 @@ class nano_analysis(processor.ProcessorABC):
         self.btagSF = btag_scalefactor(year)
         
         #self.leptonSF = LeptonSF(year=year)
+        
+        self.charge_flip_ratio = charge_flip('histos/chargefliptopfull.pkl.gz')
         
         self._accumulator = processor.dict_accumulator( accumulator )
 
@@ -82,20 +81,18 @@ class nano_analysis(processor.ProcessorABC):
 
         # define the weight
         weight = Weights( len(ev) )
+        weight2 = Weights( len(ev))
         
         if not dataset=='MuonEG':
             # generator weight
             weight.add("weight", ev.genWeight)
+            weight2.add("weight", ev.genWeight)
             
-        path = 'histos/chargeflip.pkl.gz'
-        with gzip.open(path) as fin:
-            ratio= pickle.load(fin)
-            
-        weight.add("charge flip", flip_ratio(ratio, dielectron['0'], dielectron['1']))
+        weight2.add("charge flip", self.charge_flip_ratio.flip_ratio(dielectron['0'], dielectron['1']))
             
         filters   = getFilters(ev, year=self.year, dataset=dataset)
         dilep     = ((ak.num(electron) + ak.num(muon))==2)
-        electr = ((ak.num(electron) >= 1))
+        electr = ((ak.num(electron) >= 2))
         ss = (SSelectron)
         flip = (n_flips >= 1)
         
@@ -111,6 +108,10 @@ class nano_analysis(processor.ProcessorABC):
         bl_reqs_d = { sel: True for sel in bl_reqs }
         baseline = selection.require(**bl_reqs_d)
         
+        s_reqs = bl_reqs + ['ss']
+        s_reqs_d = { sel: True for sel in s_reqs }
+        ss_sel = selection.require(**s_reqs_d)
+        
         f_reqs = bl_reqs + ['flip']
         f_reqs_d = { sel: True for sel in f_reqs }
         flip_sel = selection.require(**f_reqs_d)
@@ -122,10 +123,10 @@ class nano_analysis(processor.ProcessorABC):
         
         output["electron"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(leading_electron[baseline].pt)),
-            eta = ak.to_numpy(ak.flatten(leading_electron[baseline].eta)),
+            pt  = ak.to_numpy(ak.flatten(leading_electron[ss_sel].pt)),
+            eta = ak.to_numpy(ak.flatten(abs(leading_electron[ss_sel].eta))),
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
-            weight = weight.weight()[baseline]
+            weight = weight.weight()[ss_sel]
         )
         
         output["electron2"].fill(
@@ -133,7 +134,7 @@ class nano_analysis(processor.ProcessorABC):
             pt  = ak.to_numpy(ak.flatten(leading_electron[baseline].pt)),
             eta = ak.to_numpy(ak.flatten(abs(leading_electron[baseline].eta))),
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
-            weight = weight.weight()[baseline]
+            weight = weight2.weight()[baseline]
         )
         
         output["flipped_electron"].fill(
@@ -170,6 +171,7 @@ if __name__ == '__main__':
     from Tools.nano_mapping import make_fileset, nano_mapping
 
     overwrite = True
+    local = True
     
     # load the config and the cache
     cfg = loadConfig()
@@ -186,12 +188,28 @@ if __name__ == '__main__':
 
     add_processes_to_output(fileset, desired_output)
 
-    exe_args = {
-        'workers': 16,
-        'function_args': {'flatten': False},
-        "schema": NanoAODSchema,
-    }
-    exe = processor.futures_executor
+    if local:
+
+        exe_args = {
+            'workers': 16,
+            'function_args': {'flatten': False},
+             "schema": NanoAODSchema,
+        }
+        exe = processor.futures_executor
+
+    else:
+        from Tools.helpers import get_scheduler_address
+        from dask.distributed import Client, progress
+
+        scheduler_address = get_scheduler_address()
+        c = Client(scheduler_address)
+
+        exe_args = {
+            'client': c,
+            'function_args': {'flatten': False},
+            "schema": NanoAODSchema,
+        }
+        exe = processor.dask_executor
     
     if not overwrite:
         cache.load()
