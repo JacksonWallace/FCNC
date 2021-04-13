@@ -28,7 +28,7 @@ class nano_analysis(processor.ProcessorABC):
         
         #self.leptonSF = LeptonSF(year=year)
         
-        self.charge_flip_ratio = charge_flip('histos/chargefliptopfull.pkl.gz')
+        self.charge_flip_ratio = charge_flip('histos/chargeflipfull.pkl.gz')
         
         self._accumulator = processor.dict_accumulator( accumulator )
 
@@ -92,7 +92,7 @@ class nano_analysis(processor.ProcessorABC):
             
         filters   = getFilters(ev, year=self.year, dataset=dataset)
         dilep     = ((ak.num(electron) + ak.num(muon))==2)
-        electr = ((ak.num(electron) >= 2))
+        electr = ((ak.num(electron) == 2))
         ss = (SSelectron)
         flip = (n_flips >= 1)
         
@@ -117,8 +117,8 @@ class nano_analysis(processor.ProcessorABC):
         flip_sel = selection.require(**f_reqs_d)
     
                                         
-        output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(electron)[baseline], weight=weight.weight()[baseline])
-        output['electron_flips'].fill(dataset=dataset, multiplicity=n_flips[baseline], weight=weight.weight()[baseline])
+        output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(electron)[ss_sel], weight=weight.weight()[ss_sel])
+        output['electron_flips'].fill(dataset=dataset, multiplicity=n_flips[ss_sel], weight=weight.weight()[ss_sel])
 
         
         output["electron"].fill(
@@ -140,17 +140,17 @@ class nano_analysis(processor.ProcessorABC):
         output["flipped_electron"].fill(
             dataset = dataset,
             pt  = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].pt)),
-            eta = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].eta)),
+            eta = ak.to_numpy(ak.flatten(abs(flipped_electron[flip_sel].eta))),
             #phi = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].phi)),
-            weight = weight.weight()[flip_sel]
+            #weight = weight.weight()[flip_sel]
         ) 
         
         output["flipped_electron2"].fill(
             dataset = dataset,
             pt  = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].pt)),
-            eta = ak.to_numpy(ak.flatten(abs(flipped_electron[flip_sel].eta))),
+            eta = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].eta)),
             #phi = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].phi)),
-            weight = weight.weight()[flip_sel]
+            #weight = weight.weight()[flip_sel]
         )      
 
         return output
