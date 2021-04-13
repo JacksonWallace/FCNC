@@ -28,8 +28,6 @@ class nano_analysis(processor.ProcessorABC):
         
         #self.leptonSF = LeptonSF(year=year)
         
-        self.charge_flip_ratio = charge_flip('histos/chargeflipfull.pkl.gz')
-        
         self._accumulator = processor.dict_accumulator( accumulator )
 
     @property
@@ -62,7 +60,7 @@ class nano_analysis(processor.ProcessorABC):
 
         gen_matched_electron = electron[electron.genPartIdx >= 0]
         
-        is_flipped = (ev.GenPart[gen_matched_electron.genPartIdx].pdgId/abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId) != gen_matched_electron.pdgId/abs(gen_matched_electron.pdgId))
+        is_flipped = (abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId ==abs(gen_matched_electron.pdgId)&(ev.GenPart[gen_matched_electron.genPartIdx].pdgId/abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId) != gen_matched_electron.pdgId/abs(gen_matched_electron.pdgId)))
         flipped_electron = gen_matched_electron[is_flipped]
         n_flips = ak.num(flipped_electron)
         
@@ -79,20 +77,16 @@ class nano_analysis(processor.ProcessorABC):
         met_pt  = ev.MET.pt
         met_phi = ev.MET.phi
 
-        # define the weight
+        # setting up the various weights
         weight = Weights( len(ev) )
-        weight2 = Weights( len(ev))
         
         if not dataset=='MuonEG':
             # generator weight
             weight.add("weight", ev.genWeight)
-            weight2.add("weight", ev.genWeight)
-            
-        weight2.add("charge flip", self.charge_flip_ratio.flip_ratio(dielectron['0'], dielectron['1']))
-            
+                      
+        #selections    
         filters   = getFilters(ev, year=self.year, dataset=dataset)
-        dilep     = ((ak.num(electron) + ak.num(muon))==2)
-        electr = ((ak.num(electron) == 2))
+        electr = ((ak.num(electron) >= 1))
         ss = (SSelectron)
         flip = (n_flips >= 1)
         
@@ -108,33 +102,33 @@ class nano_analysis(processor.ProcessorABC):
         bl_reqs_d = { sel: True for sel in bl_reqs }
         baseline = selection.require(**bl_reqs_d)
         
-        s_reqs = bl_reqs + ['ss']
-        s_reqs_d = { sel: True for sel in s_reqs }
-        ss_sel = selection.require(**s_reqs_d)
-        
         f_reqs = bl_reqs + ['flip']
         f_reqs_d = { sel: True for sel in f_reqs }
         flip_sel = selection.require(**f_reqs_d)
+                      
+        #adjust weights to prevent length mismatch
+        ak_weight_gen = ak.ones_like(gen_matched_electron[baseline].pt) * weight[baseline]
+        ak_weight_flip = ak.ones_like(flipped_electron[flip_sel].pt) * weight[flip_sel]
     
                                         
-        output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(electron)[ss_sel], weight=weight.weight()[ss_sel])
-        output['electron_flips'].fill(dataset=dataset, multiplicity=n_flips[ss_sel], weight=weight.weight()[ss_sel])
+        output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(electron)[baseline], weight=weight.weight()[baseline])
+        output['electron_flips'].fill(dataset=dataset, multiplicity=n_flips[baseline], weight=weight.weight()[baseline])
 
         
         output["electron"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(leading_electron[ss_sel].pt)),
-            eta = ak.to_numpy(ak.flatten(abs(leading_electron[ss_sel].eta))),
+            pt  = ak.to_numpy(ak.flatten(gen_matched_electron[baseline].pt)),
+            eta = ak.to_numpy(ak.flatten(abs(leading_electron[baseline].eta))),
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
-            weight = weight.weight()[ss_sel]
+            weight = ak.flatten(ak_weight_gen)
         )
         
         output["electron2"].fill(
             dataset = dataset,
             pt  = ak.to_numpy(ak.flatten(leading_electron[baseline].pt)),
-            eta = ak.to_numpy(ak.flatten(abs(leading_electron[baseline].eta))),
+            eta = ak.to_numpy(ak.flatten(leading_electron[baseline].eta)),
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
-            weight = weight2.weight()[baseline]
+            weight = ak.flatten(ak_weight_gen)
         )
         
         output["flipped_electron"].fill(
@@ -142,7 +136,7 @@ class nano_analysis(processor.ProcessorABC):
             pt  = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].pt)),
             eta = ak.to_numpy(ak.flatten(abs(flipped_electron[flip_sel].eta))),
             #phi = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].phi)),
-            #weight = weight.weight()[flip_sel]
+            weight = ak.flatten(ak_weight_flip)
         ) 
         
         output["flipped_electron2"].fill(
@@ -150,7 +144,7 @@ class nano_analysis(processor.ProcessorABC):
             pt  = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].pt)),
             eta = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].eta)),
             #phi = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].phi)),
-            #weight = weight.weight()[flip_sel]
+            weight = ak.flatten(ak_weight_flip)
         )      
 
         return output

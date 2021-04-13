@@ -43,8 +43,14 @@ desired_output = {
             "chargeFlip_vs_nonprompt": hist.Hist("Counts", dataset_axis, n1_axis, n2_axis, n_ele_axis),
             
             "high_p_fwd_p":      hist.Hist("Counts", dataset_axis, p_axis),
-                        
-            "electron":           hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
+            
+    
+            "electron":           hist.Hist("Counts", dataset_axis, pt_axis, eta_axis),
+            "flipped_electron":   hist.Hist("Counts", dataset_axis, pt_axis, eta_axis),
+            "electron2":           hist.Hist("Counts", dataset_axis, pt_axis, eta_axis),
+            "flipped_electron2":   hist.Hist("Counts", dataset_axis, pt_axis, eta_axis),
+            "electron_flips":     hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "electron_flips2":     hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "muon":               hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
             "lead_lep":           hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
             "trail_lep":          hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
@@ -53,6 +59,7 @@ desired_output = {
             "N_b" :               hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_central" :         hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_ele" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_ele2" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_mu" :              hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_jet" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_fwd" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
