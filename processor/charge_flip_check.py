@@ -126,7 +126,7 @@ class charge_flip_check(processor.ProcessorABC):
         
         output["electron"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(gen_matched_electron[baseline].pt)),
+            pt  = ak.to_numpy(ak.flatten(leading_electron[baseline].pt)),
             eta = ak.to_numpy(ak.flatten(abs(leading_electron[baseline].eta))),
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
             weight = weight.weight()[ss_sel]
