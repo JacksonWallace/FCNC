@@ -45,7 +45,7 @@ class charge_flip_check(processor.ProcessorABC):
         
         ev = events[presel]
         dataset = ev.metadata['dataset']
-        
+
         # load the config - probably not needed anymore
         cfg = loadConfig()
         
@@ -61,7 +61,12 @@ class charge_flip_check(processor.ProcessorABC):
 
         gen_matched_electron = electron[electron.genPartIdx >= 0]
         
-        is_flipped = (abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId) == abs(gen_matched_electron.pdgId))&(ev.GenPart[gen_matched_electron.genPartIdx].pdgId/abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId) != gen_matched_electron.pdgId/abs(gen_matched_electron.pdgId))
+        is_flipped = (gen_matched_electron.matched_gen.pdgId*(-1) == gen_matched_electron.pdgId)
+
+        ## Merge electrons and muons - this should work better now in ak1
+        gen_matched_electron = electron[electron.genPartIdx >= 0]
+        
+        #is_flipped = (abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId) == abs(gen_matched_electron.pdgId))&(ev.GenPart[gen_matched_electron.genPartIdx].pdgId/abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId) != gen_matched_electron.pdgId/abs(gen_matched_electron.pdgId))
         flipped_electron = gen_matched_electron[is_flipped]
         n_flips = ak.num(flipped_electron)
         
@@ -131,6 +136,18 @@ class charge_flip_check(processor.ProcessorABC):
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
             weight = weight.weight()[ss_sel]
         )
+
+        output["gen_matched_electron"].fill(
+            dataset = dataset,
+            pt  = ak.flatten(gen_matched_electron.pt),
+            eta = abs(ak.flatten(gen_matched_electron.eta)),
+        )
+
+        output["flipped_electron"].fill(
+            dataset = dataset,
+            pt  = ak.flatten(gen_matched_electron[is_flipped].pt),
+            eta = abs(ak.flatten(gen_matched_electron[is_flipped].eta)),
+        )
         
         output["electron2"].fill(
             dataset = dataset,
@@ -146,16 +163,16 @@ class charge_flip_check(processor.ProcessorABC):
         return accumulator
 
 
-
-
 if __name__ == '__main__':
 
     from klepto.archives import dir_archive
-    from processor.default_accumulators import desired_output, add_processes_to_output
+    from processor.default_accumulators import desired_output, add_processes_to_output, add_files_to_output, dataset_axis
 
     from Tools.helpers import get_samples
     from Tools.config_helpers import redirector_ucsd, redirector_fnal
     from Tools.nano_mapping import make_fileset, nano_mapping
+
+    from processor.meta_processor import get_sample_meta
 
     overwrite = True
     local = True
@@ -171,7 +188,9 @@ if __name__ == '__main__':
     
     samples = get_samples()
 
-    fileset = make_fileset(['TTW', 'TTZ'], samples, redirector=redirector_ucsd, small=True)
+    #fileset = make_fileset(['TTW', 'TTZ'], samples, redirector=redirector_ucsd, small=True, n_max=5)  # small, max 5 files per sample
+    #fileset = make_fileset(['DY'], samples, redirector=redirector_ucsd, small=True, n_max=10)
+    fileset = make_fileset(['top'], samples, redirector=redirector_ucsd, small=True, n_max=10)
 
     add_processes_to_output(fileset, desired_output)
 
@@ -226,7 +245,6 @@ if __name__ == '__main__':
     import mplhep as hep
     plt.style.use(hep.style.CMS)
     
-    
     # load the functions to make a nice plot from the output histograms
     # and the scale_and_merge function that scales the individual histograms
     # to match the physical cross section
@@ -258,7 +276,8 @@ if __name__ == '__main__':
     print ("Total events in output histogram N_ele: %.2f"%output['N_ele'].sum('dataset').sum('multiplicity').values(overflow='all')[()])
     
     my_hists = {}
-    my_hists['N_ele'] = scale_and_merge(output['N_ele'], samples, fileset, nano_mapping)
+    #my_hists['N_ele'] = scale_and_merge(output['N_ele'], samples, fileset, nano_mapping)
+    my_hists['N_ele'] = scale_and_merge(output['N_ele'], meta, fileset, nano_mapping)
     print ("Total scaled events in merged histogram N_ele: %.2f"%my_hists['N_ele'].sum('dataset').sum('multiplicity').values(overflow='all')[()])
     
     # Now make a nice plot of the electron multiplicity.
