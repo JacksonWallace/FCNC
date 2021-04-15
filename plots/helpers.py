@@ -137,9 +137,9 @@ def makePlot(output, histo, axis, bins=None, data=[], normalize=True, log=False,
     if bins:
         histogram = histogram.rebin(axis, bins)
         if overlay: overlay = overlay.rebin(axis, bins)
-
+    
     y_max = histogram[bkg_sel].sum("dataset").values(overflow='over')[()].max()
-
+    print(histogram[bkg_sel].sum("dataset").values(overflow='over')[()].max())
     MC_total = histogram[bkg_sel].sum("dataset").values(overflow='over')[()].sum()
     Data_total = 0
     if data:
@@ -233,6 +233,7 @@ def makePlot(output, histo, axis, bins=None, data=[], normalize=True, log=False,
         ax.set_yscale('log')
         
     y_mult = 1.7 if not log else 100
+    
     if ymax:
         ax.set_ylim(0.01, ymax)
     else:
