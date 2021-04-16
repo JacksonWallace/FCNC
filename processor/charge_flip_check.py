@@ -132,26 +132,10 @@ class charge_flip_check(processor.ProcessorABC):
         
         output["electron"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(leading_electron[baseline].pt)),
-            eta = ak.to_numpy(ak.flatten(abs(leading_electron[baseline].eta))),
+            pt  = ak.to_numpy(ak.flatten(leading_electron[ss_sel].pt)),
+            eta = ak.to_numpy(ak.flatten(abs(leading_electron[ss_sel].eta))),
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
             weight = weight.weight()[ss_sel]
-        )
-
-        output["gen_matched_electron"].fill(
-            dataset = dataset,
-            pt  = ak.flatten(gen_matched_electron.pt),
-            eta = abs(ak.flatten(gen_matched_electron.eta)),
-            weight = build_weight_like(weight.weight(), (ak.num(gen_matched_electron)>0), gen_matched_electron.pt),
-            #weight = ak.flatten(weight.weight() * ak.ones_like(gen_matched_electron.pt)),
-        )
-
-        output["flipped_electron"].fill(
-            dataset = dataset,
-            pt  = ak.flatten(gen_matched_electron[is_flipped].pt),
-            eta = abs(ak.flatten(gen_matched_electron[is_flipped].eta)),
-            weight = build_weight_like(weight.weight(), (ak.num(gen_matched_electron[is_flipped])>0), gen_matched_electron[is_flipped].pt),
-            #weight = ak.flatten(weight.weight() * ak.ones_like(gen_matched_electron.pt)),
         )
         
         output["electron2"].fill(
@@ -198,6 +182,8 @@ if __name__ == '__main__':
 
     add_processes_to_output(fileset, desired_output)
 
+    meta = get_sample_meta(fileset, samples)
+    
     if local:
 
         exe_args = {
@@ -206,7 +192,7 @@ if __name__ == '__main__':
              "schema": NanoAODSchema,
         }
         exe = processor.futures_executor
-    meta = get_sample_meta(fileset, samples)
+   
     else:
         from Tools.helpers import get_scheduler_address
         from dask.distributed import Client, progress

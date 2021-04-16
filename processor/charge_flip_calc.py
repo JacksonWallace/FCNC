@@ -120,7 +120,7 @@ class charge_flip_calc(processor.ProcessorABC):
             pt  = ak.to_numpy(ak.flatten(gen_matched_electron[baseline].pt)),
             eta = ak.to_numpy(ak.flatten(abs(gen_matched_electron[baseline].eta))),
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
-            weight = ak.to_numpy(ak.flatten(ak_weight_gen))
+            #weight = ak.to_numpy(ak.flatten(ak_weight_gen))
         )
         
         output["electron2"].fill(
@@ -128,7 +128,7 @@ class charge_flip_calc(processor.ProcessorABC):
             pt  = ak.to_numpy(ak.flatten(gen_matched_electron[baseline].pt)),
             eta = ak.to_numpy(ak.flatten(gen_matched_electron[baseline].eta)),
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
-            weight = ak.to_numpy(ak.flatten(ak_weight_gen))
+            #weight = ak.to_numpy(ak.flatten(ak_weight_gen))
         )
         
         output["flipped_electron"].fill(
@@ -136,7 +136,7 @@ class charge_flip_calc(processor.ProcessorABC):
             pt  = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].pt)),
             eta = ak.to_numpy(ak.flatten(abs(flipped_electron[flip_sel].eta))),
             #phi = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].phi)),
-            weight = ak.to_numpy(ak.flatten(ak_weight_flip))
+            #weight = ak.to_numpy(ak.flatten(ak_weight_flip))
         ) 
         
         output["flipped_electron2"].fill(
@@ -144,7 +144,7 @@ class charge_flip_calc(processor.ProcessorABC):
             pt  = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].pt)),
             eta = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].eta)),
             #phi = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].phi)),
-            weight = ak.to_numpy(ak.flatten(ak_weight_flip))
+            #weight = ak.to_numpy(ak.flatten(ak_weight_flip))
         )      
 
         return output
