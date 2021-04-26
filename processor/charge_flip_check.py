@@ -28,7 +28,7 @@ class charge_flip_check(processor.ProcessorABC):
         
         #self.leptonSF = LeptonSF(year=year)
         
-        self.charge_flip_ratio = charge_flip('histos/chargeflipfull.pkl.gz')
+        self.charge_flip_ratio = charge_flip('histos/chargeflipfullweighted.pkl.gz')
         
         self._accumulator = processor.dict_accumulator( accumulator )
 
@@ -53,19 +53,14 @@ class charge_flip_check(processor.ProcessorABC):
         output['totalEvents']['all'] += len(events)
         output['skimmedEvents']['all'] += len(ev)
         
-        ## Muons
-        muon     = ev.Muon
         
         ## Electrons
         electron     = Collections(ev, "Electron", "tight").get()
         electron = electron[(electron.miniPFRelIso_all < 0.12) & (electron.pt > 20) & (abs(electron.eta) < 2.4)]
 
-        gen_matched_electron = electron[electron.genPartIdx >= 0]
+        gen_matched_electron = electron[( (electron.genPartIdx >= 0) & (abs(electron.matched_gen.pdgId)==11) )]
         
-        is_flipped = (gen_matched_electron.matched_gen.pdgId*(-1) == gen_matched_electron.pdgId)
-
-        ## Merge electrons and muons - this should work better now in ak1
-        gen_matched_electron = electron[electron.genPartIdx >= 0]
+        is_flipped = ( (gen_matched_electron.matched_gen.pdgId*(-1) == gen_matched_electron.pdgId) & (abs(gen_matched_electron.pdgId) == 11) )
         
         #is_flipped = (abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId) == abs(gen_matched_electron.pdgId))&(ev.GenPart[gen_matched_electron.genPartIdx].pdgId/abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId) != gen_matched_electron.pdgId/abs(gen_matched_electron.pdgId))
         flipped_electron = gen_matched_electron[is_flipped]
@@ -95,7 +90,6 @@ class charge_flip_check(processor.ProcessorABC):
                       
         #selections    
         filters   = getFilters(ev, year=self.year, dataset=dataset)
-        dilep     = ((ak.num(electron) + ak.num(muon))==2)
         electr = ((ak.num(electron) == 2))
         ss = (SSelectron)
         flip = (n_flips >= 1)
@@ -116,26 +110,24 @@ class charge_flip_check(processor.ProcessorABC):
         s_reqs_d = { sel: True for sel in s_reqs }
         ss_sel = selection.require(**s_reqs_d)
         
-        f_reqs = bl_reqs + ['flip']
+        f_reqs = s_reqs + ['flip']
         f_reqs_d = { sel: True for sel in f_reqs }
         flip_sel = selection.require(**f_reqs_d)
    
         
         #outputs
-        output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(electron)[ss_sel], weight=weight.weight()[ss_sel])
-        output['electron_flips'].fill(dataset=dataset, multiplicity=n_flips[ss_sel], weight=weight.weight()[ss_sel])
+        output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(electron)[flip_sel], weight=weight.weight()[flip_sel])
+        output['electron_flips'].fill(dataset=dataset, multiplicity=n_flips[flip_sel], weight=weight.weight()[flip_sel])
                       
         output['N_ele2'].fill(dataset=dataset, multiplicity=ak.num(electron)[baseline], weight=weight2.weight()[baseline])
         output['electron_flips2'].fill(dataset=dataset, multiplicity=n_flips[baseline], weight=weight2.weight()[baseline])
-
-
         
         output["electron"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(leading_electron[ss_sel].pt)),
-            eta = ak.to_numpy(ak.flatten(abs(leading_electron[ss_sel].eta))),
+            pt  = ak.to_numpy(ak.flatten(leading_electron[flip_sel].pt)),
+            eta = ak.to_numpy(ak.flatten(abs(leading_electron[flip_sel].eta))),
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
-            weight = weight.weight()[ss_sel]
+            weight = weight.weight()[flip_sel]
         )
         
         output["electron2"].fill(
