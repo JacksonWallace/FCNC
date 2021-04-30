@@ -170,12 +170,12 @@ if __name__ == '__main__':
 
     #fileset = make_fileset(['TTW', 'TTZ'], samples, redirector=redirector_ucsd, small=True, n_max=5)  # small, max 5 files per sample
     #fileset = make_fileset(['DY'], samples, redirector=redirector_ucsd, small=True, n_max=10)
-    fileset = make_fileset(['top'], samples, redirector=redirector_ucsd, small=True, n_max=1)
+    fileset = make_fileset(['top'], samples, redirector=redirector_fnal, small=False)
 
     add_processes_to_output(fileset, desired_output)
 
     meta = get_sample_meta(fileset, samples)
-    
+   
     if local:
 
         exe_args = {
@@ -198,7 +198,7 @@ if __name__ == '__main__':
             "schema": NanoAODSchema,
         }
         exe = processor.dask_executor
-    
+   
     if not overwrite:
         cache.load()
     
@@ -214,7 +214,7 @@ if __name__ == '__main__':
             nano_analysis(year=year, variations=[], accumulator=desired_output),
             exe,
             exe_args,
-            chunksize=250000,
+            chunksize=500000,
         )
         
         cache['fileset']        = fileset
