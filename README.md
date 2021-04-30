@@ -122,7 +122,7 @@ Where 8893 represents the port (check the output of the jupyter server, uaf-10 s
 
 When you ran the above setup you should have created a `daskworkerenv.tar.gz` file. Move this into `tW_scattering/Tools/`. If you lost the tarball, just rerun
 ```
-conda pack -n daskworkerenv --arcroot daskworkerenv -f --format tar.gz \
+conda pack -n workerenv --arcroot workerenv -f --format tar.gz \
     --compress-level 9 -j 8 --exclude "*.pyc" --exclude "*.js.map" --exclude "*.a"
 ```
 
