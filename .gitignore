@@ -10,3 +10,4 @@ Tools/logs/worker*
 caches/nano_analysis/K_simple_output/output.pkl
 coffeaEnv/lib/python3.6/site-packages/llvmlite/binding/libllvmlite.so
 caches/nano_analysis/K_I_be6e858394d0702ebe461477973dd496/output.pkl
+Tools/workerenv.tar.gz
