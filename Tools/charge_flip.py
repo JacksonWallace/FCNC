@@ -30,6 +30,6 @@ class charge_flip:
 
         flip1 = yahist_2D_lookup(self.ratio, lepton1.pt, abs(lepton1.eta))
 
-        flip_rate1 = (ak.prod(flip1, axis = 1) * ak.prod(1/(1-flip1), axis = 1) * ak.prod(1-flip2/(1-flip2), axis = 1))
+        flip_rate1 = (ak.prod(flip1, axis = 1) * ak.prod(1/(1-flip1), axis = 1))
 
         return flip_rate1

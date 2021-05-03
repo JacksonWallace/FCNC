@@ -16,7 +16,6 @@ from Tools.config_helpers import *
 from Tools.triggers import *
 from Tools.btag_scalefactors import *
 from Tools.lepton_scalefactors import *
-from Tools.charge_flip import *
 
 class charge_flip_calc(processor.ProcessorABC):
     def __init__(self, year=2018, variations=[], accumulator={}):
@@ -219,7 +218,7 @@ if __name__ == '__main__':
         output = processor.run_uproot_job(
             fileset,
             "Events",
-            nano_analysis(year=year, variations=[], accumulator=desired_output),
+            charge_flip_calc(year=year, variations=[], accumulator=desired_output),
             exe,
             exe_args,
             chunksize=250000,
