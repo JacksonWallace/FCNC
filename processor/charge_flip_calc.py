@@ -52,14 +52,16 @@ class charge_flip_calc(processor.ProcessorABC):
         
         ## Electrons
         electron   = Collections(ev, "Electron", "tight").get()
+        #electron = electron[(ak.nan_to_num(electron.eta, 99))]
         electron   = electron[(electron.miniPFRelIso_all < 0.12) & (electron.pt > 20) & (abs(electron.eta) < 2.4)]
 
         gen_matched_electron = electron[( (electron.genPartIdx >= 0) & (abs(electron.matched_gen.pdgId)==11) )]
         
-        is_flipped = is_flipped =( (gen_matched_electron.matched_gen.pdgId*(-1) == gen_matched_electron.pdgId) & (abs(gen_matched_electron.pdgId) == 11) )
+        is_flipped = ( (gen_matched_electron.matched_gen.pdgId*(-1) == gen_matched_electron.pdgId) & (abs(gen_matched_electron.pdgId) == 11) )
         #(abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId) ==abs(gen_matched_electron.pdgId))&(ev.GenPart[gen_matched_electron.genPartIdx].pdgId/abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId) != gen_matched_electron.pdgId/abs(gen_matched_electron.pdgId))
                       
         flipped_electron = gen_matched_electron[is_flipped]
+        flipped_electron = flipped_electron[(ak.fill_none(flipped_electron.pt, 0)>0)]
         n_flips = ak.num(flipped_electron)
         
         dielectron = choose(electron, 2)
@@ -118,7 +120,7 @@ class charge_flip_calc(processor.ProcessorABC):
         output["electron"].fill(
             dataset = dataset,
             pt  = ak.to_numpy(ak.flatten(gen_matched_electron[baseline].pt)),
-            eta = ak.to_numpy(ak.flatten(abs(gen_matched_electron[baseline].eta))),
+            eta = abs(ak.to_numpy(ak.flatten(gen_matched_electron[baseline].eta))),
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
             #weight = ak.to_numpy(ak.flatten(ak_weight_gen))
         )
@@ -134,7 +136,7 @@ class charge_flip_calc(processor.ProcessorABC):
         output["flipped_electron"].fill(
             dataset = dataset,
             pt  = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].pt)),
-            eta = ak.to_numpy(ak.flatten(abs(flipped_electron[flip_sel].eta))),
+            eta = abs(ak.to_numpy(ak.flatten(flipped_electron[flip_sel].eta))),
             #phi = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].phi)),
             #weight = ak.to_numpy(ak.flatten(ak_weight_flip))
         ) 
