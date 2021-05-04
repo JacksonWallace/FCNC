@@ -29,8 +29,8 @@ class charge_flip:
         f_1 = yahist_2D_lookup(self.ratio, electron.pt[:,0:1], abs(electron.eta[:,0:1]))
         f_2 = yahist_2D_lookup(self.ratio, electron.pt[:,1:2], abs(electron.eta[:,1:2]))
 
-        # I'm using ak.prod and ak.sum to replace empty arrays by 0 or 1, respectively
-        weight = ak.prod(f_1/(1-f_1), axis=1)*ak.prod(1-f_2/(1-f_2), axis=1) + ak.prod(f_2/(1-f_2), axis=1)*ak.prod(1-f_1/(1-f_1), axis=1)
+        # I'm using ak.prod and ak.sum to replace empty arrays by 1 and 0, respectively
+        weight = ak.sum(f_1/(1-f_1), axis=1)*ak.prod(1-f_2/(1-f_2), axis=1) + ak.sum(f_2/(1-f_2), axis=1)*ak.prod(1-f_1/(1-f_1), axis=1)
 
         return weight
 
