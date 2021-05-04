@@ -164,7 +164,7 @@ if __name__ == '__main__':
     # load the config and the cache
     cfg = loadConfig()
     
-    cacheName = 'nano_analysis'
+    cacheName = 'charge_flip_check'
     cache = dir_archive(os.path.join(os.path.expandvars(cfg['caches']['base']), cacheName), serialized=True)
     histograms = sorted(list(desired_output.keys()))
     
@@ -174,7 +174,7 @@ if __name__ == '__main__':
 
     #fileset = make_fileset(['TTW', 'TTZ'], samples, redirector=redirector_ucsd, small=True, n_max=5)  # small, max 5 files per sample
     #fileset = make_fileset(['DY'], samples, redirector=redirector_ucsd, small=True, n_max=10)
-    fileset = make_fileset(['top'], samples, redirector=redirector_fnal, small=False)
+    fileset = make_fileset(['top'], samples, redirector=redirector_ucsd, small=True)
 
     add_processes_to_output(fileset, desired_output)
 
@@ -215,7 +215,7 @@ if __name__ == '__main__':
         output = processor.run_uproot_job(
             fileset,
             "Events",
-            nano_analysis(year=year, variations=[], accumulator=desired_output),
+            charge_flip_check(year=year, variations=[], accumulator=desired_output),
             exe,
             exe_args,
             chunksize=500000,

@@ -172,7 +172,7 @@ if __name__ == '__main__':
     # load the config and the cache
     cfg = loadConfig()
     
-    cacheName = 'nano_analysis'
+    cacheName = 'charge_flip_calc'
     cache = dir_archive(os.path.join(os.path.expandvars(cfg['caches']['base']), cacheName), serialized=True)
     histograms = sorted(list(desired_output.keys()))
     
@@ -219,7 +219,7 @@ if __name__ == '__main__':
         output = processor.run_uproot_job(
             fileset,
             "Events",
-            nano_analysis(year=year, variations=[], accumulator=desired_output),
+            charge_flip_calc(year=year, variations=[], accumulator=desired_output),
             exe,
             exe_args,
             chunksize=250000,
