@@ -67,6 +67,8 @@ class charge_flip_check(processor.ProcessorABC):
         flipped_electron = gen_matched_electron[is_flipped]
         n_flips = ak.num(flipped_electron)
         
+        sielectron = choose(electron, 1)
+        
         dielectron = choose(electron, 2)
         SSelectron = ak.any((dielectron['0'].charge * dielectron['1'].charge)>0, axis=1)
          
@@ -86,7 +88,7 @@ class charge_flip_check(processor.ProcessorABC):
             weight.add("weight", ev.genWeight)
             weight2.add("weight", ev.genWeight)
             
-        weight2.add("charge flip", self.charge_flip_ratio.flip_ratio(dielectron['0'], dielectron['1']))
+        weight2.add("charge flip", self.charge_flip_ratio.flip_ratio(sielectron['0']))
                                    
                       
         #selections    

@@ -16,7 +16,6 @@ from Tools.config_helpers import *
 from Tools.triggers import *
 from Tools.btag_scalefactors import *
 from Tools.lepton_scalefactors import *
-from Tools.charge_flip import *
 
 class charge_flip_calc(processor.ProcessorABC):
     def __init__(self, year=2018, variations=[], accumulator={}):
