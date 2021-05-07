@@ -67,8 +67,6 @@ class charge_flip_check(processor.ProcessorABC):
         flipped_electron = gen_matched_electron[is_flipped]
         n_flips = ak.num(flipped_electron)
         
-        sielectron = choose(electron, 1)
-        
         dielectron = choose(electron, 2)
         SSelectron = ak.any((dielectron['0'].charge * dielectron['1'].charge)>0, axis=1)
          
@@ -88,16 +86,15 @@ class charge_flip_check(processor.ProcessorABC):
             weight.add("weight", ev.genWeight)
             weight2.add("weight", ev.genWeight)
             
-        weight2.add("charge flip", self.charge_flip_ratio.flip_ratio(sielectron['0']))
+        weight2.add("charge flip", self.charge_flip_ratio.flip_weight(electron))
                                    
                       
         #selections    
         filters   = getFilters(ev, year=self.year, dataset=dataset)
-        electr = ((ak.num(electron) == 2))
+        electr = ((ak.num(electron) >= 1))
         ss = (SSelectron)
         gen = (n_gen >= 1)
         flip = (n_flips >= 1)
-        
         
         
         selection = PackedSelection()
@@ -130,8 +127,8 @@ class charge_flip_check(processor.ProcessorABC):
         
         output["electron"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].pt)),
-            eta = ak.to_numpy(ak.flatten(abs(flipped_electron[flip_sel].eta))),
+            pt  = ak.to_numpy(ak.flatten(flipped_electron[flip_sel][:,0:1].pt)),
+            eta = ak.to_numpy(ak.flatten(abs(flipped_electron[flip_sel][:,0:1].eta))),
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
             weight = weight.weight()[flip_sel]
         )

@@ -1,4 +1,5 @@
 from coffea import processor, hist
+import numpy as np
 
 
 def add_processes_to_output(fileset, output):

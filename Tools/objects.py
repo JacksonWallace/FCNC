@@ -256,13 +256,13 @@ class Collections:
         
     def getMVAscore(self):
         if self.year == 2016:
-            MVA = np.minimum(np.maximum(self.cand.mvaFall17V2noIso, -1.0 + 1.e-6), 1.0 - 1.e-6)
+            MVA = self.cand.mvaSpring16GP
             return MVA
-        elif self.uear == 2017:
-            MVA = np.minimum(np.maximum(self.cand.mvaFall17V2noIso, -1.0 + 1.e-6), 1.0 - 1.e-6)
+        elif self.year == 2017:
+            MVA = self.cand.mvaFall17V2noIso
             return MVA
         elif self.year == 2018:
-            MVA = np.minimum(np.maximum(self.cand.mvaFall17V2noIso, -1.0 + 1.e-6), 1.0 - 1.e-6) #does this need be adjusted for 
+            MVA = np.minimum(np.maximum(self.cand.mvaFall17V2noIso, -1.0 + 1.e-6), 1.0 - 1.e-6)
             return -0.5*np.log(2/(MVA+1)-1)
     
     ## some more involved cuts from SS analysis
@@ -285,26 +285,26 @@ class Collections:
         
         
         lowEta      = ( abs(self.cand.etaSC) < 0.8 )
-            midEta      = ( (abs(self.cand.etaSC) <= 1.479) & (abs(self.cand.etaSC) >= 0.8) )
-            highEta     = ( abs(self.cand.etaSC) > 1.479 )
-            lowPt       = ( self.cand.pt < 10 )
-            midPt       = ( (self.cand.pt <= 25) & (self.cand.pt >= 10) )
-            highPt      = (self.cand.pt > 25)
+        midEta      = ( (abs(self.cand.etaSC) <= 1.479) & (abs(self.cand.etaSC) >= 0.8) )
+        highEta     = ( abs(self.cand.etaSC) > 1.479 )
+        lowPt       = ( self.cand.pt < 10 )
+        midPt       = ( (self.cand.pt <= 25) & (self.cand.pt >= 10) )
+        highPt      = (self.cand.pt > 25)
 
-            MVA = self.getMVAscore()
+        MVA = self.getMVAscore()
 
-            ll = ( lowEta & lowPt & (MVA > lowEtaCuts[2] ) )
-            lm = ( lowEta & midPt & (MVA > (lowEtaCuts[0]+(lowEtaCuts[1]-lowEtaCuts[0])/15*(self.cand.pt-10)) ) )
-            lh = ( lowEta & highPt & (MVA > lowEtaCuts[1] ) )
+        ll = ( lowEta & lowPt & (MVA > lowEtaCuts[2] ) )
+        lm = ( lowEta & midPt & (MVA > (lowEtaCuts[0]+(lowEtaCuts[1]-lowEtaCuts[0])/15*(self.cand.pt-10)) ) )
+        lh = ( lowEta & highPt & (MVA > lowEtaCuts[1] ) )
 
-            ml = ( midEta & lowPt & (MVA > midEtaCuts[2] ) )
-            mm = ( midEta & midPt & (MVA > (midEtaCuts[0]+(midEtaCuts[1]-midEtaCuts[0])/15*(self.cand.pt-10)) ) )
-            mh = ( midEta & highPt & (MVA > midEtaCuts[1] ) )
+        ml = ( midEta & lowPt & (MVA > midEtaCuts[2] ) )
+        mm = ( midEta & midPt & (MVA > (midEtaCuts[0]+(midEtaCuts[1]-midEtaCuts[0])/15*(self.cand.pt-10)) ) )
+        mh = ( midEta & highPt & (MVA > midEtaCuts[1] ) )
 
-            hl = ( highEta & lowPt & (MVA > highEtaCuts[2] ) )
-            hm = ( highEta & midPt & (MVA > (highEtaCuts[0]+(highEtaCuts[1]-highEtaCuts[0])/15*(self.cand.pt-10)) ) )
-            hh = ( highEta & highPt & (MVA > highEtaCuts[1] ) )
-            if self.v>0: print (" - tight electron MVA ID")
+        hl = ( highEta & lowPt & (MVA > highEtaCuts[2] ) )
+        hm = ( highEta & midPt & (MVA > (highEtaCuts[0]+(highEtaCuts[1]-highEtaCuts[0])/15*(self.cand.pt-10)) ) )
+        hh = ( highEta & highPt & (MVA > highEtaCuts[1] ) )
+        if self.v>0: print (" - tight electron MVA ID")
 
         return ( ll | lm | lh | ml | mm | mh | hl | hm | hh )
 
