@@ -171,7 +171,7 @@ if __name__ == '__main__':
     # load the config and the cache
     cfg = loadConfig()
     
-    cacheName = 'nano_analysis'
+    cacheName = 'charge_flip_calc'
     cache = dir_archive(os.path.join(os.path.expandvars(cfg['caches']['base']), cacheName), serialized=True)
     histograms = sorted(list(desired_output.keys()))
     
