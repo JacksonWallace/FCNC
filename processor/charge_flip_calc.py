@@ -18,7 +18,7 @@ from Tools.btag_scalefactors import *
 from Tools.lepton_scalefactors import *
 
 class charge_flip_calc(processor.ProcessorABC):
-    def __init__(self, year=2018, variations=[], accumulator={}):
+    def __init__(self, year, variations=[], accumulator={}):
         self.variations = variations
         self.year = year
         self.btagSF = btag_scalefactor(year)
@@ -50,7 +50,7 @@ class charge_flip_calc(processor.ProcessorABC):
         muon     = ev.Muon
         
         ## Electrons
-        electron   = Collections(ev, "Electron", "tight").get()
+        electron   = Collections(ev, "Electron", "tight", self.year).get()
         #electron = electron[(ak.nan_to_num(electron.eta, 99))]
         electron   = electron[(electron.miniPFRelIso_all < 0.12) & (electron.pt > 20) & (abs(electron.eta) < 2.4)]
 
