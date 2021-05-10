@@ -65,6 +65,7 @@ class charge_flip_check(processor.ProcessorABC):
         
         #is_flipped = (abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId) == abs(gen_matched_electron.pdgId))&(ev.GenPart[gen_matched_electron.genPartIdx].pdgId/abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId) != gen_matched_electron.pdgId/abs(gen_matched_electron.pdgId))
         flipped_electron = gen_matched_electron[is_flipped]
+        flipped_electron = flipped_electron[(ak.fill_none(flipped_electron.pt, 0)>0)]
         n_flips = ak.num(flipped_electron)
         
         dielectron = choose(electron, 2)
@@ -104,7 +105,7 @@ class charge_flip_check(processor.ProcessorABC):
         selection.add('flip',          flip)
         selection.add('gen',         gen)
         
-        bl_reqs = ['filter', 'electr']
+        bl_reqs = ['filter', 'electr', 'gen']
 
         bl_reqs_d = { sel: True for sel in bl_reqs }
         baseline = selection.require(**bl_reqs_d)
@@ -113,7 +114,7 @@ class charge_flip_check(processor.ProcessorABC):
         s_reqs_d = { sel: True for sel in s_reqs }
         ss_sel = selection.require(**s_reqs_d)
         
-        f_reqs = bl_reqs + ['gen', 'flip']
+        f_reqs = bl_reqs + ['flip']
         f_reqs_d = { sel: True for sel in f_reqs }
         flip_sel = selection.require(**f_reqs_d)
    
