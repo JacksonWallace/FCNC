@@ -66,6 +66,7 @@ class charge_flip_check(processor.ProcessorABC):
         #is_flipped = (abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId) == abs(gen_matched_electron.pdgId))&(ev.GenPart[gen_matched_electron.genPartIdx].pdgId/abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId) != gen_matched_electron.pdgId/abs(gen_matched_electron.pdgId))
         flipped_electron = gen_matched_electron[is_flipped]
         flipped_electron = flipped_electron[(ak.fill_none(flipped_electron.pt, 0)>0)]
+        flipped_electron = flipped_electron[~(ak.is_none(flipped_electron))]
         n_flips = ak.num(flipped_electron)
         
         dielectron = choose(electron, 2)
@@ -128,8 +129,8 @@ class charge_flip_check(processor.ProcessorABC):
         
         output["electron"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(flipped_electron[flip_sel][:,0:1].pt)),
-            eta = ak.to_numpy(ak.flatten(abs(flipped_electron[flip_sel][:,0:1].eta))),
+            pt  = ak.to_numpy(ak.flatten(leading_electron[flip_sel].pt)),
+            eta = ak.to_numpy(ak.flatten(abs(leading_electron[flip_sel].eta))),
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
             weight = weight.weight()[flip_sel]
         )

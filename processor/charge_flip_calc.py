@@ -61,6 +61,7 @@ class charge_flip_calc(processor.ProcessorABC):
                       
         flipped_electron = gen_matched_electron[is_flipped]
         flipped_electron = flipped_electron[(ak.fill_none(flipped_electron.pt, 0)>0)]
+        flipped_electron = flipped_electron[~(ak.is_none(flipped_electron))]
         n_flips = ak.num(flipped_electron)
         
         dielectron = choose(electron, 2)
