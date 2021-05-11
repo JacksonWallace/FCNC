@@ -5,6 +5,9 @@
 *.cmd
 
 Tools/logs/worker*
+histos/*
+notebooks/histos*
+notebooks/.ipynb_checkpoints/*
 
 #ignore large files
 caches/nano_analysis/K_simple_output/output.pkl
