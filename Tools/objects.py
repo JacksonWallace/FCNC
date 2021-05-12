@@ -276,31 +276,7 @@ class Collections:
         highPt      = (self.cand.pt > 25)
 
         MVA = self.getMVAscore()
-            
-        if self.year == 2017:
-            lowEtaCuts = 0.2, 0.68, 0.2
-            midEtaCuts = 0.1, 0.475, 0.1
-            highEtaCuts = -0.1, 0.320, -0.1
-          
-        elif self.year == 2018:
-            # this should be year specific, only 2018 for now
-            lowEtaCuts  = 2.597, 4.277, 2.597
-            midEtaCuts  = 2.252, 3.152, 2.252
-            highEtaCuts = 1.054, 2.359, 1.054
-
-        ll = ( lowEta & lowPt & (MVA > lowEtaCuts[2] ) )
-        lm = ( lowEta & midPt & (MVA > (lowEtaCuts[0]+(lowEtaCuts[1]-lowEtaCuts[0])/15*(self.cand.pt-10)) ) )
-        lh = ( lowEta & highPt & (MVA > lowEtaCuts[1] ) )
-
-        ml = ( midEta & lowPt & (MVA > midEtaCuts[2] ) )
-        mm = ( midEta & midPt & (MVA > (midEtaCuts[0]+(midEtaCuts[1]-midEtaCuts[0])/15*(self.cand.pt-10)) ) )
-        mh = ( midEta & highPt & (MVA > midEtaCuts[1] ) )
-
-        hl = ( highEta & lowPt & (MVA > highEtaCuts[2] ) )
-        hm = ( highEta & midPt & (MVA > (highEtaCuts[0]+(highEtaCuts[1]-highEtaCuts[0])/15*(self.cand.pt-10)) ) )
-        hh = ( highEta & highPt & (MVA > highEtaCuts[1] ) )
-        if self.v>0: print (" - tight electron MVA ID")
-            
+        
         if self.year == 2016:
             lowEtaCuts = 0, 0.77, 0.52
             midEtaCuts = 0, 0.56, 0.11
@@ -316,6 +292,44 @@ class Collections:
             hl = ( highEta & lowPt & (MVA > highEtaCuts[0] ) )
             hm = ( highEta & midPt & (MVA > lowEtaCuts[1] ) )
             hh = ( highEta & highPt & (MVA > highEtaCuts[2] ) )
+            if self.v>0: print (" - tight electron MVA ID")
+        
+        elif self.year == 2017:
+            lowEtaCuts = 0.2, 0.68, 0.2
+            midEtaCuts = 0.1, 0.475, 0.1
+            highEtaCuts = -0.1, 0.320, -0.1
+        
+            ll = ( lowEta & lowPt & (MVA > lowEtaCuts[2] ) )
+            lm = ( lowEta & midPt & (MVA > (lowEtaCuts[0]+(lowEtaCuts[1]-lowEtaCuts[0])/15*(self.cand.pt-10)) ) )
+            lh = ( lowEta & highPt & (MVA > lowEtaCuts[1] ) )
+
+            ml = ( midEta & lowPt & (MVA > midEtaCuts[2] ) )
+            mm = ( midEta & midPt & (MVA > (midEtaCuts[0]+(midEtaCuts[1]-midEtaCuts[0])/15*(self.cand.pt-10)) ) )
+            mh = ( midEta & highPt & (MVA > midEtaCuts[1] ) )
+
+            hl = ( highEta & lowPt & (MVA > highEtaCuts[2] ) )
+            hm = ( highEta & midPt & (MVA > (highEtaCuts[0]+(highEtaCuts[1]-highEtaCuts[0])/15*(self.cand.pt-10)) ) )
+            hh = ( highEta & highPt & (MVA > highEtaCuts[1] ) )
+            if self.v>0: print (" - tight electron MVA ID")
+                
+        elif self.year == 2018:
+            # this should be year specific, only 2018 for now
+            lowEtaCuts  = 2.597, 4.277, 2.597
+            midEtaCuts  = 2.252, 3.152, 2.252
+            highEtaCuts = 1.054, 2.359, 1.054
+
+            ll = ( lowEta & lowPt & (MVA > lowEtaCuts[2] ) )
+            lm = ( lowEta & midPt & (MVA > (lowEtaCuts[0]+(lowEtaCuts[1]-lowEtaCuts[0])/15*(self.cand.pt-10)) ) )
+            lh = ( lowEta & highPt & (MVA > lowEtaCuts[1] ) )
+
+            ml = ( midEta & lowPt & (MVA > midEtaCuts[2] ) )
+            mm = ( midEta & midPt & (MVA > (midEtaCuts[0]+(midEtaCuts[1]-midEtaCuts[0])/15*(self.cand.pt-10)) ) )
+            mh = ( midEta & highPt & (MVA > midEtaCuts[1] ) )
+
+            hl = ( highEta & lowPt & (MVA > highEtaCuts[2] ) )
+            hm = ( highEta & midPt & (MVA > (highEtaCuts[0]+(highEtaCuts[1]-highEtaCuts[0])/15*(self.cand.pt-10)) ) )
+            hh = ( highEta & highPt & (MVA > highEtaCuts[1] ) )
+            if self.v>0: print (" - tight electron MVA ID")
         
         
         return ( ll | lm | lh | ml | mm | mh | hl | hm | hh )

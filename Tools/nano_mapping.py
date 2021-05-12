@@ -12,7 +12,7 @@ from Tools.config_helpers import redirector_ucsd, load_yaml, data_path
 
 import uproot
 
-nano_mapping = load_yaml(data_path+'nano_mapping.yaml')
+nano_mapping = load_yaml(data_path+'nano_mapping_'+str(year)+'.yaml')
 
 def make_fileset(datasets, samples, redirector=redirector_ucsd, small=False, n_max=1):
     fileset = {}

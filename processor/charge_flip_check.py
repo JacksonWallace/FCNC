@@ -63,7 +63,7 @@ class charge_flip_check(processor.ProcessorABC):
         
         is_flipped = ( (gen_matched_electron.matched_gen.pdgId*(-1) == gen_matched_electron.pdgId) & (abs(gen_matched_electron.pdgId) == 11) )
         
-        #is_flipped = (abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId) == abs(gen_matched_electron.pdgId))&(ev.GenPart[gen_matched_electron.genPartIdx].pdgId/abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId) != gen_matched_electron.pdgId/abs(gen_matched_electron.pdgId))
+        
         flipped_electron = gen_matched_electron[is_flipped]
         flipped_electron = flipped_electron[(ak.fill_none(flipped_electron.pt, 0)>0)]
         flipped_electron = flipped_electron[~(ak.is_none(flipped_electron))]
@@ -97,13 +97,15 @@ class charge_flip_check(processor.ProcessorABC):
         ss = (SSelectron)
         gen = (n_gen >= 1)
         flip = (n_flips >= 1)
+        not_flip = (n_flips == 0)
         
         
         selection = PackedSelection()
-        selection.add('filter',        (filters) )
-        selection.add('electr',        electr  )
-        selection.add('ss',        ss)
-        selection.add('flip',          flip)
+        selection.add('filter',      (filters) )
+        selection.add('electr',      electr  )
+        selection.add('ss',          ss)
+        selection.add('flip',        flip)
+        selection.add('nflip',       not_flip)
         selection.add('gen',         gen)
         
         bl_reqs = ['filter', 'electr', 'gen']
@@ -118,14 +120,19 @@ class charge_flip_check(processor.ProcessorABC):
         f_reqs = bl_reqs + ['flip']
         f_reqs_d = { sel: True for sel in f_reqs }
         flip_sel = selection.require(**f_reqs_d)
+        
+        nf_reqs = bl_reqs + ['nflip']
+        nf_reqs_d = { sel: True for sel in nf_reqs }
+        nflip_sel = selection.require(**nf_reqs_d)
+        
    
         
         #outputs
         output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(electron)[flip_sel], weight=weight.weight()[flip_sel])
         output['electron_flips'].fill(dataset=dataset, multiplicity=n_flips[flip_sel], weight=weight.weight()[flip_sel])
                       
-        output['N_ele2'].fill(dataset=dataset, multiplicity=ak.num(electron)[baseline], weight=weight2.weight()[baseline])
-        output['electron_flips2'].fill(dataset=dataset, multiplicity=n_flips[baseline], weight=weight2.weight()[baseline])
+        output['N_ele2'].fill(dataset=dataset, multiplicity=ak.num(electron)[nflip_sel], weight=weight2.weight()[nflip_sel])
+        output['electron_flips2'].fill(dataset=dataset, multiplicity=n_flips[nflip_sel], weight=weight2.weight()[nflip_sel])
         
         output["electron"].fill(
             dataset = dataset,
@@ -137,10 +144,10 @@ class charge_flip_check(processor.ProcessorABC):
         
         output["electron2"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(leading_electron[baseline].pt)),
-            eta = ak.to_numpy(ak.flatten(abs(leading_electron[baseline].eta))),
+            pt  = ak.to_numpy(ak.flatten(leading_electron[nflip_sel].pt)),
+            eta = ak.to_numpy(ak.flatten(abs(leading_electron[nflip_sel].eta))),
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
-            weight = weight2.weight()[baseline]
+            weight = weight2.weight()[nflip_sel]
         )
 
         return output
