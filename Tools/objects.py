@@ -116,6 +116,8 @@ class Collections:
             # calculate new variables. asignment is awkward, but what can you do.
             ev['Electron', 'absMiniIso'] = ev.Electron.miniPFRelIso_all*ev.Electron.pt
             ev['Electron', 'etaSC'] = ev.Electron.eta + ev.Electron.deltaEtaSC
+            
+            I_1 = 0.07; I_2 = 0.78; I_3 = 8.0
 
             # the following line is only needed if we do our own matching.
             # right now, we keep using the NanoAOD match, but check the deltaR distance
@@ -143,6 +145,10 @@ class Collections:
         
         if self.obj == "Electron" and self.wp == "tight":
             self.selection = self.selection & self.getElectronMVAID() & self.getIsolation(0.07, 0.78, 8.0) & self.isTriggerSafeNoIso()
+            if self.v>0: print (" - custom ID and multi-isolation")
+                
+        if self.obj == "Electron" and self.wp == "tightFCNC":
+            self.selection = self.selection & self.getElectronMVAID() & self.getFCNCIsolation(ev.Electron.jetRelIso, ev.Electron.jetPtRelV2, I_2, I_3)& (ev.Electron.miniPFRelIso_all < I_1) & self.isTriggerSafeNoIso()
             if self.v>0: print (" - custom ID and multi-isolation")
 
         if self.obj == "Muon" and self.wp == "tight":
@@ -348,3 +354,10 @@ class Collections:
         k = (low-high)/(min_pt-max_pt)
         d = low - k*min_pt
         return (pt<min_pt)*low + ((pt>=min_pt)*(pt<max_pt)*(k*pt+d)) + (pt>=max_pt)*high
+    
+    def getFCNCIsolation(self, jetRelIso, jetPtRelV2, I_2, I_3):
+        if (self.year==2018) or (self.year==2017):
+            jetRelIso_cut = 1/I_2 - 1
+            return ((jetRelIso < jetRelIso_cut) | (jetPtRelV2 > I_3)) 
+        elif self.year==2016:
+            raise "need to define 2016 Isolation in getFCNCIsolation()"

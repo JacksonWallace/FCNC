@@ -46,6 +46,7 @@ class charge_flip_check(processor.ProcessorABC):
         
         ev = events[presel]
         dataset = ev.metadata['dataset']
+        dataset_weight = ev.metadata['dataset']
 
         # load the config - probably not needed anymore
         cfg = loadConfig()
@@ -131,8 +132,8 @@ class charge_flip_check(processor.ProcessorABC):
         output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(electron)[flip_sel], weight=weight.weight()[flip_sel])
         output['electron_flips'].fill(dataset=dataset, multiplicity=n_flips[flip_sel], weight=weight.weight()[flip_sel])
                       
-        output['N_ele2'].fill(dataset=dataset, multiplicity=ak.num(electron)[nflip_sel], weight=weight2.weight()[nflip_sel])
-        output['electron_flips2'].fill(dataset=dataset, multiplicity=n_flips[nflip_sel], weight=weight2.weight()[nflip_sel])
+        output['N_ele2'].fill(dataset=dataset_weight, multiplicity=ak.num(electron)[nflip_sel], weight=weight2.weight()[nflip_sel])
+        output['electron_flips2'].fill(dataset=dataset_weight, multiplicity=n_flips[nflip_sel], weight=weight2.weight()[nflip_sel])
         
         output["electron"].fill(
             dataset = dataset,
@@ -143,7 +144,7 @@ class charge_flip_check(processor.ProcessorABC):
         )
         
         output["electron2"].fill(
-            dataset = dataset,
+            dataset = dataset_weight,
             pt  = ak.to_numpy(ak.flatten(leading_electron[nflip_sel].pt)),
             eta = ak.to_numpy(ak.flatten(abs(leading_electron[nflip_sel].eta))),
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),

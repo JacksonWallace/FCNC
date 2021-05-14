@@ -22,7 +22,7 @@ class charge_flip_calc(processor.ProcessorABC):
         self.variations = variations
         self.year = year
         self.btagSF = btag_scalefactor(year)
-        #self.leptonSF = LeptonSF(year=year)
+        #self.leptonSF = LeptonSF(year)
         self._accumulator = processor.dict_accumulator( accumulator )
 
     @property
@@ -50,9 +50,9 @@ class charge_flip_calc(processor.ProcessorABC):
         muon     = ev.Muon
         
         ## Electrons
-        electron   = Collections(ev, "Electron", "tight", self.year).get()
+        electron   = Collections(ev, "Electron", "tightFCNC", self.year).get()
         #electron = electron[(ak.nan_to_num(electron.eta, 99))]
-        electron   = electron[(electron.miniPFRelIso_all < 0.12) & (electron.pt > 20) & (abs(electron.eta) < 2.4)]
+        electron   = electron[(electron.pt > 20) & (abs(electron.eta) < 2.4)]
 
         gen_matched_electron = electron[( (electron.genPartIdx >= 0) & (abs(electron.matched_gen.pdgId)==11) )]
         
@@ -83,6 +83,10 @@ class charge_flip_calc(processor.ProcessorABC):
         if not dataset=='MuonEG':
             # generator weight
             weight.add("weight", ev.genWeight)
+            
+        #weight.add("leptonSF", self.leptonSF.get(electron, muon))
+        weight.add("PU", ev.puWeight, weightUp=ev.puWeightUp, weightDown=ev.puWeightDown, shift=False)
+        weight.add("btagSF", self.btagSF.Method1a(btag, light))
                       
         #selections    
         filters   = getFilters(ev, year=self.year, dataset=dataset)

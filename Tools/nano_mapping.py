@@ -1,5 +1,5 @@
 """
-Helpes for the use of raw NanoAOD
+Helpers for the use of raw NanoAOD
 """
 #from yaml import load, dump
 #try:
@@ -12,12 +12,17 @@ from Tools.config_helpers import redirector_ucsd, load_yaml, data_path
 
 import uproot
 
-nano_mapping = load_yaml(data_path+'nano_mapping_'+str(year)+'.yaml')
 
-def make_fileset(datasets, samples, redirector=redirector_ucsd, small=False, n_max=1):
+def nano_mapping(year=2018):
+    print(data_path+'nano_mapping_'+str(year)+'.yaml' )
+    nano_mapping = load_yaml(data_path+'nano_mapping_'+str(year)+'.yaml')
+    return nano_mapping
+
+def make_fileset(datasets, samples, year=2018, redirector=redirector_ucsd, small=False, n_max=1):
     fileset = {}
+    nano_mappings = nano_mapping(year)
     for dataset in datasets:
-        for nano_sample in nano_mapping[dataset]:
+        for nano_sample in nano_mappings[dataset]:
             dbs_files = DBSSample(dataset=nano_sample).get_files()
             files = [ redirector+x.name for x in dbs_files ]
             if not small:
