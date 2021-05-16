@@ -55,8 +55,6 @@ Electron:
     sip3d:
       max: 4
       extra: abs
-    miniPFRelIso_all:
-      max: 0.07
       
   vetoTTH:
     pt:
@@ -250,6 +248,27 @@ Muon:
       extra: abs
     ptErrRel:
       max: 0.2
+  
+  tightFCNC:
+    pt:
+      min: 15
+    eta:
+      max: 2.4
+      extra: abs
+    mediumId: 1
+    looseId: 1
+    dxy:
+      max: 0.05
+      extra: abs
+    dz:
+      max: 0.1
+      extra: abs
+    sip3d:
+      max: 4
+      extra: abs
+    ptErrRel:
+      max: 0.2
+    tightCharge: 2
 
   vetoTTH:
     pt:

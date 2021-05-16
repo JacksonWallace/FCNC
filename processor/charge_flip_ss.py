@@ -13,16 +13,23 @@ from Tools.objects import *
 from Tools.basic_objects import *
 from Tools.cutflow import *
 from Tools.config_helpers import *
+from Tools.helpers import build_weight_like
 from Tools.triggers import *
 from Tools.btag_scalefactors import *
 from Tools.lepton_scalefactors import *
+from Tools.charge_flip import *
 
-class charge_flip_calc(processor.ProcessorABC):
+class charge_flip_ss(processor.ProcessorABC):
     def __init__(self, year=2018, variations=[], accumulator={}):
         self.variations = variations
         self.year = year
+        
         self.btagSF = btag_scalefactor(year)
-        #self.leptonSF = LeptonSF(year)
+        
+        #self.leptonSF = LeptonSF(year=year)
+        
+        self.charge_flip_ratio = charge_flip('histos/chargeflipfullfixed3.pkl.gz')
+        
         self._accumulator = processor.dict_accumulator( accumulator )
 
     @property
@@ -35,43 +42,45 @@ class charge_flip_calc(processor.ProcessorABC):
         output = self.accumulator.identity()
         
         # we can use a very loose preselection to filter the events. nothing is done with this presel, though
-        presel = ak.num(events.Jet)>0
+        presel = ak.num(events.Jet)>=2
         
         ev = events[presel]
         dataset = ev.metadata['dataset']
-        
+
         # load the config - probably not needed anymore
         cfg = loadConfig()
         
         output['totalEvents']['all'] += len(events)
         output['skimmedEvents']['all'] += len(ev)
         
-        ## Muons
-        muon     = ev.Muon
         
         ## Electrons
-        electron   = Collections(ev, "Electron", "tightFCNC", self.year).get()
-        #electron = electron[(ak.nan_to_num(electron.eta, 99))]
-        electron   = electron[(electron.pt > 20) & (abs(electron.eta) < 2.4)]
+        electron     = Collections(ev, "Electron", "tightFCNC").get()
+        electron = electron[(electron.pt > 20) & (abs(electron.eta) < 2.4)]
 
         gen_matched_electron = electron[( (electron.genPartIdx >= 0) & (abs(electron.matched_gen.pdgId)==11) )]
+        n_gen = ak.num(gen_matched_electron)
         
-        is_flipped = ( (gen_matched_electron.matched_gen.pdgId*(-1) == gen_matched_electron.pdgId) & (abs(gen_matched_electron.pdgId) == 11) )
-        #(abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId) ==abs(gen_matched_electron.pdgId))&(ev.GenPart[gen_matched_electron.genPartIdx].pdgId/abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId) != gen_matched_electron.pdgId/abs(gen_matched_electron.pdgId))
-                      
-        flipped_electron = gen_matched_electron[is_flipped]
-        flipped_electron = flipped_electron[(ak.fill_none(flipped_electron.pt, 0)>0)]
-        flipped_electron = flipped_electron[~(ak.is_none(flipped_electron))]
-        n_flips = ak.num(flipped_electron)
         
-        dielectron = choose(electron, 2)
-        SSelectron = ak.any((dielectron['0'].charge * dielectron['1'].charge)>0, axis=1)
-         
-        leading_electron_idx = ak.singletons(ak.argmax(electron.pt, axis=1))
-        leading_electron = electron[leading_electron_idx]
+        ##Muons
+        muon     = Collections(ev, "Muon", "tightFCNC").get()
+        muon = muon[(muon.pt > 20) & (abs(muon.eta) < 2.4)]
         
-        leading_flipped_electron_idx = ak.singletons(ak.argmax(flipped_electron.pt, axis=1))
-        leading_flipped_electron = electron[leading_flipped_electron_idx]
+        
+        ##Leptons
+        dilepton = cross(muon, electron)
+        SSlepton = ak.any((dilepton['0'].charge * dilepton['1'].charge)>0, axis=1)
+
+        lepton   = ak.concatenate([muon, electron], axis=1)
+        leading_lepton_idx = ak.singletons(ak.argmax(lepton.pt, axis=1))
+        leading_lepton = lepton[leading_lepton_idx]
+        
+        
+        #jets
+        jet       = getJets(ev, minPt=25, maxEta=4.7, pt_var='pt')
+        jet       = jet[ak.argsort(jet.pt, ascending=False)] # need to sort wrt smeared and recorrected jet pt
+        jet       = jet[~match(jet, muon, deltaRCut=0.4)] # remove jets that overlap with muons
+        jet       = jet[~match(jet, electron, deltaRCut=0.4)] 
         
         ## MET -> can switch to puppi MET
         met_pt  = ev.MET.pt
@@ -79,79 +88,69 @@ class charge_flip_calc(processor.ProcessorABC):
 
         # setting up the various weights
         weight = Weights( len(ev) )
+        weight2 = Weights( len(ev))
         
         if not dataset=='MuonEG':
             # generator weight
             weight.add("weight", ev.genWeight)
+            weight2.add("weight", ev.genWeight)
             
-        #weight.add("leptonSF", self.leptonSF.get(electron, muon))
-        #weight.add("PU", ev.puWeight, weightUp=ev.puWeightUp, weightDown=ev.puWeightDown, shift=False)
-        #weight.add("btagSF", self.btagSF.Method1a(btag, light))
+        weight2.add("charge flip", self.charge_flip_ratio.flip_weight(electron))
+                                   
                       
         #selections    
         filters   = getFilters(ev, year=self.year, dataset=dataset)
         electr = ((ak.num(electron) >= 1))
-        gen_electr = ((ak.num(gen_matched_electron) >= 1))
-        ss = (SSelectron)
-        flip = (n_flips >= 1)
+        gen = (n_gen >= 1)
+        ss = (SSlepton)
+        os = ~(SSlepton)
+        jet_all = (ak.num(jet) >= 2)
         
         
         selection = PackedSelection()
-        selection.add('filter',        (filters) )
-        selection.add('electr',        electr  )
-        selection.add('ss',        ss)
-        selection.add('flip',          flip)
-        selection.add('gen_electr',    gen_electr)
+        selection.add('filter',      (filters) )
+        selection.add('electr',      electr  )
+        selection.add('ss',          ss)
+        selection.add('gen',         gen)
+        selection.add('os',          os)
+        selection.add('jet',         jet_all)
         
-        bl_reqs = ['filter', 'electr', 'gen_electr']
+        bl_reqs = ['filter', 'electr', 'gen', 'jet']
 
         bl_reqs_d = { sel: True for sel in bl_reqs }
         baseline = selection.require(**bl_reqs_d)
         
-        f_reqs = bl_reqs + ['flip']
-        f_reqs_d = { sel: True for sel in f_reqs }
-        flip_sel = selection.require(**f_reqs_d)
+        s_reqs = bl_reqs + ['ss']
+        s_reqs_d = { sel: True for sel in s_reqs }
+        ss_sel = selection.require(**s_reqs_d)
+        
+        o_reqs = bl_reqs + ['os']
+        o_reqs_d = {sel: True for sel in o_reqs }
+        os_sel = selection.require(**o_reqs_d)
+   
+        
+        #outputs
+        output['N_jet'].fill(dataset=dataset, multiplicity=ak.num(jet)[baseline], weight=weight.weight()[baseline])
+        
+        output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(lepton)[ss_sel], weight=weight.weight()[ss_sel])
                       
-        #adjust weights to prevent length mismatch
-        ak_weight_gen = ak.ones_like(gen_matched_electron[baseline].pt) * weight.weight()[baseline]
-        ak_weight_flip = ak.ones_like(flipped_electron[flip_sel].pt) * weight.weight()[flip_sel]
-    
-                                        
-        output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(electron)[baseline], weight=weight.weight()[baseline])
-        output['electron_flips'].fill(dataset=dataset, multiplicity=n_flips[baseline], weight=weight.weight()[baseline])
-
+        output['N_ele2'].fill(dataset=dataset, multiplicity=ak.num(lepton)[os_sel], weight=weight2.weight()[os_sel])
         
         output["electron"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(gen_matched_electron[baseline].pt)),
-            eta = abs(ak.to_numpy(ak.flatten(gen_matched_electron[baseline].eta))),
+            pt  = ak.to_numpy(ak.flatten(leading_lepton[ss_sel].pt)),
+            eta = ak.to_numpy(ak.flatten(abs(leading_lepton[ss_sel].eta))),
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
-            #weight = ak.to_numpy(ak.flatten(ak_weight_gen))
+            weight = weight.weight()[ss_sel]
         )
         
         output["electron2"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(gen_matched_electron[baseline].pt)),
-            eta = ak.to_numpy(ak.flatten(gen_matched_electron[baseline].eta)),
+            pt  = ak.to_numpy(ak.flatten(leading_lepton[os_sel].pt)),
+            eta = ak.to_numpy(ak.flatten(abs(leading_lepton[os_sel].eta))),
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
-            #weight = ak.to_numpy(ak.flatten(ak_weight_gen))
+            weight = weight2.weight()[os_sel]
         )
-        
-        output["flipped_electron"].fill(
-            dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].pt)),
-            eta = abs(ak.to_numpy(ak.flatten(flipped_electron[flip_sel].eta))),
-            #phi = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].phi)),
-            #weight = ak.to_numpy(ak.flatten(ak_weight_flip))
-        ) 
-        
-        output["flipped_electron2"].fill(
-            dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].pt)),
-            eta = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].eta)),
-            #phi = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].phi)),
-            #weight = ak.to_numpy(ak.flatten(ak_weight_flip))
-        )      
 
         return output
 
@@ -159,24 +158,25 @@ class charge_flip_calc(processor.ProcessorABC):
         return accumulator
 
 
-
-
 if __name__ == '__main__':
 
     from klepto.archives import dir_archive
-    from processor.default_accumulators import desired_output, add_processes_to_output
+    from processor.default_accumulators import desired_output, add_processes_to_output, add_files_to_output, dataset_axis
 
     from Tools.helpers import get_samples
     from Tools.config_helpers import redirector_ucsd, redirector_fnal
     from Tools.nano_mapping import make_fileset, nano_mapping
 
+    from processor.meta_processor import get_sample_meta
     overwrite = True
     local = True
-    
+
+
+   
     # load the config and the cache
     cfg = loadConfig()
     
-    cacheName = 'charge_flip_calc'
+    cacheName = 'charge_flip_check'
     cache = dir_archive(os.path.join(os.path.expandvars(cfg['caches']['base']), cacheName), serialized=True)
     histograms = sorted(list(desired_output.keys()))
     
@@ -184,10 +184,14 @@ if __name__ == '__main__':
     
     samples = get_samples()
 
-    fileset = make_fileset(['TTW', 'TTZ'], samples, redirector=redirector_ucsd, small=True)
+    #fileset = make_fileset(['TTW', 'TTZ'], samples, redirector=redirector_ucsd, small=True, n_max=5)  # small, max 5 files per sample
+    #fileset = make_fileset(['DY'], samples, redirector=redirector_ucsd, small=True, n_max=10)
+    fileset = make_fileset(['top'], samples, redirector=redirector_ucsd, small=True)
 
     add_processes_to_output(fileset, desired_output)
 
+    meta = get_sample_meta(fileset, samples)
+   
     if local:
 
         exe_args = {
@@ -196,7 +200,7 @@ if __name__ == '__main__':
              "schema": NanoAODSchema,
         }
         exe = processor.futures_executor
-
+   
     else:
         from Tools.helpers import get_scheduler_address
         from dask.distributed import Client, progress
@@ -210,7 +214,7 @@ if __name__ == '__main__':
             "schema": NanoAODSchema,
         }
         exe = processor.dask_executor
-    
+   
     if not overwrite:
         cache.load()
     
@@ -223,10 +227,10 @@ if __name__ == '__main__':
         output = processor.run_uproot_job(
             fileset,
             "Events",
-            charge_flip_calc(year=year, variations=[], accumulator=desired_output),
+            charge_flip_check(year=year, variations=[], accumulator=desired_output),
             exe,
             exe_args,
-            chunksize=250000,
+            chunksize=500000,
         )
         
         cache['fileset']        = fileset
@@ -238,7 +242,6 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import mplhep as hep
     plt.style.use(hep.style.CMS)
-    
     
     # load the functions to make a nice plot from the output histograms
     # and the scale_and_merge function that scales the individual histograms
@@ -271,7 +274,8 @@ if __name__ == '__main__':
     print ("Total events in output histogram N_ele: %.2f"%output['N_ele'].sum('dataset').sum('multiplicity').values(overflow='all')[()])
     
     my_hists = {}
-    my_hists['N_ele'] = scale_and_merge(output['N_ele'], samples, fileset, nano_mapping)
+    #my_hists['N_ele'] = scale_and_merge(output['N_ele'], samples, fileset, nano_mapping)
+    my_hists['N_ele'] = scale_and_merge(output['N_ele'], meta, fileset, nano_mapping)
     print ("Total scaled events in merged histogram N_ele: %.2f"%my_hists['N_ele'].sum('dataset').sum('multiplicity').values(overflow='all')[()])
     
     # Now make a nice plot of the electron multiplicity.
