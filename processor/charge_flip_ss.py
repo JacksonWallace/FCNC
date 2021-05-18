@@ -58,36 +58,30 @@ class charge_flip_ss(processor.ProcessorABC):
         electron     = Collections(ev, "Electron", "tightFCNC").get()
         electron = electron[(electron.pt > 20) & (abs(electron.eta) < 2.4)]
 
-        gen_matched_electron = electron[( (electron.genPartIdx >= 0) & (abs(electron.matched_gen.pdgId)==11) )]
+        electron = electron[( (electron.genPartIdx >= 0) & (abs(electron.matched_gen.pdgId)==11) )] #from here on all leptons are gen-matched
         
         
         ##Muons
         muon     = Collections(ev, "Muon", "tightFCNC").get()
         muon = muon[(muon.pt > 20) & (abs(muon.eta) < 2.4)]
         
-        gen_matched_muon = muon[( (muon.genPartIdx >= 0) & (abs(muon.matched_gen.pdgId)==13) )]
+        muon = muon[( (muon.genPartIdx >= 0) & (abs(muon.matched_gen.pdgId)==13) )]
         
         
         ##Leptons
-        dilepton = cross(muon, electron)
-        SSlepton = ak.any((dilepton['0'].charge * dilepton['1'].charge)>0, axis=1)
 
         lepton   = ak.concatenate([muon, electron], axis=1)
+        SSlepton = (ak.sum(lepton.charge, axis=1) != 0) & (ak.num(lepton)==2)
+        OSlepton = (ak.sum(lepton.charge, axis=1) == 0) & (ak.num(lepton)==2)
+        
+        
         leading_lepton_idx = ak.singletons(ak.argmax(lepton.pt, axis=1))
         leading_lepton = lepton[leading_lepton_idx]
         
         
-        gen_matched_dilepton = cross(gen_matched_muon, gen_matched_electron)
-        gen_matched_SSlepton = ak.any((gen_matched_dilepton['0'].charge * gen_matched_dilepton['1'].charge)>0, axis=1)
-
-        gen_matched_lepton   = ak.concatenate([gen_matched_muon, gen_matched_electron], axis=1)
-        
-        gm_leading_lepton_idx = ak.singletons(ak.argmax(gen_matched_lepton.pt, axis=1))#gm stands for gen matched
-        gm_leading_lepton = gen_matched_lepton[gm_leading_lepton_idx]
-        
         
         #jets
-        jet       = getJets(ev, minPt=25, maxEta=4.7, pt_var='pt')
+        jet       = getJets(ev, minPt=40, maxEta=2.4, pt_var='pt')
         jet       = jet[ak.argsort(jet.pt, ascending=False)] # need to sort wrt smeared and recorrected jet pt
         jet       = jet[~match(jet, muon, deltaRCut=0.4)] # remove jets that overlap with muons
         jet       = jet[~match(jet, electron, deltaRCut=0.4)] 
@@ -105,27 +99,23 @@ class charge_flip_ss(processor.ProcessorABC):
             weight.add("weight", ev.genWeight)
             weight2.add("weight", ev.genWeight)
             
-        weight2.add("charge flip", self.charge_flip_ratio.flip_weight(gen_matched_electron))
+        weight2.add("charge flip", self.charge_flip_ratio.flip_weight(electron))
                                    
                       
         #selections    
         filters   = getFilters(ev, year=self.year, dataset=dataset)
-        lept = (ak.num(lepton) == 2)
-        gm_lept = (ak.num(gen_matched_lepton) == 2)
-        ss = (gen_matched_SSlepton)
-        os = ~(gen_matched_SSlepton)
+        ss = (SSlepton)
+        os = (OSlepton)
         jet_all = (ak.num(jet) >= 2)
         
         
         selection = PackedSelection()
         selection.add('filter',      (filters) )
-        selection.add('lept',        lept )
-        selection.add('gm_lept',        gm_lept )
         selection.add('ss',          ss )
         selection.add('os',          os )
         selection.add('jet',         jet_all )
         
-        bl_reqs = ['filter', 'lept', 'gm_lept', 'jet']
+        bl_reqs = ['filter', 'jet']
 
         bl_reqs_d = { sel: True for sel in bl_reqs }
         baseline = selection.require(**bl_reqs_d)
@@ -142,22 +132,22 @@ class charge_flip_ss(processor.ProcessorABC):
         #outputs
         output['N_jet'].fill(dataset=dataset, multiplicity=ak.num(jet)[baseline], weight=weight.weight()[baseline])
         
-        output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(gen_matched_lepton)[ss_sel], weight=weight.weight()[ss_sel])
+        output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(lepton)[ss_sel], weight=weight.weight()[ss_sel])
                       
-        output['N_ele2'].fill(dataset=dataset, multiplicity=ak.num(gen_matched_lepton)[os_sel], weight=weight2.weight()[os_sel])
+        output['N_ele2'].fill(dataset=dataset, multiplicity=ak.num(lepton)[os_sel], weight=weight2.weight()[os_sel])
         
         output["electron"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(gm_leading_lepton[ss_sel].pt)),
-            eta = abs(ak.to_numpy(ak.flatten(gm_leading_lepton[ss_sel].eta))),
+            pt  = ak.to_numpy(ak.flatten(leading_lepton[ss_sel].pt)),
+            eta = abs(ak.to_numpy(ak.flatten(leading_lepton[ss_sel].eta))),
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
             weight = weight.weight()[ss_sel]
         )
         
         output["electron2"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(gm_leading_lepton[os_sel].pt)),
-            eta = abs(ak.to_numpy(ak.flatten(gm_leading_lepton[os_sel].eta))),
+            pt  = ak.to_numpy(ak.flatten(leading_lepton[os_sel].pt)),
+            eta = abs(ak.to_numpy(ak.flatten(leading_lepton[os_sel].eta))),
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
             weight = weight2.weight()[os_sel]
         )

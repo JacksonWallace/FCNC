@@ -7,7 +7,6 @@ Helpers for the use of raw NanoAOD
 #except ImportError:
 #    from yaml import Loader, Dumper
 from metis.Sample import DBSSample
-from Tools.helpers import get_samples
 from Tools.config_helpers import redirector_ucsd, load_yaml, data_path
 
 import uproot
@@ -18,7 +17,7 @@ def nano_mapping(year=2018):
     nano_mapping = load_yaml(data_path+'nano_mapping_'+str(year)+'.yaml')
     return nano_mapping
 
-def make_fileset(datasets, samples, year=2018, redirector=redirector_ucsd, small=False, n_max=1):
+def make_fileset(datasets, year=2018, redirector=redirector_ucsd, small=False, n_max=1):
     fileset = {}
     nano_mappings = nano_mapping(year)
     for dataset in datasets:

@@ -85,14 +85,11 @@ def get_sample_meta(fileset, samples, workers=10, skipbadfiles=True):
 
 if __name__ == '__main__':
 
-    from Tools.helpers import get_samples
     from Tools.config_helpers import redirector_ucsd, redirector_fnal
     from Tools.nano_mapping import make_fileset, nano_mapping
 
     
-    samples = get_samples()
-
-    fileset = make_fileset(['QCD'], samples, redirector=redirector_ucsd, small=False)
+    fileset = make_fileset(['QCD'], redirector=redirector_ucsd, small=False)
 
     meta = get_sample_meta(fileset)
 
