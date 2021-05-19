@@ -20,7 +20,7 @@ from Tools.lepton_scalefactors import *
 from Tools.charge_flip import *
 
 class charge_flip_ss(processor.ProcessorABC):
-    def __init__(self, year=2018, variations=[], accumulator={}):
+    def __init__(self, year=2016, variations=[], accumulator={}):
         self.variations = variations
         self.year = year
         
@@ -28,7 +28,7 @@ class charge_flip_ss(processor.ProcessorABC):
         
         #self.leptonSF = LeptonSF(year=year)
         
-        self.charge_flip_ratio = charge_flip('../histos/chargeflipfull2016.pkl.gz')
+        self.charge_flip_ratio = charge_flip('../histos/chargeflipfull2018.pkl.gz')
         
         self._accumulator = processor.dict_accumulator( accumulator )
 
@@ -55,14 +55,14 @@ class charge_flip_ss(processor.ProcessorABC):
         
         
         ## Electrons
-        electron     = Collections(ev, "Electron", "tightFCNC").get()
+        electron     = Collections(ev, "Electron", "tight").get()
         electron = electron[(electron.pt > 20) & (abs(electron.eta) < 2.4)]
 
         electron = electron[( (electron.genPartIdx >= 0) & (abs(electron.matched_gen.pdgId)==11) )] #from here on all leptons are gen-matched
         
         
         ##Muons
-        muon     = Collections(ev, "Muon", "tightFCNC").get()
+        muon     = Collections(ev, "Muon", "tight").get()
         muon = muon[(muon.pt > 20) & (abs(muon.eta) < 2.4)]
         
         muon = muon[( (muon.genPartIdx >= 0) & (abs(muon.matched_gen.pdgId)==13) )]
@@ -140,7 +140,6 @@ class charge_flip_ss(processor.ProcessorABC):
             dataset = dataset,
             pt  = ak.to_numpy(ak.flatten(leading_lepton[ss_sel].pt)),
             eta = abs(ak.to_numpy(ak.flatten(leading_lepton[ss_sel].eta))),
-            #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
             weight = weight.weight()[ss_sel]
         )
         
@@ -148,7 +147,6 @@ class charge_flip_ss(processor.ProcessorABC):
             dataset = dataset,
             pt  = ak.to_numpy(ak.flatten(leading_lepton[os_sel].pt)),
             eta = abs(ak.to_numpy(ak.flatten(leading_lepton[os_sel].eta))),
-            #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
             weight = weight2.weight()[os_sel]
         )
 
