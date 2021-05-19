@@ -169,8 +169,6 @@ if __name__ == '__main__':
     overwrite = True
     local = True
 
-
-   
     # load the config and the cache
     cfg = loadConfig()
     
@@ -184,7 +182,7 @@ if __name__ == '__main__':
 
     #fileset = make_fileset(['TTW', 'TTZ'], samples, redirector=redirector_ucsd, small=True, n_max=5)  # small, max 5 files per sample
     #fileset = make_fileset(['DY'], samples, redirector=redirector_ucsd, small=True, n_max=10)
-    fileset = make_fileset(['top'], samples, redirector=redirector_ucsd, small=True)
+    fileset = make_fileset(['top', 'DY', 'TTZ'], samples, redirector=redirector_fnal, small=True)
 
     add_processes_to_output(fileset, desired_output)
 
