@@ -13,7 +13,6 @@ import uproot
 
 
 def nano_mapping(year=2018):
-    print(data_path+'nano_mapping_'+str(year)+'.yaml' )
     nano_mapping = load_yaml(data_path+'nano_mapping_'+str(year)+'.yaml')
     return nano_mapping
 

@@ -66,6 +66,8 @@ desired_output = {
             "N_central" :         hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_ele" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_ele2" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_ele3" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_ele4" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_mu" :              hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_jet" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_fwd" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
