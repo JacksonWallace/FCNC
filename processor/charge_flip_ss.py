@@ -59,7 +59,7 @@ class charge_flip_ss(processor.ProcessorABC):
         electron = electron[(electron.pt > 20) & (np.abs(electron.eta) < 2.4)]
 
         electron = electron[( (electron.genPartIdx >= 0) & (np.abs(electron.matched_gen.pdgId)==11) )] #from here on all leptons are gen-matched
-        
+       
         electron = electron[(ak.fill_none(electron.pt, 0)>0)]
         electron = electron[~(ak.is_none(electron))]
         
@@ -71,7 +71,7 @@ class charge_flip_ss(processor.ProcessorABC):
         
         leading_parent = 
         
-        
+       
         is_flipped = ( (electron.matched_gen.pdgId*(-1) == electron.pdgId) & (abs(electron.pdgId) == 11) )
         
         
@@ -88,7 +88,7 @@ class charge_flip_ss(processor.ProcessorABC):
         
         muon = muon[(ak.fill_none(muon.pt, 0)>0)]
         muon = muon[~(ak.is_none(muon))]
-        
+       
         
         ##Leptons
 
@@ -283,9 +283,8 @@ if __name__ == '__main__':
 
     #fileset = make_fileset(['TTW', 'TTZ'], samples, redirector=redirector_ucsd, small=True, n_max=5)  # small, max 5 files per sample
     #fileset = make_fileset(['DY'], samples, redirector=redirector_ucsd, small=True, n_max=10)
-    fileset = make_fileset(['top', 'DY',], redirector=redirector_ucsd, small=False)
+   fileset = make_fileset(['top', 'DY',], redirector=redirector_ucsd, small=False)
    
-
     add_processes_to_output(fileset, desired_output)
 
     #meta = get_sample_meta(fileset, samples)
