@@ -74,7 +74,7 @@ class charge_flip_ss(processor.ProcessorABC):
         trailing_parent = find_first_parent(trailing_electron.matched_gen)
         
        
-        is_flipped = ( (electron.matched_gen.pdgId*(-1) == electron.pdgId) & (abs(electron.pdgId) == 11) )
+        is_flipped = ( ((electron.matched_gen.pdgId*(-1) == electron.pdgId) | charge(electron.gen_matched)*(-1) == electron.charge & (np.abs(electron.pdgId) == 11))
         
         
         flipped_electron = electron[is_flipped]
@@ -172,7 +172,7 @@ class charge_flip_ss(processor.ProcessorABC):
         nf2_reqs_d = {sel: True for sel in nf2_reqs}
         n_flip_sel2 = selection.require(**nf2_reqs_d)
         
-        """s_reqs = bl_reqs + ['ss'] + ['no_mumu']
+        s_reqs = bl_reqs + ['ss'] + ['no_mumu']
         s_reqs_d = { sel: True for sel in s_reqs }
         ss_sel = selection.require(**s_reqs_d)
         
@@ -235,19 +235,19 @@ class charge_flip_ss(processor.ProcessorABC):
             pt  = ak.to_numpy(ak.flatten(leading_lepton[n_flip_sel].pt)),
             eta = np.abs(ak.to_numpy(ak.flatten(leading_lepton[n_flip_sel].eta))),
             weight = weight2.weight()[n_flip_sel]
-        )"""
+        )
         #commenting out the above for now
         
         output["lepton_parent"].fill(
             dataset = dataset,
-            pdgID = np.abs(ak.to_numpy(ak.flatten(leading_parent[n_flip_sel2]))),
-            weight = weight.weight()[n_flip_sel2]
+            pdgID = np.abs(ak.to_numpy(ak.flatten(leading_parent[ss_sel]))),
+            weight = weight.weight()[ss_sel]
         )
         
         output["lepton_parent2"].fill(
             dataset = dataset,
-            pdgID = np.abs(ak.to_numpy(ak.flatten(trailing_parent[n_flip_sel2]))),
-            weight = weight.weight()[n_flip_sel2]
+            pdgID = np.abs(ak.to_numpy(ak.flatten(trailing_parent[ss_sel]))),
+            weight = weight.weight()[ss_sel]
         )
 
         return output

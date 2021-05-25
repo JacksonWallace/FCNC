@@ -43,3 +43,22 @@ def get_lepton_from(events, parent_pdg=6):
     gp_lep_fromW = gp_lep[abs(gp_lep.parent.pdgId)==24]
     gp_leptonic_W_parent = find_first_parent(gp_lep_fromW.parent, maxgen=19)
     return gp_lep_fromW[gp_leptonic_W_parent==parent_pdg]
+
+def get_charge_parent(particle):
+    parent = find_first_parent(particle)
+    if parent == 11 or parent == 13 or parent == 15 or parent == 17 or parent == -24 or parent == -37:
+        charge = -1
+    elif parent == -11 or parent == -13 or parent == -15 or parent == -17 or parent == 24 or parent == 37:
+        charge = 1
+    elif parent == 2 or parent == 4 or parent == 6 or parent == 8:
+        charge = 2/3
+    elif parent == -2 or parent == -4 or parent == -6 or parent == -8:
+        charge = -2/3
+    elif parent == 1 or parent == 3 or parent == 5 or parent == 7:
+        charge = -1/3
+    elif parent == -1 or parent == -3 or parent == -5 or parent == -7:
+        charge = 1/3
+    elif parent == 12 or parent == 14 or parent == 16 or parent == 18 or parent == 9 or parent == 21 or parent == 22 or parent == 23 or parent == 25:
+        charge = 0
+    return charge
+    
