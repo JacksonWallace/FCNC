@@ -18,6 +18,7 @@ from Tools.triggers import *
 from Tools.btag_scalefactors import *
 from Tools.lepton_scalefactors import *
 from Tools.charge_flip import *
+from Tools.gen import find_first_parent
 
 class charge_flip_ss(processor.ProcessorABC):
     def __init__(self, year=2018, variations=[], accumulator={}):
@@ -69,7 +70,8 @@ class charge_flip_ss(processor.ProcessorABC):
         trailing_electron_idx = ak.singletons(ak.argmin(electron.pt, axis=1))
         trailing_electron = electron[trailing_electron_idx]
         
-        leading_parent = 
+        leading_parent = find_first_parent(leading_electron.matched_gen)
+        trailing_parent = find_first_parent(trailing_electron.matched_gen)
         
        
         is_flipped = ( (electron.matched_gen.pdgId*(-1) == electron.pdgId) & (abs(electron.pdgId) == 11) )
@@ -170,7 +172,7 @@ class charge_flip_ss(processor.ProcessorABC):
         nf2_reqs_d = {sel: True for sel in nf2_reqs}
         n_flip_sel2 = selection.require(**nf2_reqs_d)
         
-        s_reqs = bl_reqs + ['ss'] + ['no_mumu']
+        """s_reqs = bl_reqs + ['ss'] + ['no_mumu']
         s_reqs_d = { sel: True for sel in s_reqs }
         ss_sel = selection.require(**s_reqs_d)
         
@@ -203,10 +205,6 @@ class charge_flip_ss(processor.ProcessorABC):
                       
         output['N_ele2'].fill(dataset=dataset, multiplicity=ak.num(lepton)[os_sel], weight=weight2.weight()[os_sel])
         
-        #output['N_ele3'].fill(dataset=dataset, multiplicity=ak.num(lepton)[emss_sel], weight=weight.weight()[emss_sel])
-                      
-        #output['N_ele4'].fill(dataset=dataset, multiplicity=ak.num(lepton)[emos_sel], weight=weight2.weight()[emos_sel])
-        
         output['electron_flips'].fill(dataset=dataset, multiplicity = n_flips[ss_sel], weight=weight.weight()[ss_sel])
 
         output['electron_flips2'].fill(dataset=dataset, multiplicity = n_flips[os_sel], weight=weight2.weight()[os_sel])
@@ -237,17 +235,18 @@ class charge_flip_ss(processor.ProcessorABC):
             pt  = ak.to_numpy(ak.flatten(leading_lepton[n_flip_sel].pt)),
             eta = np.abs(ak.to_numpy(ak.flatten(leading_lepton[n_flip_sel].eta))),
             weight = weight2.weight()[n_flip_sel]
-        )
+        )"""
+        #commenting out the above for now
         
         output["lepton_parent"].fill(
             dataset = dataset,
-            pdgID = ak.to_numpy(ak.flatten([n_flip_sel2])),
+            pdgID = np.abs(ak.to_numpy(ak.flatten(leading_parent[n_flip_sel2]))),
             weight = weight.weight()[n_flip_sel2]
         )
         
         output["lepton_parent2"].fill(
             dataset = dataset,
-            pdgID = ak.to_numpy(ak.flatten([n_flip_sel2])),
+            pdgID = np.abs(ak.to_numpy(ak.flatten(trailing_parent[n_flip_sel2]))),
             weight = weight.weight()[n_flip_sel2]
         )
 
@@ -283,7 +282,7 @@ if __name__ == '__main__':
 
     #fileset = make_fileset(['TTW', 'TTZ'], samples, redirector=redirector_ucsd, small=True, n_max=5)  # small, max 5 files per sample
     #fileset = make_fileset(['DY'], samples, redirector=redirector_ucsd, small=True, n_max=10)
-   fileset = make_fileset(['top', 'DY',], redirector=redirector_ucsd, small=False)
+    fileset = make_fileset(['top', 'DY',], redirector=redirector_ucsd, small=False)
    
     add_processes_to_output(fileset, desired_output)
 
