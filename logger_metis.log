@@ -189,3 +189,6 @@
 [2021-05-19 10:39:37,811] [Sample.py:55] [DEBUG] Doing DIS query of type files for /DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM
 [2021-05-19 10:40:27,150] [Sample.py:55] [DEBUG] Doing DIS query of type files for /TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM
 [2021-05-19 10:40:27,193] [Sample.py:55] [DEBUG] Doing DIS query of type files for /DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM
+[2021-05-21 22:01:11,957] [Sample.py:55] [DEBUG] Doing DIS query of type files for /TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM
+[2021-05-21 22:04:16,238] [Sample.py:55] [DEBUG] Doing DIS query of type files for /TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM
+[2021-05-21 22:04:22,666] [Sample.py:55] [DEBUG] Doing DIS query of type files for /DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/NANOAODSIM

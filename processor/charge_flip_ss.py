@@ -63,6 +63,14 @@ class charge_flip_ss(processor.ProcessorABC):
         electron = electron[(ak.fill_none(electron.pt, 0)>0)]
         electron = electron[~(ak.is_none(electron))]
         
+        leading_electron_idx = ak.singletons(ak.argmax(electron.pt, axis=1))
+        leading_electron = electron[leading_electron_idx]
+        
+        trailing_electron_idx = ak.singletons(ak.argmin(electron.pt, axis=1))
+        trailing_electron = electron[trailing_electron_idx]
+        
+        leading_parent = 
+        
         
         is_flipped = ( (electron.matched_gen.pdgId*(-1) == electron.pdgId) & (abs(electron.pdgId) == 11) )
         
@@ -87,6 +95,9 @@ class charge_flip_ss(processor.ProcessorABC):
         lepton   = ak.concatenate([muon, electron], axis=1)
         SSlepton = (ak.sum(lepton.charge, axis=1) != 0) & (ak.num(lepton)==2)
         OSlepton = (ak.sum(lepton.charge, axis=1) == 0) & (ak.num(lepton)==2)
+        
+        emulepton = (ak.num(electron) == 1) & (ak.num(muon) == 1)
+        no_mumu = (ak.num(muon) <= 1)
         
         
         leading_lepton_idx = ak.singletons(ak.argmax(lepton.pt, axis=1))
@@ -125,9 +136,10 @@ class charge_flip_ss(processor.ProcessorABC):
         os = (OSlepton)
         jet_all = (ak.num(jet) >= 2)
         diele = (ak.num(electron) == 2)
-        emu = (ak.num(electron) == 1)
+        emu = (emulepton)
         flips = (n_flips == 1)
         no_flips = (n_flips == 0)
+        nmm = no_mumu
         
         
         selection = PackedSelection()
@@ -139,25 +151,30 @@ class charge_flip_ss(processor.ProcessorABC):
         selection.add('emu',         emu)
         selection.add('flip',        flips)
         selection.add('nflip',       no_flips)
+        selection.add('no_mumu',     nmm)
         
         bl_reqs = ['filter', 'jet']
 
         bl_reqs_d = { sel: True for sel in bl_reqs }
         baseline = selection.require(**bl_reqs_d)
         
-        f_reqs = bl_reqs + ['flip'] + ['emu']
+        f_reqs = bl_reqs + ['flip'] + ['ss'] + ['no_mumu']
         f_reqs_d = {sel: True for sel in f_reqs}
         flip_sel = selection.require(**f_reqs_d)
         
-        nf_reqs = bl_reqs + ['nflip'] + ['emu']
+        nf_reqs = bl_reqs + ['nflip'] + ['os'] + ['no_mumu']
         nf_reqs_d = {sel: True for sel in nf_reqs}
         n_flip_sel = selection.require(**nf_reqs_d)
         
-        s_reqs = bl_reqs + ['ss']
+        nf2_reqs = bl_reqs + ['nflip'] + ['ss'] + ['no_mumu']
+        nf2_reqs_d = {sel: True for sel in nf2_reqs}
+        n_flip_sel2 = selection.require(**nf2_reqs_d)
+        
+        s_reqs = bl_reqs + ['ss'] + ['no_mumu']
         s_reqs_d = { sel: True for sel in s_reqs }
         ss_sel = selection.require(**s_reqs_d)
         
-        o_reqs = bl_reqs + ['os']
+        o_reqs = bl_reqs + ['os'] + ['no_mumu']
         o_reqs_d = {sel: True for sel in o_reqs }
         os_sel = selection.require(**o_reqs_d)
         
@@ -182,30 +199,30 @@ class charge_flip_ss(processor.ProcessorABC):
         #outputs
         output['N_jet'].fill(dataset=dataset, multiplicity=ak.num(jet)[baseline], weight=weight.weight()[baseline])
         
-        output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(lepton)[emuss_sel], weight=weight.weight()[emuss_sel])
+        output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(lepton)[ss_sel], weight=weight.weight()[ss_sel])
                       
-        output['N_ele2'].fill(dataset=dataset, multiplicity=ak.num(lepton)[emuos_sel], weight=weight2.weight()[emuos_sel])
+        output['N_ele2'].fill(dataset=dataset, multiplicity=ak.num(lepton)[os_sel], weight=weight2.weight()[os_sel])
         
         #output['N_ele3'].fill(dataset=dataset, multiplicity=ak.num(lepton)[emss_sel], weight=weight.weight()[emss_sel])
                       
         #output['N_ele4'].fill(dataset=dataset, multiplicity=ak.num(lepton)[emos_sel], weight=weight2.weight()[emos_sel])
         
-        output['electron_flips'].fill(dataset=dataset, multiplicity = n_flips[emuss_sel], weight=weight.weight()[emuss_sel])
+        output['electron_flips'].fill(dataset=dataset, multiplicity = n_flips[ss_sel], weight=weight.weight()[ss_sel])
 
-        output['electron_flips2'].fill(dataset=dataset, multiplicity = n_flips[emuos_sel], weight=weight2.weight()[emuos_sel])
+        output['electron_flips2'].fill(dataset=dataset, multiplicity = n_flips[os_sel], weight=weight2.weight()[os_sel])
 
         output["electron"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(leading_lepton[emuss_sel].pt)),
-            eta = np.abs(ak.to_numpy(ak.flatten(leading_lepton[emuss_sel].eta))),
-            weight = weight.weight()[emuss_sel]
+            pt  = ak.to_numpy(ak.flatten(leading_lepton[ss_sel].pt)),
+            eta = np.abs(ak.to_numpy(ak.flatten(leading_lepton[ss_sel].eta))),
+            weight = weight.weight()[ss_sel]
         )
         
         output["electron2"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(leading_lepton[emuos_sel].pt)),
-            eta = np.abs(ak.to_numpy(ak.flatten(leading_lepton[emuos_sel].eta))),
-            weight = weight2.weight()[emuos_sel]
+            pt  = ak.to_numpy(ak.flatten(leading_lepton[os_sel].pt)),
+            eta = np.abs(ak.to_numpy(ak.flatten(leading_lepton[os_sel].eta))),
+            weight = weight2.weight()[os_sel]
         )
         
         output["flipped_electron"].fill(
@@ -220,6 +237,18 @@ class charge_flip_ss(processor.ProcessorABC):
             pt  = ak.to_numpy(ak.flatten(leading_lepton[n_flip_sel].pt)),
             eta = np.abs(ak.to_numpy(ak.flatten(leading_lepton[n_flip_sel].eta))),
             weight = weight2.weight()[n_flip_sel]
+        )
+        
+        output["lepton_parent"].fill(
+            dataset = dataset,
+            pdgID = ak.to_numpy(ak.flatten([n_flip_sel2])),
+            weight = weight.weight()[n_flip_sel2]
+        )
+        
+        output["lepton_parent2"].fill(
+            dataset = dataset,
+            pdgID = ak.to_numpy(ak.flatten([n_flip_sel2])),
+            weight = weight.weight()[n_flip_sel2]
         )
 
         return output

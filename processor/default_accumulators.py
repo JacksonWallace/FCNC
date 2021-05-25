@@ -28,6 +28,7 @@ n_ele_axis              = hist.Bin("n_ele",         r"N", 4, -0.5, 3.5) # we can
 ext_multiplicity_axis   = hist.Bin("multiplicity",  r"N", 100, -0.5, 99.5) # e.g. for PV
 norm_axis               = hist.Bin("norm",          r"N", 25, 0, 1)
 score_axis              = hist.Bin("score",         r"N", 100, 0, 1)
+pdgID_axis              = hist.Bin("pdgID",         r"N", 26, 0, 25)
 
 variations = ['pt_jesTotalUp', 'pt_jesTotalDown']
 
@@ -79,6 +80,8 @@ desired_output = {
             "nGenTau" :         hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "nGenL" :           hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "GenL" :            hist.Hist("Counts", pt_axis, multiplicity_axis),
+            "lepton_parent":    hist.Hist("Counts", dataset_axis, pdgID_axis),
+            "lepton_parent2":    hist.Hist("Counts", dataset_axis, pdgID_axis),
 
             'skimmedEvents':    processor.defaultdict_accumulator(int),
             'totalEvents':      processor.defaultdict_accumulator(int),
