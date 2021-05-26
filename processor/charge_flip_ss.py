@@ -18,7 +18,7 @@ from Tools.triggers import *
 from Tools.btag_scalefactors import *
 from Tools.lepton_scalefactors import *
 from Tools.charge_flip import *
-from Tools.gen import find_first_parent
+from Tools.gen import find_first_parent, get_charge_parent
 
 class charge_flip_ss(processor.ProcessorABC):
     def __init__(self, year=2018, variations=[], accumulator={}):
@@ -59,10 +59,9 @@ class charge_flip_ss(processor.ProcessorABC):
         electron     = Collections(ev, "Electron", "tightFCNC").get()
         electron = electron[(electron.pt > 20) & (np.abs(electron.eta) < 2.4)]
 
-        electron = electron[( (electron.genPartIdx >= 0) & (np.abs(electron.matched_gen.pdgId)==11) )] #from here on all leptons are gen-matched
-       
-        electron = electron[(ak.fill_none(electron.pt, 0)>0)]
-        electron = electron[~(ak.is_none(electron))]
+        electron = electron[(electron.genPartIdx >= 0)]
+        electron = electron[(np.abs(electron.matched_gen.pdgId)==11)]  #from here on all leptons are gen-matched
+        electron = electron[( (electron.genPartFlav==1) | (electron.genPartFlav==15) )] #and now they are all prompt
         
         leading_electron_idx = ak.singletons(ak.argmax(electron.pt, axis=1))
         leading_electron = electron[leading_electron_idx]
@@ -74,7 +73,7 @@ class charge_flip_ss(processor.ProcessorABC):
         trailing_parent = find_first_parent(trailing_electron.matched_gen)
         
        
-        is_flipped = ( ((electron.matched_gen.pdgId*(-1) == electron.pdgId) | charge(electron.gen_matched)*(-1) == electron.charge & (np.abs(electron.pdgId) == 11))
+        is_flipped = ( ( (electron.matched_gen.pdgId*(-1) == electron.pdgId) | (get_charge_parent(electron.matched_gen)*(-1) == electron.charge) )  & (np.abs(electron.pdgId) == 11) )
         
         
         flipped_electron = electron[is_flipped]
@@ -86,10 +85,9 @@ class charge_flip_ss(processor.ProcessorABC):
         muon     = Collections(ev, "Muon", "tightFCNC").get()
         muon = muon[(muon.pt > 20) & (np.abs(muon.eta) < 2.4)]
         
-        muon = muon[( (muon.genPartIdx >= 0) & (np.abs(muon.matched_gen.pdgId)==13) )]
-        
-        muon = muon[(ak.fill_none(muon.pt, 0)>0)]
-        muon = muon[~(ak.is_none(muon))]
+        muon = muon[(muon.genPartIdx >= 0)]
+        muon = muon[(np.abs(muon.matched_gen.pdgId)==13)] #from here, all muons are gen-matched
+        muon = muon[( (muon.genPartFlav==1) | (muon.genPartFlav==15) )] #and now they are all prompt
        
         
         ##Leptons
@@ -195,9 +193,7 @@ class charge_flip_ss(processor.ProcessorABC):
         emo_reqs = o_reqs + ['emu']
         emo_reqs_d = { sel: True for sel in emo_reqs }
         emos_sel = selection.require(**emo_reqs_d)
-   
-        #look at events with two electrons by requiring two electrons, then events with e mu and plot
-    
+       
         #outputs
         output['N_jet'].fill(dataset=dataset, multiplicity=ak.num(jet)[baseline], weight=weight.weight()[baseline])
         

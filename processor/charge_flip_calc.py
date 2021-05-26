@@ -16,6 +16,7 @@ from Tools.config_helpers import *
 from Tools.triggers import *
 from Tools.btag_scalefactors import *
 from Tools.lepton_scalefactors import *
+from Tools.gen import get_charge_parent, find_first_parent
 
 class charge_flip_calc(processor.ProcessorABC):
     def __init__(self, year=2018, variations=[], accumulator={}):
@@ -47,25 +48,22 @@ class charge_flip_calc(processor.ProcessorABC):
         output['skimmedEvents']['all'] += len(ev)
         
         ## Muons
-        muon     = ev.Muon
         
         ## Electrons
         electron   = Collections(ev, "Electron", "tightFCNC", self.year).get()
-        #electron = electron[(ak.nan_to_num(electron.eta, 99))]
         electron   = electron[(electron.pt > 20) & (abs(electron.eta) < 2.4)]
 
-        gen_matched_electron = electron[( (electron.genPartIdx >= 0) & (abs(electron.matched_gen.pdgId)==11) )]
+        electron = electron[(electron.genPartIdx >= 0)]
+        electron = electron[(np.abs(electron.matched_gen.pdgId)==11)]  #from here on all leptons are gen-matched
+        electron = electron[( (electron.genPartFlav==1) | (electron.genPartFlav==15) )] #and now they are all prompt
         
-        is_flipped = ( (gen_matched_electron.matched_gen.pdgId*(-1) == gen_matched_electron.pdgId) & (abs(gen_matched_electron.pdgId) == 11) )
-        #(abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId) ==abs(gen_matched_electron.pdgId))&(ev.GenPart[gen_matched_electron.genPartIdx].pdgId/abs(ev.GenPart[gen_matched_electron.genPartIdx].pdgId) != gen_matched_electron.pdgId/abs(gen_matched_electron.pdgId))
-                      
-        flipped_electron = gen_matched_electron[is_flipped]
+        is_flipped = ( ( (electron.matched_gen.pdgId*(-1) == electron.pdgId) | (get_charge_parent(electron.matched_gen)*(-1) == electron.charge) )  & (np.abs(electron.pdgId) == 11) )
+        
+        
+        flipped_electron = electron[is_flipped]
         flipped_electron = flipped_electron[(ak.fill_none(flipped_electron.pt, 0)>0)]
         flipped_electron = flipped_electron[~(ak.is_none(flipped_electron))]
         n_flips = ak.num(flipped_electron)
-        
-        dielectron = choose(electron, 2)
-        SSelectron = ak.any((dielectron['0'].charge * dielectron['1'].charge)>0, axis=1)
          
         leading_electron_idx = ak.singletons(ak.argmax(electron.pt, axis=1))
         leading_electron = electron[leading_electron_idx]
@@ -91,8 +89,6 @@ class charge_flip_calc(processor.ProcessorABC):
         #selections    
         filters   = getFilters(ev, year=self.year, dataset=dataset)
         electr = ((ak.num(electron) >= 1))
-        gen_electr = ((ak.num(gen_matched_electron) >= 1))
-        ss = (SSelectron)
         flip = (n_flips >= 1)
         
         
@@ -103,7 +99,7 @@ class charge_flip_calc(processor.ProcessorABC):
         selection.add('flip',          flip)
         selection.add('gen_electr',    gen_electr)
         
-        bl_reqs = ['filter', 'electr', 'gen_electr']
+        bl_reqs = ['filter', 'electr']
 
         bl_reqs_d = { sel: True for sel in bl_reqs }
         baseline = selection.require(**bl_reqs_d)
