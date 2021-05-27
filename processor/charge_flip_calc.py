@@ -95,9 +95,7 @@ class charge_flip_calc(processor.ProcessorABC):
         selection = PackedSelection()
         selection.add('filter',        (filters) )
         selection.add('electr',        electr  )
-        selection.add('ss',        ss)
         selection.add('flip',          flip)
-        selection.add('gen_electr',    gen_electr)
         
         bl_reqs = ['filter', 'electr']
 
@@ -109,7 +107,7 @@ class charge_flip_calc(processor.ProcessorABC):
         flip_sel = selection.require(**f_reqs_d)
                       
         #adjust weights to prevent length mismatch
-        ak_weight_gen = ak.ones_like(gen_matched_electron[baseline].pt) * weight.weight()[baseline]
+        ak_weight_gen = ak.ones_like(electron[baseline].pt) * weight.weight()[baseline]
         ak_weight_flip = ak.ones_like(flipped_electron[flip_sel].pt) * weight.weight()[flip_sel]
     
                                         
@@ -119,16 +117,16 @@ class charge_flip_calc(processor.ProcessorABC):
         
         output["electron"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(gen_matched_electron[baseline].pt)),
-            eta = abs(ak.to_numpy(ak.flatten(gen_matched_electron[baseline].eta))),
+            pt  = ak.to_numpy(ak.flatten(electron[baseline].pt)),
+            eta = abs(ak.to_numpy(ak.flatten(electron[baseline].eta))),
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
             #weight = ak.to_numpy(ak.flatten(ak_weight_gen))
         )
         
         output["electron2"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(gen_matched_electron[baseline].pt)),
-            eta = ak.to_numpy(ak.flatten(gen_matched_electron[baseline].eta)),
+            pt  = ak.to_numpy(ak.flatten(electron[baseline].pt)),
+            eta = ak.to_numpy(ak.flatten(electron[baseline].eta)),
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
             #weight = ak.to_numpy(ak.flatten(ak_weight_gen))
         )
