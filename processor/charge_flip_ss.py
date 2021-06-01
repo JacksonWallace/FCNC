@@ -73,7 +73,7 @@ class charge_flip_ss(processor.ProcessorABC):
         trailing_parent = find_first_parent(trailing_electron.matched_gen)
         
        
-        is_flipped = ( ( (electron.matched_gen.pdgId*(-1) == electron.pdgId) | (get_charge_parent(electron.matched_gen)*(-1) == electron.charge) )  & (np.abs(electron.pdgId) == 11) )
+        is_flipped = ( (electron.matched_gen.pdgId*(-1) == electron.pdgId) & (np.abs(electron.pdgId) == 11) )
         
         
         flipped_electron = electron[is_flipped]

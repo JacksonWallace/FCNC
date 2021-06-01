@@ -12,6 +12,7 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.postprocessor import Pos
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection
 from argparse import ArgumentParser
+ 
 parser = ArgumentParser()
 parser.add_argument('-i', '--infiles', dest='infiles', action='store', type=str, default=None)
 parser.add_argument('-n', '--max',     dest='maxEvts', action='store', type=int, default=20)
@@ -25,6 +26,7 @@ outdir    = '.'
 maxEvts   = args.maxEvts if args.maxEvts>0 else 9999999999
 branchsel = None
 
+
 # INPUT FILES
 #  dasgoclient --query="dataset=/DYJetsToLL_M-50*/*18NanoAODv5*/NANOAOD*"
 #  dasgoclient --query="dataset=/DYJetsToLL_M-50_TuneCP2_13TeV-madgraphMLM-pythia8/RunIIAutumn18NanoAODv5-PUFall18Fast_Nano1June2019_lhe_102X_upgrade2018_realistic_v19-v1/NANOAODSIM file" | head -n10
@@ -36,7 +38,7 @@ infiles   = [
   #'/hadoop/cms/store/user/mbryson/WH_hadronic/WH_had_750_1/test/WH_hadronic_nanoAOD_500.root'
   #'root://xrootd.t2.ucsd.edu:2040//store/mc/RunIIAutumn18NanoAODv6/W1JetsToLNu_NuPt-200_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano25Oct2019_102X_upgrade2018_realistic_v20-v1/250000/3917F723-A4EF-AF42-9CA9-D5358FF660CB.root'
   #'root://xcache-redirector.t2.ucsd.edu:2040//store/mc/RunIISummer16NanoAODv7/TT_FCNC-TtoHJ_aTleptonic_HToWWZZtautau_eta_hut-MadGraph5-pythia8/NANOAODSIM/PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1/120000/658DC188-65AB-7E4D-871B-5B2F2B951539.root'
-  'root://xcache-redirector.t2.ucsd.edu:2040//store/mc/RunIIAutumn18NanoAODv7/TTGamma_SingleLept_TuneCP5_13TeV-madgraph-pythia8/NANOAODSIM/Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/60000/122F21B5-5A0D-D842-9636-27D1CF6547D1.root'
+  'root://xcache-redirector.t2.ucsd.edu:2040//store/mc/RunIIAutumn18NanoAODv7/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/60000/0EF179F9-428D-B944-8DB3-63E04ED9AE8E.root'
   #'/hadoop/cms/store/user/dspitzba/tW_scattering/tW_scattering/nanoAOD/tW_scattering_nanoAOD_500.root'
 ]
 if args.infiles:
@@ -81,8 +83,8 @@ class LHEDumper(Module):
     leptonic = False
     particles = Collection(event,'GenPart')
     #particles = Collection(event,'LHEPart')
-    print " \033[4m%7s %8s %10s %8s %8s %10s %8s %8s %8s %8s %9s %10s %11s %11s \033[0m"%(
-      "index","pdgId","particle","moth","mothid", "moth part", "dR","pt","eta", "status","prompt","last copy", "hard scatter", "W ancestor")
+    print " \033[4m%7s %8s %10s %8s %8s %10s %8s %8s %8s %8s %8s %9s %10s %11s %11s \033[0m"%(
+      "index","pdgId","particle","moth","mothid", "moth part", "dR","pt","eta", "phi", "status","prompt","last copy", "hard scatter", "W ancestor")
     for i, particle in enumerate(particles):
       mothidx  = particle.genPartIdxMother
       if 0<=mothidx<len(particles):
@@ -104,8 +106,8 @@ class LHEDumper(Module):
         motherName = Particle.from_pdgid(int(mothpid)).name if mothpid != 0 else 'initial'
       except:
           particleName = str(particle.pdgId)
-      print " %7d %8d %10s %8d %8d %10s %8.2f %8.2f %8.2f %8d %9s %10s %11s %11s"%(
-        i,particle.pdgId,particleName,mothidx,mothpid,motherName,mothdR,particle.pt, particle.eta ,particle.status,prompt,lastcopy,hardprocess, hasWancestor)
+      print " %7d %8d %10s %8d %8d %10s %8.2f %8.2f %8.2f %8.2f %8d %9s %10s %11s %11s"%(
+        i,particle.pdgId,particleName,mothidx,mothpid,motherName,mothdR,particle.pt, particle.eta, particle.phi ,particle.status,prompt,lastcopy,hardprocess, hasWancestor)
       if abs(particle.pdgId) in [11,13,15]:
         leptonic = True
     if leptonic:
@@ -120,6 +122,6 @@ class LHEDumper(Module):
 # PROCESS NANOAOD
 #filterEvent = 'event==606||event==352'
 #filterEvent = 'event==1'
-filterEvent = '(1)'
+filterEvent = 'event == 15647420 || event == 67097129 || event == 34424576 || event == 38963390'
 processor = PostProcessor(outdir,infiles,noOut=True,cut=filterEvent,modules=[LHEDumper()],maxEntries=maxEvts)
 processor.run()

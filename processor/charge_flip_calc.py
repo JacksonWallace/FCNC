@@ -57,12 +57,10 @@ class charge_flip_calc(processor.ProcessorABC):
         electron = electron[(np.abs(electron.matched_gen.pdgId)==11)]  #from here on all leptons are gen-matched
         electron = electron[( (electron.genPartFlav==1) | (electron.genPartFlav==15) )] #and now they are all prompt
         
-        is_flipped = ( ( (electron.matched_gen.pdgId*(-1) == electron.pdgId) | (get_charge_parent(electron.matched_gen)*(-1) == electron.charge) )  & (np.abs(electron.pdgId) == 11) )
+        is_flipped = ((electron.matched_gen.pdgId*(-1) == electron.pdgId)  & (np.abs(electron.pdgId) == 11) )
         
         
         flipped_electron = electron[is_flipped]
-        flipped_electron = flipped_electron[(ak.fill_none(flipped_electron.pt, 0)>0)]
-        flipped_electron = flipped_electron[~(ak.is_none(flipped_electron))]
         n_flips = ak.num(flipped_electron)
          
         leading_electron_idx = ak.singletons(ak.argmax(electron.pt, axis=1))
