@@ -72,10 +72,10 @@ class LHEDumper(Module):
   def hasAncestor(self, p, ancestorPdg, genParts):
     motherIdx = p.genPartIdxMother
     while motherIdx>0:
-      if (abs(genParts[motherIdx].pdgId) == ancestorPdg): return True
-      motherIdx = genParts[motherIdx].genPartIdxMother
+        if (abs(genParts[motherIdx].pdgId) == ancestorPdg): return True
+        motherIdx = genParts[motherIdx].genPartIdxMother
     return False
- 
+
   def analyze(self,event):
     """Dump LHE information for each gen particle in given event."""
     print "%s event %s %s"%('-'*10,event.event,'-'*50)
@@ -86,42 +86,42 @@ class LHEDumper(Module):
     print " \033[4m%7s %8s %10s %8s %8s %10s %8s %8s %8s %8s %8s %9s %10s %11s %11s \033[0m"%(
       "index","pdgId","particle","moth","mothid", "moth part", "dR","pt","eta", "phi", "status","prompt","last copy", "hard scatter", "W ancestor")
     for i, particle in enumerate(particles):
-      mothidx  = particle.genPartIdxMother
-      if 0<=mothidx<len(particles):
-        moth    = particles[mothidx]
-        mothpid = moth.pdgId
-        mothdR  = min(10,particle.DeltaR(moth)) #particle.p4().DeltaR(moth.p4())
-      else:
-        mothpid = 0
-        mothdR  = -1
-      prompt    = hasBit(particle.statusFlags,0)
-      lastcopy  = hasBit(particle.statusFlags,13)
-      hardprocess = hasBit(particle.statusFlags,7)
-      hasWancestor = (self.hasAncestor( particle, 24, particles) and abs(particle.pdgId)<5)
-      try:
-          particleName =  Particle.from_pdgid(int(particle.pdgId)).name
-      except:
-          particleName = str(particle.pdgId)
-      try:
-        motherName = Particle.from_pdgid(int(mothpid)).name if mothpid != 0 else 'initial'
-      except:
-          particleName = str(particle.pdgId)
-      print " %7d %8d %10s %8d %8d %10s %8.2f %8.2f %8.2f %8.2f %8d %9s %10s %11s %11s"%(
+        mothidx  = particle.genPartIdxMother
+        if 0<=mothidx<len(particles):
+            moth    = particles[mothidx]
+            mothpid = moth.pdgId
+            mothdR  = min(10,particle.DeltaR(moth)) #particle.p4().DeltaR(moth.p4())
+        else:
+            mothpid = 0
+            mothdR  = -1
+        prompt    = hasBit(particle.statusFlags,0)
+        lastcopy  = hasBit(particle.statusFlags,13)
+        hardprocess = hasBit(particle.statusFlags,7)
+        hasWancestor = (self.hasAncestor( particle, 24, particles) and abs(particle.pdgId)<5)
+        try:
+            particleName =  Particle.from_pdgid(int(particle.pdgId)).name
+        except:
+            particleName = str(particle.pdgId)
+        try:
+            motherName = Particle.from_pdgid(int(mothpid)).name if mothpid != 0 else 'initial'
+        except:
+            particleName = str(particle.pdgId)
+        print " %7d %8d %10s %8d %8d %10s %8.2f %8.2f %8.2f %8.2f %8d %9s %10s %11s %11s"%(
         i,particle.pdgId,particleName,mothidx,mothpid,motherName,mothdR,particle.pt, particle.eta, particle.phi ,particle.status,prompt,lastcopy,hardprocess, hasWancestor)
-      if abs(particle.pdgId) in [11,13,15]:
-        leptonic = True
-    if leptonic:
-      self.nleptons += 1
+        if abs(particle.pdgId) in [11,13,15]:
+            leptonic = True
+        if leptonic:
+            self.nleptons += 1
     
-  def endJob(self):
-    print '-'*70
-    if self.nevents>0:
-      print "  %-10s %4d / %-4d (%.1f%%)"%('leptonic:',self.nleptons,self.nevents,100.0*self.nleptons/self.nevents)
-    print "%s done %s"%('-'*10,'-'*54)
+    def endJob(self):
+        print '-'*70
+        if self.nevents>0:
+            print "  %-10s %4d / %-4d (%.1f%%)"%('leptonic:',self.nleptons,self.nevents,100.0*self.nleptons/self.nevents)
+        print "%s done %s"%('-'*10,'-'*54)
   
 # PROCESS NANOAOD
 #filterEvent = 'event==606||event==352'
 #filterEvent = 'event==1'
-filterEvent = 'event == 15647420 || event == 67097129 || event == 34424576 || event == 38963390'
+filterEvent = 'event == 1115354 || event == 5814016 || event == 14506309 || event == 14618397'
 processor = PostProcessor(outdir,infiles,noOut=True,cut=filterEvent,modules=[LHEDumper()],maxEntries=maxEvts)
 processor.run()

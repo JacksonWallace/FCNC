@@ -56,12 +56,13 @@ class charge_flip_ss(processor.ProcessorABC):
         
         
         ## Electrons
-        electron     = Collections(ev, "Electron", "tightFCNC").get()
+        electron     = Collections(ev, "Electron", "tightFCNC", 0, self.year).get()
         electron = electron[(electron.pt > 20) & (np.abs(electron.eta) < 2.4)]
 
         electron = electron[(electron.genPartIdx >= 0)]
         electron = electron[(np.abs(electron.matched_gen.pdgId)==11)]  #from here on all leptons are gen-matched
         electron = electron[( (electron.genPartFlav==1) | (electron.genPartFlav==15) )] #and now they are all prompt
+     
         
         leading_electron_idx = ak.singletons(ak.argmax(electron.pt, axis=1))
         leading_electron = electron[leading_electron_idx]
@@ -73,7 +74,7 @@ class charge_flip_ss(processor.ProcessorABC):
         trailing_parent = find_first_parent(trailing_electron.matched_gen)
         
        
-        is_flipped = ( (electron.matched_gen.pdgId*(-1) == electron.pdgId) & (np.abs(electron.pdgId) == 11) )
+        is_flipped = ( ( (electron.matched_gen.pdgId*(-1) == electron.pdgId) | (find_first_parent(electron.matched_gen)*(-1) == electron.pdgId) ) & (np.abs(electron.pdgId) == 11) )
         
         
         flipped_electron = electron[is_flipped]
@@ -232,7 +233,6 @@ class charge_flip_ss(processor.ProcessorABC):
             eta = np.abs(ak.to_numpy(ak.flatten(leading_lepton[n_flip_sel].eta))),
             weight = weight2.weight()[n_flip_sel]
         )
-        #commenting out the above for now
         
         output["lepton_parent"].fill(
             dataset = dataset,

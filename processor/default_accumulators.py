@@ -15,6 +15,7 @@ def add_files_to_output(fileset, output):
 
 dataset_axis            = hist.Cat("dataset",       "Primary dataset")
 pt_axis                 = hist.Bin('pt',            r'$p_{T}\ (GeV)$', np.array([15, 40, 60, 80, 100, 200, 300]))
+pt_fine_axis            = hist.Bin('pt',            r'$p_{T}\ (GeV)$', 300, 0, 300)
 p_axis                  = hist.Bin("p",             r"$p$ (GeV)", int(2500/5), 0, 2500) # 5 GeV is fine enough
 ht_axis                 = hist.Bin("ht",            r"$H_{T}$ (GeV)", 500, 0, 5000)
 mass_axis               = hist.Bin("mass",          r"M (GeV)", 1000, 0, 2000)
@@ -49,39 +50,43 @@ desired_output = {
 
             "chargeFlip_vs_nonprompt": hist.Hist("Counts", dataset_axis, n1_axis, n2_axis, n_ele_axis),
             
-            "high_p_fwd_p":      hist.Hist("Counts", dataset_axis, p_axis),
+            "high_p_fwd_p":     hist.Hist("Counts", dataset_axis, p_axis),
             
     
-            "electron":           hist.Hist("Counts", dataset_axis, pt_axis, eta_axis),
-            "flipped_electron":   hist.Hist("Counts", dataset_axis, pt_axis, eta_axis),
-            "electron2":           hist.Hist("Counts", dataset_axis, pt_axis, eta_axis),
-            "flipped_electron2":   hist.Hist("Counts", dataset_axis, pt_axis, eta_axis),
-            "electron_flips":     hist.Hist("Counts", dataset_axis, multiplicity_axis),
-            "electron_flips2":     hist.Hist("Counts", dataset_axis, multiplicity_axis),
-            "muon":               hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
-            "lead_lep":           hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
-            "trail_lep":          hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
-            "fwd_jet":            hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis), 
+            "electron":              hist.Hist("Counts", dataset_axis, pt_axis, eta_axis),
+            "flipped_electron":      hist.Hist("Counts", dataset_axis, pt_axis, eta_axis),
+            "electron2":             hist.Hist("Counts", dataset_axis, pt_axis, eta_axis),
+            "flipped_electron2":     hist.Hist("Counts", dataset_axis, pt_axis, eta_axis),
+            "electron_flips":        hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "electron_flips2":       hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "muon":                  hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
+            "lead_lep":              hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
+            "trail_lep":             hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
+            "fwd_jet":               hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis), 
 
-            "N_b" :               hist.Hist("Counts", dataset_axis, multiplicity_axis),
-            "N_central" :         hist.Hist("Counts", dataset_axis, multiplicity_axis),
-            "N_ele" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
-            "N_ele2" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
-            "N_ele3" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
-            "N_ele4" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
-            "N_mu" :              hist.Hist("Counts", dataset_axis, multiplicity_axis),
-            "N_jet" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
-            "N_fwd" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_b" :           hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_central" :     hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_ele" :         hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_ele2" :        hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_ele3" :        hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_ele4" :        hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_mu" :          hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_jet" :         hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_fwd" :         hist.Hist("Counts", dataset_axis, multiplicity_axis),
 
-            "nLepFromTop" :     hist.Hist("Counts", dataset_axis, multiplicity_axis),
-            "nLepFromW" :       hist.Hist("Counts", dataset_axis, multiplicity_axis),
-            "nLepFromTau" :     hist.Hist("Counts", dataset_axis, multiplicity_axis),
-            "nLepFromZ" :       hist.Hist("Counts", dataset_axis, multiplicity_axis),
-            "nGenTau" :         hist.Hist("Counts", dataset_axis, multiplicity_axis),
-            "nGenL" :           hist.Hist("Counts", dataset_axis, multiplicity_axis),
-            "GenL" :            hist.Hist("Counts", pt_axis, multiplicity_axis),
-            "lepton_parent":    hist.Hist("Counts", dataset_axis, pdgID_axis),
-            "lepton_parent2":    hist.Hist("Counts", dataset_axis, pdgID_axis),
+            "nLepFromTop" :       hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "nLepFromW" :         hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "nLepFromTau" :       hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "nLepFromZ" :         hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "nGenTau" :           hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "nGenL" :             hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "GenL" :              hist.Hist("Counts", pt_axis, multiplicity_axis),
+            "lepton_parent":      hist.Hist("Counts", dataset_axis, pdgID_axis),
+            "lepton_parent2":     hist.Hist("Counts", dataset_axis, pdgID_axis),
+    
+            "dilep_mass":       hist.Hist("Counts", dataset_axis, mass_axis),
+            "dilep_mass2":       hist.Hist("Counts", dataset_axis, mass_axis),
+
 
             'skimmedEvents':    processor.defaultdict_accumulator(int),
             'totalEvents':      processor.defaultdict_accumulator(int),

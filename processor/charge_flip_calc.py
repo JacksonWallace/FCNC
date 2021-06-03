@@ -50,15 +50,16 @@ class charge_flip_calc(processor.ProcessorABC):
         ## Muons
         
         ## Electrons
-        electron   = Collections(ev, "Electron", "tightFCNC", self.year).get()
-        electron   = electron[(electron.pt > 20) & (abs(electron.eta) < 2.4)]
+        electron   = Collections(ev, "Electron", "tightFCNC", 0, self.year).get()
+        electron   = electron[(electron.pt > 15) & (np.abs(electron.eta) < 2.4)]
 
         electron = electron[(electron.genPartIdx >= 0)]
         electron = electron[(np.abs(electron.matched_gen.pdgId)==11)]  #from here on all leptons are gen-matched
         electron = electron[( (electron.genPartFlav==1) | (electron.genPartFlav==15) )] #and now they are all prompt
+        #trying delta R matching instead
+        #electron = electron[(delta_r(electron, electron.matched_gen) < 0.4)]
         
-        is_flipped = ((electron.matched_gen.pdgId*(-1) == electron.pdgId)  & (np.abs(electron.pdgId) == 11) )
-        
+        is_flipped = ( ( (electron.matched_gen.pdgId*(-1) == electron.pdgId) | (find_first_parent(electron.matched_gen)*(-1) == electron.pdgId) ) & (np.abs(electron.pdgId) == 11) )        
         
         flipped_electron = electron[is_flipped]
         n_flips = ak.num(flipped_electron)
