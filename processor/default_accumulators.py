@@ -20,6 +20,7 @@ p_axis                  = hist.Bin("p",             r"$p$ (GeV)", int(2500/5), 0
 ht_axis                 = hist.Bin("ht",            r"$H_{T}$ (GeV)", 500, 0, 5000)
 mass_axis               = hist.Bin("mass",          r"M (GeV)", 1000, 0, 2000)
 eta_axis                = hist.Bin('eta',           r'$\eta $', np.array([0, 0.8, 1.479, 2.5]))
+eta_fine_axis           = hist.Bin('eta',           r'$\eta $', 25, -2.5, 2.5)  
 phi_axis                = hist.Bin("phi",           r"$\phi$", 64, -3.2, 3.2)
 delta_axis              = hist.Bin("delta",         r"$\delta$", 100,0,10 )
 multiplicity_axis       = hist.Bin("multiplicity",  r"N", 20, -0.5, 19.5)
@@ -53,10 +54,12 @@ desired_output = {
             "high_p_fwd_p":     hist.Hist("Counts", dataset_axis, p_axis),
             
     
-            "electron":              hist.Hist("Counts", dataset_axis, pt_axis, eta_axis),
-            "flipped_electron":      hist.Hist("Counts", dataset_axis, pt_axis, eta_axis),
-            "electron2":             hist.Hist("Counts", dataset_axis, pt_axis, eta_axis),
-            "flipped_electron2":     hist.Hist("Counts", dataset_axis, pt_axis, eta_axis),
+            "electron":              hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
+            "electron2":             hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
+            "electron3":             hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis),
+            "electron4":             hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis),
+            "flipped_electron":      hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
+            "flipped_electron2":     hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
             "electron_flips":        hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "electron_flips2":       hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "muon":                  hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),

@@ -21,7 +21,7 @@ from Tools.charge_flip import *
 from Tools.gen import find_first_parent, get_charge_parent
 
 
-class dilepton_mass(processor.ProcessorABC):
+class dielectron_mass(processor.ProcessorABC):
     def __init__(self, year=2018, variations=[], accumulator={}):
         self.variations = variations
         self.year = year
@@ -65,6 +65,12 @@ class dilepton_mass(processor.ProcessorABC):
         electron = electron[(np.abs(electron.matched_gen.pdgId)==11)]  #from here on all leptons are gen-matched
         electron = electron[( (electron.genPartFlav==1) | (electron.genPartFlav==15) )] #and now they are all prompt
         
+        SSelectron = (ak.sum(electron.charge, axis=1) != 0) & (ak.num(electron)==2)
+        OSelectron = (ak.sum(electron.charge, axis=1) == 0) & (ak.num(electron)==2)
+        
+        dielectron = choose(electron, 2)
+        dielectron_mass = (dielectron['0']+dielectron['1']).mass
+        
         leading_electron_idx = ak.singletons(ak.argmax(electron.pt, axis=1))
         leading_electron = electron[leading_electron_idx]
         
@@ -73,47 +79,12 @@ class dilepton_mass(processor.ProcessorABC):
        
         is_flipped = ( ( (electron.matched_gen.pdgId*(-1) == electron.pdgId) | (find_first_parent(electron.matched_gen)*(-1) == electron.pdgId) ) & (np.abs(electron.pdgId) == 11) )
         
-        
         flipped_electron = electron[is_flipped]
         flipped_electron = flipped_electron[(ak.fill_none(flipped_electron.pt, 0)>0)]
         flipped_electron = flipped_electron[~(ak.is_none(flipped_electron))]
         n_flips = ak.num(flipped_electron)
-                
-        ##Muons
-        muon     = Collections(ev, "Muon", "tightFCNC").get()
-        muon = muon[(muon.pt > 20) & (np.abs(muon.eta) < 2.4)]
         
-        muon = muon[(muon.genPartIdx >= 0)]
-        muon = muon[(np.abs(muon.matched_gen.pdgId)==13)] #from here, all muons are gen-matched
-        muon = muon[( (muon.genPartFlav==1) | (muon.genPartFlav==15) )] #and now they are all prompt
-       
-        
-        ##Leptons
-
-        lepton   = ak.concatenate([muon, electron], axis=1)
-        SSlepton = (ak.sum(lepton.charge, axis=1) != 0) & (ak.num(lepton)==2)
-        OSlepton = (ak.sum(lepton.charge, axis=1) == 0) & (ak.num(lepton)==2)
-        
-        no_mumu = (ak.num(muon) <= 1)
-        
-        two_lepton = lepton[(ak.num(lepton)>=2)]
-        dilepton = choose(two_lepton, 2)
-        dilepton_mass = (dilepton['0']+dilepton['1']).mass
-        
-        leading_lepton_idx = ak.singletons(ak.argmax(lepton.pt, axis=1))
-        leading_lepton = lepton[leading_lepton_idx]
-        
-        trailing_lepton_idx = ak.singletons(ak.argmin(lepton.pt, axis=1))
-        trailing_lepton = lepton[trailing_lepton_idx]
-        
-        
-        
-        #jets
-        jet       = getJets(ev, minPt=40, maxEta=2.4, pt_var='pt')
-        jet       = jet[ak.argsort(jet.pt, ascending=False)] # need to sort wrt smeared and recorrected jet pt
-        jet       = jet[~match(jet, muon, deltaRCut=0.4)] # remove jets that overlap with muons
-        jet       = jet[~match(jet, electron, deltaRCut=0.4)] 
-        
+ 
         ## MET -> can switch to puppi MET
         met_pt  = ev.MET.pt
         met_phi = ev.MET.phi
@@ -132,12 +103,10 @@ class dilepton_mass(processor.ProcessorABC):
                       
         #selections    
         filters   = getFilters(ev, year=self.year, dataset=dataset)
-        ss = (SSlepton)
-        os = (OSlepton)
-        jet_all = (ak.num(jet) >= 2)
+        ss = (SSelectron)
+        os = (OSelectron)
         flip = (n_flips == 1)
         no_flips = (n_flips == 0)
-        nmm = no_mumu
         
         
         selection = PackedSelection()
@@ -146,10 +115,8 @@ class dilepton_mass(processor.ProcessorABC):
         selection.add('os',          os)
         selection.add('flip',        flip)
         selection.add('nflip',       no_flips)
-        selection.add('jet_all',     jet_all)
-        selection.add('no_mumu',     nmm) 
         
-        bl_reqs = ['filter', 'no_mumu']
+        bl_reqs = ['filter']
 
         bl_reqs_d = { sel: True for sel in bl_reqs }
         baseline = selection.require(**bl_reqs_d)
@@ -173,21 +140,21 @@ class dilepton_mass(processor.ProcessorABC):
    
         
         #outputs
-        output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(lepton)[ss_sel], weight=weight.weight()[ss_sel])
+        output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(electron)[ss_sel], weight=weight.weight()[ss_sel])
         output['electron_flips'].fill(dataset=dataset, multiplicity=n_flips[ss_sel], weight=weight.weight()[ss_sel])
                       
-        output['N_ele2'].fill(dataset=dataset_weight, multiplicity=ak.num(lepton)[os_sel], weight=weight2.weight()[os_sel])
+        output['N_ele2'].fill(dataset=dataset_weight, multiplicity=ak.num(electron)[os_sel], weight=weight2.weight()[os_sel])
         output['electron_flips2'].fill(dataset=dataset_weight, multiplicity=n_flips[os_sel], weight=weight2.weight()[os_sel])
         
-        output["electron"].fill(
+        output["electron3"].fill(
             dataset = dataset,
             pt  = ak.to_numpy(ak.flatten(leading_electron[ss_sel].pt)),
-            eta = ak.to_numpy(ak.flatten(abs(leading_electron[ss_sel].eta))),
+            eta = ak.to_numpy(ak.flatten(leading_electron[ss_sel].eta)),
             #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
             weight = weight.weight()[ss_sel]
         )
         
-        output["electron2"].fill(
+        output["electron4"].fill(
             dataset = dataset,
             pt  = ak.to_numpy(ak.flatten(leading_electron[os_sel].pt)),
             eta = ak.to_numpy(ak.flatten(leading_electron[os_sel].eta)),
@@ -197,13 +164,13 @@ class dilepton_mass(processor.ProcessorABC):
         
         output["dilep_mass"].fill(
             dataset = dataset,
-            mass = ak.to_numpy(ak.flatten(dilepton_mass[ss_sel])),
+            mass = ak.to_numpy(ak.flatten(dielectron_mass[ss_sel])),
             weight = weight.weight()[ss_sel],
         )
         
         output["dilep_mass2"].fill(
             dataset = dataset,
-            mass = ak.to_numpy(ak.flatten(dilepton_mass[os_sel])),
+            mass = ak.to_numpy(ak.flatten(dielectron_mass[os_sel])),
             weight = weight2.weight()[os_sel],
         )
 
