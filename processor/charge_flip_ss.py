@@ -56,7 +56,7 @@ class charge_flip_ss(processor.ProcessorABC):
         
         
         ## Electrons
-        electron     = Collections(ev, "Electron", "tightFCNC", 0, self.year).get()
+        electron = Collections(ev, "Electron", "tightFCNC", 0, self.year).get()
         electron = electron[(electron.pt > 20) & (np.abs(electron.eta) < 2.4)]
 
         electron = electron[(electron.genPartIdx >= 0)]

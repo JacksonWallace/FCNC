@@ -70,6 +70,18 @@ class charge_flip_calc(processor.ProcessorABC):
         leading_flipped_electron_idx = ak.singletons(ak.argmax(flipped_electron.pt, axis=1))
         leading_flipped_electron = electron[leading_flipped_electron_idx]
         
+        
+        def getMVAscore(electron):
+            if self.year == 2016:
+                MVA = electron.mvaSpring16GP
+                return MVA
+            elif self.year == 2017:
+                MVA = electron.mvaFall17V2noIso
+                return MVA
+            elif self.year == 2018:
+                MVA = np.minimum(np.maximum(electron.mvaFall17V2noIso, -1.0 + 1.e-6), 1.0 - 1.e-6)
+                return -0.5*np.log(2/(MVA+1)-1)
+        
         ## MET -> can switch to puppi MET
         met_pt  = ev.MET.pt
         met_phi = ev.MET.phi
@@ -144,7 +156,27 @@ class charge_flip_calc(processor.ProcessorABC):
             eta = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].eta)),
             #phi = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].phi)),
             #weight = ak.to_numpy(ak.flatten(ak_weight_flip))
-        )      
+        )
+        
+        output["mva_id"].fill(
+            dataset = dataset,
+            mva_id = ak.to_numpy(ak.flatten(getMVAscore(electron)[baseline])),
+            eta = np.abs(ak.to_numpy(ak.flatten(electron.eta[baseline]))),
+        )
+        
+        output["mva_id2"].fill(
+            dataset = dataset,
+            mva_id = ak.to_numpy(ak.flatten(getMVAscore(electron)[baseline])),
+            pt = ak.to_numpy(ak.flatten(electron.pt[baseline])),
+        )
+        
+        output["isolation"].fill(
+            dataset = dataset,
+            isolation1 = ak.to_numpy(ak.flatten(electron.jetRelIso[baseline])),
+            isolation2 = ak.to_numpy(ak.flatten(electron.jetPtRelv2[baseline])),
+        )
+        
+        
 
         return output
 
