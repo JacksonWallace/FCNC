@@ -38,8 +38,8 @@ infiles   = [
   #'/hadoop/cms/store/user/mbryson/WH_hadronic/WH_had_750_1/test/WH_hadronic_nanoAOD_500.root'
   #'root://xrootd.t2.ucsd.edu:2040//store/mc/RunIIAutumn18NanoAODv6/W1JetsToLNu_NuPt-200_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano25Oct2019_102X_upgrade2018_realistic_v20-v1/250000/3917F723-A4EF-AF42-9CA9-D5358FF660CB.root'
   #'root://xcache-redirector.t2.ucsd.edu:2040//store/mc/RunIISummer16NanoAODv7/TT_FCNC-TtoHJ_aTleptonic_HToWWZZtautau_eta_hut-MadGraph5-pythia8/NANOAODSIM/PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1/120000/658DC188-65AB-7E4D-871B-5B2F2B951539.root'
-  'root://xcache-redirector.t2.ucsd.edu:2040//store/mc/RunIIAutumn18NanoAODv7/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/60000/0EF179F9-428D-B944-8DB3-63E04ED9AE8E.root'
-  #'/hadoop/cms/store/user/dspitzba/tW_scattering/tW_scattering/nanoAOD/tW_scattering_nanoAOD_500.root'
+ 'root://xcache-redirector.t2.ucsd.edu:2040//store/mc/RunIIAutumn18NanoAODv7/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8/NANOAODSIM/Nano02Apr2020_102X_upgrade2018_realistic_v21-v1/60000/0EF179F9-428D-B944-8DB3-63E04ED9AE8E.root'
+ #'/hadoop/cms/store/user/dspitzba/tW_scattering/tW_scattering/nanoAOD/tW_scattering_nanoAOD_500.root'
 ]
 if args.infiles:
   infiles = [args.infiles]
