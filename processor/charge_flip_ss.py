@@ -191,6 +191,22 @@ class charge_flip_ss(processor.ProcessorABC):
         o_reqs_d = {sel: True for sel in o_reqs }
         os_sel = selection.require(**o_reqs_d)
         
+        ees_reqs = bl_reqs + ['ss'] + ['ee']
+        ees_reqs_d = { sel: True for sel in ees_reqs }
+        eess_sel = selection.require(**ees_reqs_d)
+        
+        eeo_reqs = bl_reqs + ['os'] + ['ee']
+        eeo_reqs_d = {sel: True for sel in eeo_reqs }
+        eeos_sel = selection.require(**eeo_reqs_d)
+        
+        ems_reqs = bl_reqs + ['ss'] + ['emu']
+        ems_reqs_d = { sel: True for sel in ems_reqs }
+        emss_sel = selection.require(**ems_reqs_d)
+        
+        emo_reqs = bl_reqs + ['os'] + ['emu']
+        emo_reqs_d = {sel: True for sel in emo_reqs }
+        emos_sel = selection.require(**emo_reqs_d)
+        
        
         #outputs
         output['N_jet'].fill(dataset=dataset, multiplicity=ak.num(jet)[baseline], weight=weight.weight()[baseline])
@@ -199,9 +215,14 @@ class charge_flip_ss(processor.ProcessorABC):
                       
         output['N_ele2'].fill(dataset=dataset, multiplicity=ak.num(lepton)[os_sel], weight=weight2.weight()[os_sel])
         
-        output['electron_flips'].fill(dataset=dataset, multiplicity = n_flips[ss_sel], weight=weight.weight()[ss_sel])
+        output['electron_flips'].fill(dataset=dataset, multiplicity = n_flips[flip_sel], weight=weight.weight()[flip_sel])
 
-        output['electron_flips2'].fill(dataset=dataset, multiplicity = n_flips[os_sel], weight=weight2.weight()[os_sel])
+        output['electron_flips2'].fill(dataset=dataset, multiplicity = n_flips[n_flip_sel], weight=weight2.weight()[n_flip_sel])
+        
+        output['electron_flips3'].fill(dataset=dataset, multiplicity = n_flips[flip_sel2], weight=weight.weight()[flip_sel2])
+
+        output['electron_flips4'].fill(dataset=dataset, multiplicity = n_flips[n_flip_sel2], weight=weight2.weight()[n_flip_sel2])
+        
 
         output["electron"].fill(
             dataset = dataset,
