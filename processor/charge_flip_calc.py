@@ -161,7 +161,7 @@ class charge_flip_calc(processor.ProcessorABC):
         output["mva_id"].fill(
             dataset = dataset,
             mva_id = ak.to_numpy(ak.flatten(getMVAscore(electron)[baseline])),
-            eta = np.abs(ak.to_numpy(ak.flatten(electron.eta[baseline]))),
+            eta = np.abs(ak.to_numpy(ak.flatten(electron.etaSC[baseline]))),
         )
         
         output["mva_id2"].fill(

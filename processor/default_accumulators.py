@@ -16,11 +16,12 @@ def add_files_to_output(fileset, output):
 dataset_axis            = hist.Cat("dataset",       "Primary dataset")
 pt_axis                 = hist.Bin('pt',            r'$p_{T}\ (GeV)$', np.array([15, 40, 60, 80, 100, 200, 300]))
 pt_axis2                 = hist.Bin('pt',            r'$p_{T}\ (GeV)$', np.array([0, 5, 10, 25, 100, 200, 300]))
-pt_fine_axis            = hist.Bin('pt',            r'$p_{T}\ (GeV)$', 300, 0, 300)
+pt_fine_axis            = hist.Bin('pt',            r'$p_{T}\ (GeV)$', 500, 0, 500)
 p_axis                  = hist.Bin("p",             r"$p$ (GeV)", int(2500/5), 0, 2500) # 5 GeV is fine enough
 ht_axis                 = hist.Bin("ht",            r"$H_{T}$ (GeV)", 500, 0, 5000)
 mass_axis               = hist.Bin("mass",          r"M (GeV)", 1000, 0, 2000)
 eta_axis                = hist.Bin('eta',           r'$\eta $', np.array([0, 0.8, 1.479, 2.5]))
+etaSC_axis                = hist.Bin('eta',         r'$\eta\ SC$', np.array([0, 0.8, 1.479, 2.5]))
 eta_fine_axis           = hist.Bin('eta',           r'$\eta $', 25, -2.5, 2.5)  
 phi_axis                = hist.Bin("phi",           r"$\phi$", 64, -3.2, 3.2)
 delta_axis              = hist.Bin("delta",         r"$\delta$", 100,0,10 )
@@ -32,9 +33,9 @@ ext_multiplicity_axis   = hist.Bin("multiplicity",  r"N", 100, -0.5, 99.5) # e.g
 norm_axis               = hist.Bin("norm",          r"N", 25, 0, 1)
 score_axis              = hist.Bin("score",         r"N", 100, 0, 1)
 pdgID_axis              = hist.Bin("pdgID",         r"N", 26, 0, 25)
-mva_id_axis             = hist.Bin("mva_id",        r"mva ID", np.array([0, 1.054, 2.252, 2.359, 2.597, 3.152, 4.277]))
-isolation1_axis         = hist.Bin("isolation1",    r"Iso1", np.array([0, 1/0.78-1, 0.5]))
-isolation2_axis         = hist.Bin("isolation2",    r"Iso2", np.array([0, 8.0, 10]))
+mva_id_axis             = hist.Bin("mva_id",        r"mva ID", np.array([0, 1.489, 2.359, 2.552, 3.152, 3.157, 4.277, 100]))
+isolation1_axis         = hist.Bin("isolation1",    r"Iso1", np.array([0, 1/0.78-1, 1]))
+isolation2_axis         = hist.Bin("isolation2",    r"Iso2", np.array([0, 8.0, 16]))
 
 variations = ['pt_jesTotalUp', 'pt_jesTotalDown']
 
@@ -60,10 +61,12 @@ desired_output = {
     
             "electron":              hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
             "electron2":             hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
-            "electron3":             hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis),
-            "electron4":             hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis),
+            "electron3":             hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
+            "electron4":             hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
             "flipped_electron":      hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
             "flipped_electron2":     hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
+            "flipped_electron3":      hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
+            "flipped_electron4":     hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
             "electron_flips":        hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "electron_flips2":       hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "muon":                  hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
@@ -94,7 +97,7 @@ desired_output = {
             "dilep_mass":        hist.Hist("Counts", dataset_axis, mass_axis),
             "dilep_mass2":       hist.Hist("Counts", dataset_axis, mass_axis),
     
-            "mva_id":            hist.Hist("Counts", dataset_axis, mva_id_axis, eta_axis),
+            "mva_id":            hist.Hist("Counts", dataset_axis, mva_id_axis, etaSC_axis),
             "mva_id2":            hist.Hist("Counts", dataset_axis, mva_id_axis, pt_axis2),
             "isolation":         hist.Hist("Counts", dataset_axis, isolation1_axis, isolation2_axis),
 
