@@ -33,7 +33,7 @@ ext_multiplicity_axis   = hist.Bin("multiplicity",  r"N", 100, -0.5, 99.5) # e.g
 norm_axis               = hist.Bin("norm",          r"N", 25, 0, 1)
 score_axis              = hist.Bin("score",         r"N", 100, 0, 1)
 pdgID_axis              = hist.Bin("pdgID",         r"N", 26, 0, 25)
-mva_id_axis             = hist.Bin("mva_id",        r"mva ID", np.array([0, 1.489, 2.359, 2.552, 3.152, 3.157, 4.277, 100]))
+mva_id_axis             = hist.Bin("mva_id",        r"mva ID", np.array([0, 0.04, 0.225, 0.32, 0.36, 0.475, 0.68, 100]))
 isolation1_axis         = hist.Bin("isolation1",    r"Iso1", np.array([0, 1/0.78-1, 1]))
 isolation2_axis         = hist.Bin("isolation2",    r"Iso2", np.array([0, 8.0, 16]))
 

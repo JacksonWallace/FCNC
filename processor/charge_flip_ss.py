@@ -29,7 +29,7 @@ class charge_flip_ss(processor.ProcessorABC):
         
         #self.leptonSF = LeptonSF(year=year)
         
-        self.charge_flip_ratio = charge_flip('../histos/chargeflipfullpt152018.pkl.gz')
+        self.charge_flip_ratio = charge_flip('../histos/chargeflipfullpt2017June.pkl.gz')
         
         self._accumulator = processor.dict_accumulator( accumulator )
 
