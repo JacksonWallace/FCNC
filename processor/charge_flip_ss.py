@@ -29,7 +29,7 @@ class charge_flip_ss(processor.ProcessorABC):
         
         #self.leptonSF = LeptonSF(year=year)
         
-        self.charge_flip_ratio = charge_flip('../histos/chargeflipfullpt2017June.pkl.gz')
+        self.charge_flip_ratio = charge_flip('histos/chargeflipfull2017June.pkl.gz')
         
         self._accumulator = processor.dict_accumulator( accumulator )
 
@@ -57,7 +57,7 @@ class charge_flip_ss(processor.ProcessorABC):
         
         ## Electrons
         electron = Collections(ev, "Electron", "tightFCNC", 0, self.year).get()
-        electron = electron[(electron.pt > 20) & (np.abs(electron.eta) < 2.4)]
+        electron = electron[(electron.pt > 15) & (np.abs(electron.eta) < 2.4)]
 
         electron = electron[(electron.genPartIdx >= 0)]
         electron = electron[(np.abs(electron.matched_gen.pdgId)==11)]  #from here on all leptons are gen-matched
@@ -84,7 +84,7 @@ class charge_flip_ss(processor.ProcessorABC):
                 
         ##Muons
         muon     = Collections(ev, "Muon", "tightFCNC").get()
-        muon = muon[(muon.pt > 20) & (np.abs(muon.eta) < 2.4)]
+        muon = muon[(muon.pt > 15) & (np.abs(muon.eta) < 2.4)]
         
         muon = muon[(muon.genPartIdx >= 0)]
         muon = muon[(np.abs(muon.matched_gen.pdgId)==13)] #from here, all muons are gen-matched
@@ -135,7 +135,7 @@ class charge_flip_ss(processor.ProcessorABC):
         filters   = getFilters(ev, year=self.year, dataset=dataset)
         ss = (SSlepton)
         os = (OSlepton)
-        #jet_all = (ak.num(jet) >= 2)
+        jet_all = (ak.num(jet) >= 2)
         diele = (ak.num(electron) == 2)
         emu = (emulepton)
         flips = (n_flips == 1)
@@ -147,14 +147,14 @@ class charge_flip_ss(processor.ProcessorABC):
         selection.add('filter',      (filters) )
         selection.add('ss',          ss )
         selection.add('os',          os )
-        #selection.add('jet',         jet_all )
+        selection.add('jet',         jet_all )
         selection.add('ee',          diele)
         selection.add('emu',         emu)
         selection.add('flip',        flips)
         selection.add('nflip',       no_flips)
         selection.add('no_mumu',     nmm)
         
-        bl_reqs = ['filter']
+        bl_reqs = ['filter'] + ['jet']
 
         bl_reqs_d = { sel: True for sel in bl_reqs }
         baseline = selection.require(**bl_reqs_d)

@@ -1,10 +1,10 @@
 import uproot
 from Tools.helpers import get_samples
-from Tools.config_helpers import redirector_ucsd, redirector_fnal
+from Tools.config_helpers import redirector_ucsd, redirector_ucsd_mini, redirector_fnal
 from Tools.nano_mapping import make_fileset, nano_mapping
 
 
-fileset = make_fileset(['DY'], 2017, redirector=redirector_ucsd, small=False)
+fileset = make_fileset(['Data'], 2018, redirector=redirector_ucsd, small=True)
 good = []
 bad = []
 

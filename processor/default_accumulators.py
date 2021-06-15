@@ -33,9 +33,9 @@ ext_multiplicity_axis   = hist.Bin("multiplicity",  r"N", 100, -0.5, 99.5) # e.g
 norm_axis               = hist.Bin("norm",          r"N", 25, 0, 1)
 score_axis              = hist.Bin("score",         r"N", 100, 0, 1)
 pdgID_axis              = hist.Bin("pdgID",         r"N", 26, 0, 25)
-mva_id_axis             = hist.Bin("mva_id",        r"mva ID", np.array([0, 0.04, 0.225, 0.32, 0.36, 0.475, 0.68, 100]))
-isolation1_axis         = hist.Bin("isolation1",    r"Iso1", np.array([0, 1/0.78-1, 1]))
-isolation2_axis         = hist.Bin("isolation2",    r"Iso2", np.array([0, 8.0, 16]))
+mva_id_axis             = hist.Bin("mva_id",        r"mva ID", np.array([-1, -0.01, 0.11, 0.48, 0.52, 0.56, 0.77, 100]))
+isolation1_axis         = hist.Bin("isolation1",    r"Iso1", np.array([0, 1/0.80-1, 1]))
+isolation2_axis         = hist.Bin("isolation2",    r"Iso2", np.array([0, 7.2, 16]))
 
 variations = ['pt_jesTotalUp', 'pt_jesTotalDown']
 
@@ -63,9 +63,11 @@ desired_output = {
             "electron2":             hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
             "electron3":             hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
             "electron4":             hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
+            "electron_data1":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
+            "electron_data2":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
             "flipped_electron":      hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
             "flipped_electron2":     hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
-            "flipped_electron3":      hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
+            "flipped_electron3":     hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
             "flipped_electron4":     hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
             "electron_flips":        hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "electron_flips2":       hist.Hist("Counts", dataset_axis, multiplicity_axis),
