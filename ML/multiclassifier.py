@@ -41,7 +41,7 @@ def baseline_model(input_dim, out_dim):
     model.add(tf.keras.layers.Dense(2*input_dim, input_dim=input_dim, activation='relu'))
     model.add(tf.keras.layers.BatchNormalization() )
     model.add( tf.keras.layers.Dropout( rate = 0.3 ) )
-    model.add(tf.keras.layers.Dense(2*input_dim, activation='relu'))  # changed from 2->4
+    model.add(tf.keras.layers.Dense(2*input_dim, activation='relu')) 
     model.add(tf.keras.layers.BatchNormalization() )
     model.add( tf.keras.layers.Dropout( rate = 0.3 ) ) # this introduces some stochastic behavior
     model.add(tf.keras.layers.Dense(out_dim, activation='softmax'))
@@ -75,11 +75,11 @@ def test_train(test, train, y_test, y_train, labels=[], bins=25, node=0, plot_di
     h = {}
     for i, label in enumerate(labels):
         
-        #_ks, _p = scipy.stats.kstest(
-        #    train[:,node][(y_train==i)],
-        #    test[:,node][(y_test==i)]
-        #)
-        _ks, _p = -1, -1
+        _ks, _p = scipy.stats.kstest(
+            train[:,node][(y_train==i)],
+            test[:,node][(y_test==i)]
+        )
+        #_ks, _p = -1, -1
         
         ks[label] = (_p, _ks)
 
@@ -107,11 +107,11 @@ def test_train_cat(test, train, y_test, y_train, labels=[], n_cat=5, plot_dir=No
     h = {}
     for i, label in enumerate(labels):
         
-        #_ks, _p = scipy.stats.kstest(
-        #    train.argmax(axis=1)[(y_train==i)],
-        #    test.argmax(axis=1)[(y_test==i)]
-        #)
-        _ks, _p = -1, -1
+        _ks, _p = scipy.stats.kstest(
+            train.argmax(axis=1)[(y_train==i)],
+            test.argmax(axis=1)[(y_test==i)]
+        )
+        #_ks, _p = -1, -1
 
         ks[label] = (_p, _ks)
         
@@ -156,9 +156,7 @@ def get_ROC(test, train, y_test, y_train, node=0):
     plt.legend(loc ='lower left')
 
 
-def prepare_data(f_in, selection, robust=False, reuse=False, fout=None):
-
-    label_ID = 'label_cat'  # was: label
+def prepare_data(f_in, selection, robust=False, reuse=False, fout=None, label_ID='label_cat'):
 
     if not reuse:
         df = pd.read_hdf(f_in) # load data processed with ML_processor.py
@@ -171,8 +169,8 @@ def prepare_data(f_in, selection, robust=False, reuse=False, fout=None):
         df = df[(process_labels<5)]
         labels = labels[process_labels<5] # filter out high weight DY events
 
-        df = df[(labels<4)]
-        labels = labels[labels<4] # filter out high weight DY events
+        df = df[(labels<5)]
+        labels = labels[labels<5] # filter out high weight DY events
 
         df_train, df_test, y_train, y_test = train_test_split(df, labels, train_size= int( 0.9*labels.shape[0] ), random_state=42 )
 
@@ -234,27 +232,45 @@ def get_class_weight(df):
     '''
     return {i: 1/sum(df[df['label']==i]['weight']) for i in range(5)}
 
+def get_sob(sig, bkg, var='fwd_jet_p', start=500, step=1, threshold=9):
+    for i in range(int(start/step), 10000, 1):
+        s = sum(sig[sig[var]>(i*step)]['weight'])*137
+        b = sum(bkg[bkg[var]>(i*step)]['weight'])*137
+        if s<threshold: break
+    print (s, b, i*step)
+    return s/b
+
 
 if __name__ == '__main__':
 
-    load_weights = False
-    version = 'v13'
-    is_cat = True
 
-    plot_dir = "/home/users/dspitzba/public_html/tW_scattering/ML/%s/"%version
+    import argparse
 
-    df = pd.read_hdf('data/multiclass_input_v2.h5')
-    df_bsm = pd.read_hdf('data/multiclass_input_v2_EFT.h5')
+    argParser = argparse.ArgumentParser(description = "Argument parser")
+    argParser.add_argument('--load', action='store_true', default=None, help="Load weights?")
+    argParser.add_argument('--cat', action='store_true', default=None, help="Use categories?")
+    argParser.add_argument('--fit', action='store_true', default=None, help="Do combine fit?")
+    argParser.add_argument('--version', action='store', default='v13', help="Version number")
+    args = argParser.parse_args()
+
+
+    load_weights = args.load
+    version = args.version
+    is_cat = args.cat
+
+    plot_dir = os.path.expandvars("/home/users/$USER/public_html/tW_scattering/ML/%s/"%version)
+
+    df = pd.read_hdf('/hadoop/cms/store/user/dspitzba/ML/multiclass_input_v2.h5')
 
     variables = [
         ## best results with all variables, but should get pruned at some point...
         'n_jet',
-        #'n_central',
-        ##'n_fwd',
+        ##'n_central',
+        ###'n_fwd',
         'n_tau',
         'n_track',
         'st',
-        #'ht',
+        ##'ht',
         'met',
         'mjj_max',
         'delta_eta_jj',
@@ -277,19 +293,22 @@ if __name__ == '__main__':
         'sublead_btag_eta',
         'min_bl_dR',
         'min_mt_lep_met',
-        ###'weight', # this does of course _not_ work 🤡 
     ]
 
-    #preselection = ((df['n_jet']>2) & (df['n_btag']>0) & (df['n_lep_tight']==2) & (df['n_fwd']>0))
-    preselection = ((df['n_jet']>2) & (df['n_btag']>0) & (df['n_lep_tight']==2) & (df['n_fwd']>0) & (df['weight']>0) & (df['label_cat']<3))
+    # Apply some loose preselection
+    preselection = ((df['n_jet']>2) & (df['n_btag']>0) & (df['n_lep_tight']==2) & (df['n_fwd']>0))
+    #preselection = ((df['n_jet']>2) & (df['n_btag']>0) & (df['n_lep_tight']==2) & (df['n_fwd']>0) & (df['weight']>0) & (df['label_cat']<3))
     #preselection = ((df['n_jet']>2) & (df['n_btag']>0) & (df['n_lep_tight']==2) & (df['weight']>0))
     
     colors = ['gray', 'blue', 'red', 'green', 'orange']
     
     bins = [x/20 for x in range(21)]
 
-    df_train, df_test, y_train_int, y_test_int = prepare_data('data/multiclass_input_v2.h5', preselection, reuse=False, fout='data/multiclass_input_v2_split_v13.h5')
-    #df_train, df_test, y_train_int, y_test_int  = prepare_data('data/multiclass_input_v2_split.h5', preselection, reuse=True)
+    # prepare the data
+    if not args.load:
+        df_train, df_test, y_train_int, y_test_int = prepare_data('/hadoop/cms/store/user/dspitzba/ML/multiclass_input_v2.h5', preselection, reuse=False, fout='data/multiclass_input_v2_split_%s.h5'%args.version, label_ID='label_cat' if args.cat else 'label')
+    else:
+        df_train, df_test, y_train_int, y_test_int  = prepare_data('data/multiclass_input_v2_split_%s.h5'%args.version, preselection, reuse=True, label_ID='label_cat' if args.cat else 'label')
     
     X_train = df_train[variables].values
     X_test  = df_test[variables].values
@@ -345,29 +364,21 @@ if __name__ == '__main__':
     X_all_scaled  = scaler.transform(X_all)
     X_test_scaled = scaler.transform(X_test)
 
-    X_bsm = df_bsm[variables].values
-    X_bsm_scaled = scaler.transform(X_bsm)
-
+    # Evaluate the model for the entire data frame (pred_all), just the training set (pred_train) or the test set (pred_test)
     pred_all    = model.predict( X_all_scaled )
-    pred_bsm    = model.predict( X_bsm_scaled )
     pred_train  = model.predict( X_train_scaled )
     pred_test   = model.predict( X_test_scaled )
     
+    # We can now evaluate the performance
     df['score_topW'] = pred_all[:,0]
     df['score_ttW'] = pred_all[:,1]
     df['score_ttZ'] = pred_all[:,2]
-    #df['score_ttH'] = pred_all[:,3]
-    #df['score_ttbar'] = pred_all[:,4]
+    df['score_ttH'] = pred_all[:,3]
+    df['score_ttbar'] = pred_all[:,4]
     df['score_best'] = pred_all.argmax(axis=1)
 
-    df_bsm['score_topW'] = pred_bsm[:,0]
-    df_bsm['score_ttW'] = pred_bsm[:,1]
-    df_bsm['score_ttZ'] = pred_bsm[:,2]
-    #df_bsm['score_ttH'] = pred_bsm[:,3]
-    df_bsm['score_best'] = pred_bsm.argmax(axis=1)
-    
     #label_ID = 'label'  # was: label
-    label_ID = 'label_cat'  # was: label
+    label_ID = 'label_cat' if args.cat else 'label'  # was: label
     processes = {
         'topW_v2': df[df[label_ID]==0],
         'TTW':     df[df[label_ID]==1],
@@ -378,21 +389,21 @@ if __name__ == '__main__':
     }
 
     print ("## Real baseline selection (as in selections.py)")
-    sel_BL = ((df['n_lep_tight']==2) & (df['n_fwd']>0) & (df['met']>30))
-    signal_BL = sum(df[(sel_BL & (df['label']==0))]['weight']) * 137
-    bkg_BL = sum(df[(sel_BL & (df['label']!=0))]['weight']) * 137
+    sel_BL      = ((df['n_lep_tight']==2) & (df['n_fwd']>0) & (df['met']>30))
+    signal_BL   = sum(df[(sel_BL & (df['label']==0))]['weight']) * 137
+    bkg_BL      = sum(df[(sel_BL & (df['label']!=0))]['weight']) * 137
 
-    prompt_BL = sum(df[(sel_BL & (df['label_cat']==1))]['weight']) * 137
-    LL_BL = sum(df[(sel_BL & (df['label_cat']==2))]['weight']) * 137
+    prompt_BL    = sum(df[(sel_BL & (df['label_cat']==1))]['weight']) * 137
+    LL_BL        = sum(df[(sel_BL & (df['label_cat']==2))]['weight']) * 137
     nonprompt_BL = sum(df[(sel_BL & (df['label_cat']==3))]['weight']) * 137
-    flip_BL = sum(df[(sel_BL & (df['label_cat']==4))]['weight']) * 137
+    flip_BL      = sum(df[(sel_BL & (df['label_cat']==4))]['weight']) * 137
 
-    TTW_BL = sum(df[(sel_BL & (df['label']==1))]['weight']) * 137
-    TTZ_BL = sum(df[(sel_BL & (df['label']==2))]['weight']) * 137
-    TTH_BL = sum(df[(sel_BL & (df['label']==3))]['weight']) * 137
-    tt_BL = sum(df[(sel_BL & (df['label']==4))]['weight']) * 137
-    rare_BL = sum(df[(sel_BL & (df['label']==5))]['weight']) * 137
-    DY_BL = sum(df[(sel_BL & (df['label']==6))]['weight']) * 137
+    TTW_BL      = sum(df[(sel_BL & (df['label']==1))]['weight']) * 137
+    TTZ_BL      = sum(df[(sel_BL & (df['label']==2))]['weight']) * 137
+    TTH_BL      = sum(df[(sel_BL & (df['label']==3))]['weight']) * 137
+    tt_BL       = sum(df[(sel_BL & (df['label']==4))]['weight']) * 137
+    rare_BL     = sum(df[(sel_BL & (df['label']==5))]['weight']) * 137
+    DY_BL       = sum(df[(sel_BL & (df['label']==6))]['weight']) * 137
 
 
     print (" - signal: %.2f"%signal_BL)
@@ -419,17 +430,15 @@ if __name__ == '__main__':
     print (" - bkg: %.2f"%bkg_baseline)
 
     #sel_topW = ((df['score_best']==0) & (df['n_lep_tight']==2) & (df['n_fwd']>0) )
-    #sel_topW_bsm = ((df_bsm['score_best']==0) & (df_bsm['n_lep_tight']==2) & (df_bsm['n_fwd']>0) )
 
-    sel_topW = ((df['score_best']==0) & (df['n_lep_tight']==2) )
-    sel_topW_bsm = ((df_bsm['score_best']==0) & (df_bsm['n_lep_tight']==2) )
+    sel_topW        = ((df['score_best']==0) & (df['n_lep_tight']==2) )
 
-    signal_NN_baseline = sum(df[(sel_topW & (df['label']==0))]['weight']) * 137
-    bkg_NN_baseline = sum(df[(sel_topW & (df['label']!=0))]['weight']) * 137
-    prompt_NN_baseline = sum(df[(sel_topW & (df['label_cat']==1))]['weight']) * 137
-    LL_NN_baseline = sum(df[(sel_topW & (df['label_cat']==2))]['weight']) * 137
-    nonprompt_NN_baseline = sum(df[(sel_topW & (df['label_cat']==3))]['weight']) * 137
-    flip_NN_baseline = sum(df[(sel_topW & (df['label_cat']==4))]['weight']) * 137
+    signal_NN_baseline      = sum(df[(sel_topW & (df['label']==0))]['weight']) * 137
+    bkg_NN_baseline         = sum(df[(sel_topW & (df['label']!=0))]['weight']) * 137
+    prompt_NN_baseline      = sum(df[(sel_topW & (df['label_cat']==1))]['weight']) * 137
+    LL_NN_baseline          = sum(df[(sel_topW & (df['label_cat']==2))]['weight']) * 137
+    nonprompt_NN_baseline   = sum(df[(sel_topW & (df['label_cat']==3))]['weight']) * 137
+    flip_NN_baseline        = sum(df[(sel_topW & (df['label_cat']==4))]['weight']) * 137
 
     print ("w/ NN, baseline expectations are:")
     print (" - signal: %.2f"%signal_NN_baseline)
@@ -439,13 +448,15 @@ if __name__ == '__main__':
     print ("    - nonprompt: %.2f"%nonprompt_NN_baseline)
     print ("    - charge flip: %.2f"%flip_NN_baseline)
 
-    #raise NotImplementedError
+    s_over_b = get_sob(df[(sel_baseline & (df['label']==0))], df[(sel_baseline & (df['label']!=0))], var='fwd_jet_p', start=500, step=25)
+    s_over_b_NN = get_sob(df[(sel_topW & (df['label']==0))], df[(sel_topW & (df['label']!=0))], var='score_topW', start=0.25, step=0.01)
+
+    ### This is a very simple metric. The better S/B, the higher our sensitivity.
+    print ("S/B for cut&count: %.2f"%s_over_b)
+    print ("S/B for NN: %.2f"%s_over_b_NN)
 
     sel_topW_pos = (sel_topW & (df['lead_lep_charge']>0))
     sel_topW_neg = (sel_topW & (df['lead_lep_charge']<0))
-
-    sel_topW_bsm_pos = (sel_topW_bsm & (df_bsm['lead_lep_charge']>0))
-    sel_topW_bsm_neg = (sel_topW_bsm & (df_bsm['lead_lep_charge']<0))
 
     sel_BL_pos = (sel_baseline & (df['lead_lep_charge']>0))
     sel_BL_neg = (sel_baseline & (df['lead_lep_charge']<0))
@@ -466,22 +477,11 @@ if __name__ == '__main__':
 
     h_st_topW_pos = hist.Hist("score", dataset_axis, energy_axis)
 
-    h_score_topW_bsm_pos = hist.Hist("score", dataset_axis, score_axis)
-    h_score_topW_bsm_neg = hist.Hist("score", dataset_axis, score_axis)
-
-    h_st_topW_bsm_pos = hist.Hist("score", dataset_axis, energy_axis)
-
     h_score_incl = hist.Hist("score", dataset_axis, score_axis_ext)
     h_nodes = hist.Hist("nodes", dataset_axis, nodes_axis)
     
     h_p_topW_pos = hist.Hist("p", dataset_axis, momentum_axis)
     h_p_topW_neg = hist.Hist("p", dataset_axis, momentum_axis)
-
-    h_score_topW_bsm_pos.fill(dataset='EFT', score=df_bsm[sel_topW_bsm_pos]["score_topW"].values, weight=df_bsm[sel_topW_bsm_pos]["weight"].values*137)
-    h_score_topW_bsm_neg.fill(dataset='EFT', score=df_bsm[sel_topW_bsm_neg]["score_topW"].values, weight=df_bsm[sel_topW_bsm_neg]["weight"].values*137)
-
-    h_st_topW_bsm_pos.fill(dataset='EFT', e=df_bsm[sel_topW_bsm_pos]["st"].values, weight=df_bsm[sel_topW_bsm_pos]["weight"].values*137)
-    #h_st_topW_pos.fill(dataset='EFT', e=df_bsm[sel_topW_bsm_pos]["st"].values, weight=df_bsm[sel_topW_bsm_pos]["weight"].values*137)
 
     for proc in processes:
         h_score_topW_pos.fill(dataset=proc, score=processes[proc][sel_topW_pos]["score_topW"].values, weight=processes[proc][sel_topW_pos]["weight"].values*137)
@@ -511,14 +511,24 @@ if __name__ == '__main__':
 
     }
 
-    my_labels = {
-        'topW_v2': 'top-W scat.',
-        'TTW': 'prompt',
-        'TTZ': 'lost lepton',
-        'TTH': 'nonprompt',
-        'ttbar': 'charge flip',
-        'rare': 'rare',
-    }
+    if args.cat:
+        my_labels = {
+            'topW_v2': 'top-W scat.',
+            'TTW': 'prompt',
+            'TTZ': 'lost lepton',
+            'TTH': 'nonprompt',
+            'ttbar': 'charge flip',
+            'rare': 'rare',
+        }
+    else:
+        my_labels = {
+            'topW_v2': 'top-W scat.',
+            'TTW': 'ttW',
+            'TTZ': 'ttZ',
+            'TTH': 'ttH',
+            'ttbar': 'nonprompt',
+            'rare': 'rare',
+        }
     
     my_colors = {
         'topW_v2': '#FF595E',
@@ -580,51 +590,45 @@ if __name__ == '__main__':
          lumi=137,
         )
 
-    #raise NotImplementedError
 
-    # cards with NN    
-    SR_NN_card_pos = makeCardFromHist(output, 'score_topW_pos', overflow='all', ext='', systematics=True, categories=is_cat)
-    SR_NN_card_neg = makeCardFromHist(output, 'score_topW_neg', overflow='all', ext='', systematics=True, categories=is_cat)
+    if args.fit:
 
-    # as a comparison, cut based cards
-    SR_card_pos = makeCardFromHist(output, 'p_topW_pos', overflow='all', ext='', systematics=True)
-    SR_card_neg = makeCardFromHist(output, 'p_topW_neg', overflow='all', ext='', systematics=True)
+        # cards with NN    
+        SR_NN_card_pos = makeCardFromHist(output, 'score_topW_pos', overflow='all', ext='', systematics=True, categories=is_cat)
+        SR_NN_card_neg = makeCardFromHist(output, 'score_topW_neg', overflow='all', ext='', systematics=True, categories=is_cat)
+
+        # as a comparison, cut based cards
+        SR_card_pos = makeCardFromHist(output, 'p_topW_pos', overflow='all', ext='', systematics=True)
+        SR_card_neg = makeCardFromHist(output, 'p_topW_neg', overflow='all', ext='', systematics=True)
+            
+        card = dataCard(releaseLocation='/home/users/dspitzba/TTW/CMSSW_10_2_13/src/HiggsAnalysis/CombinedLimit/')
         
-    SR_NN_card_bsm_pos = makeCardFromHist(output, 'score_topW_pos', overflow='all', ext='_bsm', systematics=True, categories=is_cat, bsm_hist=h_score_topW_bsm_pos)
-    SR_NN_card_bsm_neg = makeCardFromHist(output, 'score_topW_neg', overflow='all', ext='_bsm', systematics=True, categories=is_cat, bsm_hist=h_score_topW_bsm_neg)
+        SR_NN_card = card.combineCards({'pos': SR_NN_card_pos, 'neg':SR_NN_card_neg})
+        results_NN = card.nllScan(SR_NN_card, rmin=0, rmax=3, npoints=61, options=' -v -1')
+        
+        SR_card = card.combineCards({'pos': SR_card_pos, 'neg':SR_card_neg})
+        results = card.nllScan(SR_card, rmin=0, rmax=3, npoints=61, options=' -v -1')
 
-    card = dataCard(releaseLocation='/home/users/dspitzba/TTW/CMSSW_10_2_13/src/HiggsAnalysis/CombinedLimit/')
-    
-    SR_NN_card = card.combineCards({'pos': SR_NN_card_pos, 'neg':SR_NN_card_neg})
-    results_NN = card.nllScan(SR_NN_card, rmin=0, rmax=3, npoints=61, options=' -v -1')
-    
-    SR_card = card.combineCards({'pos': SR_card_pos, 'neg':SR_card_neg})
-    results = card.nllScan(SR_card, rmin=0, rmax=3, npoints=61, options=' -v -1')
+        card.cleanUp()
+        
+        print ("NN: NLL for r=0: %.2f"%(results_NN[results_NN['r']==0]['deltaNLL']*2)[0])
+        print ("cut: NLL for r=0: %.2f"%(results[results['r']==0]['deltaNLL']*2)[0])
 
-    #SR_NN_card_bsm = card.combineCards({'pos': SR_NN_card_bsm_pos, 'neg':SR_NN_card_bsm_neg})
-    #results_bsm_nll = card.calcNLL(SR_NN_card_bsm)
-    #results_sm_nll = card.calcNLL(SR_NN_card)
+        fig, ax = plt.subplots(1,1,figsize=(10,10))
+        #plt.figure()
 
-    card.cleanUp()
-    
-    print ("NN: NLL for r=0: %.2f"%(results_NN[results_NN['r']==0]['deltaNLL']*2)[0])
-    print ("cut: NLL for r=0: %.2f"%(results[results['r']==0]['deltaNLL']*2)[0])
+        ax.plot(results['r'][1:], results['deltaNLL'][1:]*2, label=r'Expected baseline SR', c='green')
+        ax.plot(results_NN['r'][1:], results_NN['deltaNLL'][1:]*2, label=r'Expected NN SR', c='black')
+        #plt.plot(results_opt['r'][1:], results_opt['deltaNLL'][1:]*2, label=r'Expected NN SR, +/- charge', c='orange')
+        #plt.plot(results_stat['r'][1:], results_stat['deltaNLL'][1:]*2, label=r'Expected NN SR, stat only', c='red')
+        #plt.plot(results_Run3['r'][1:], results_Run3['deltaNLL'][1:]*2, label=r'Expected NN SR, Run3', c='blue')
+        
+        ax.set_xlabel(r'$r$')
+        ax.set_ylabel(r'$-2\Delta  ln L$')
+        ax.legend()
 
-    fig, ax = plt.subplots(1,1,figsize=(10,10))
-    #plt.figure()
-
-    ax.plot(results['r'][1:], results['deltaNLL'][1:]*2, label=r'Expected baseline SR', c='green')
-    ax.plot(results_NN['r'][1:], results_NN['deltaNLL'][1:]*2, label=r'Expected NN SR', c='black')
-    #plt.plot(results_opt['r'][1:], results_opt['deltaNLL'][1:]*2, label=r'Expected NN SR, +/- charge', c='orange')
-    #plt.plot(results_stat['r'][1:], results_stat['deltaNLL'][1:]*2, label=r'Expected NN SR, stat only', c='red')
-    #plt.plot(results_Run3['r'][1:], results_Run3['deltaNLL'][1:]*2, label=r'Expected NN SR, Run3', c='blue')
-    
-    ax.set_xlabel(r'$r$')
-    ax.set_ylabel(r'$-2\Delta  ln L$')
-    ax.legend()
-
-    fig.savefig(plot_dir+'/delta_NLL.pdf')
-    fig.savefig(plot_dir+'/delta_NLL.png')
+        fig.savefig(plot_dir+'/delta_NLL.pdf')
+        fig.savefig(plot_dir+'/delta_NLL.png')
 
     print ("Checking for overtraining in max node asignment...")
 
@@ -633,39 +637,39 @@ if __name__ == '__main__':
         pred_train,
         y_test_int,
         y_train_int,
-        #labels=['top-W', 'ttW', 'ttZ', 'ttH', 'nonprompt'],
+        labels=['top-W', 'ttW', 'ttZ', 'ttH', 'nonprompt'],
         #labels=['top-W', 'prompt', 'lost lepton', 'nonprompt'],
-        labels=['top-W', 'prompt', 'lost lepton'],
-        n_cat=3,  # was: 5
+        #labels=['top-W', 'prompt', 'lost lepton'],
+        n_cat=5,  # was: 5
         plot_dir=plot_dir,
         weight_test = df_test['weight'].values,
         weight_train = df_train['weight'].values,
     )
 
-    #for label in ks:
-    #    if ks[label][0]<0.05:
-    #        print ("- !! Found small p-value for process %s: %.2f"%(label, ks[label][0]))
+    for label in ks:
+        if ks[label][0]<0.05:
+            print ("- !! Found small p-value for process %s: %.2f"%(label, ks[label][0]))
 
     print ("Checking for overtraining in the different nodes...")
 
-    for node in [0,1,2]:  # also had 4
+    for node in [0,1,2,3,4]:  # also had 4
         ks = test_train(
             pred_test,
             pred_train,
             y_test_int,
             y_train_int,
-            #labels=['top-W', 'ttW', 'ttZ', 'ttH', 'nonprompt'],
+            labels=['top-W', 'ttW', 'ttZ', 'ttH', 'nonprompt'],
             #labels=['top-W', 'prompt', 'lost lepton', 'nonprompt'],
-            labels=['top-W', 'prompt', 'lost lepton'],
+            #labels=['top-W', 'prompt', 'lost lepton'],
             node=node,
             bins=bins,
             plot_dir=plot_dir,
             weight_test = df_test['weight'].values,
             weight_train = df_train['weight'].values,
         )
-        #for label in ks:
-        #    if ks[label][0]<0.05:
-        #        print ("- !! Found small p-value for process %s in node %s: %.2f"%(label, node, ks[label][0]))
+        for label in ks:
+            if ks[label][0]<0.05:
+                print ("- !! Found small p-value for process %s in node %s: %.2f"%(label, node, ks[label][0]))
 
 
     # Correlations
@@ -678,5 +682,4 @@ if __name__ == '__main__':
     
 
     # dump the merged data frame with the NN scores
-    df_out = pd.concat([df, df_bsm])
-    df_out.to_hdf('data/mini_baby_NN_%s.h5'%version, key='df', format='table', mode='w')
+    df.to_hdf('data/mini_baby_NN_%s.h5'%version, key='df', format='table', mode='w')

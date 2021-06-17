@@ -17,11 +17,11 @@ def nano_mapping(year=2018):
     return nano_mapping
 
 def make_fileset(datasets, year=2018, redirector=redirector_ucsd, small=False, n_max=1):
-    fileset = {}
+   fileset = {}
     nano_mappings = nano_mapping(year)
     for dataset in datasets:
-        for nano_sample in nano_mappings[dataset]:
-            dbs_files = DBSSample(dataset=nano_sample).get_files()
+       for nano_sample in nano_mappings[dataset]:
+           dbs_files = DBSSample(dataset=nano_sample).get_files()
             files = [ redirector+x.name for x in dbs_files ]
             if not small:
                 fileset.update({nano_sample: files})
@@ -36,4 +36,4 @@ if __name__ == '__main__':
     samples = get_samples()
     samples.update(get_samples('samples_QCD.yaml'))
 
-    fileset = make_fileset(['TTW', 'TTZ', 'QCD'], samples)
+    fileset = make_fileset(['TTW', 'TTZ', 'QCD'], samples, year=2018)

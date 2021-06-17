@@ -179,7 +179,7 @@ def main():
         sampleList_missing.append(sample)
     
 
-    workers = 4
+    workers = 1
     # then, run over the missing ones
     print ("Will have to work in %s samples."%len(sampleList_missing))
 
@@ -197,10 +197,10 @@ def main():
             #print (result)
             #print ("Done with %s samples."%counter)
 
-    print ("Done with the heavy lifting. Dumping results to yaml file now.")
+            print ("Done with the heavy lifting. Dumping results to yaml file now.")
 
-    with open(data_path+'%s.yaml'%name, 'w') as f:
-        yaml.dump(samples, f, Dumper=Dumper)
+            with open(data_path+'%s.yaml'%name, 'w') as f:
+                yaml.dump(samples, f, Dumper=Dumper)
 
     print ("Done.")
 
