@@ -42,8 +42,12 @@ variations = ['pt_jesTotalUp', 'pt_jesTotalDown']
 desired_output = {
             "PV_npvs" :         hist.Hist("PV_npvs", dataset_axis, ext_multiplicity_axis),
             "PV_npvsGood" :     hist.Hist("PV_npvsGood", dataset_axis, ext_multiplicity_axis),
+            "PV_npvsGood2" :     hist.Hist("PV_npvsGood", dataset_axis, ext_multiplicity_axis),
+            "PV_npvsGood3" :     hist.Hist("PV_npvsGood", dataset_axis, ext_multiplicity_axis),
             
             "MET" :             hist.Hist("Counts", dataset_axis, pt_axis, phi_axis),
+            "MET2" :             hist.Hist("Counts", dataset_axis, pt_axis, phi_axis),
+            "MET3" :             hist.Hist("Counts", dataset_axis, pt_axis, phi_axis),
             
             "lead_gen_lep":     hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
             "trail_gen_lep":    hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
@@ -65,6 +69,10 @@ desired_output = {
             "electron4":             hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
             "electron_data1":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
             "electron_data2":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
+            "electron_data3":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
+            "electron_data4":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
+            "electron_data5":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
+            "electron_data6":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
             "flipped_electron":      hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
             "flipped_electron2":     hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
             "flipped_electron3":     hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
@@ -86,6 +94,8 @@ desired_output = {
             "N_ele4" :        hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_mu" :          hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_jet" :         hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_jet2" :        hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_jet3" :        hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_fwd" :         hist.Hist("Counts", dataset_axis, multiplicity_axis),
 
             "nLepFromTop" :       hist.Hist("Counts", dataset_axis, multiplicity_axis),
@@ -98,8 +108,9 @@ desired_output = {
             "lepton_parent":      hist.Hist("Counts", dataset_axis, pdgID_axis),
             "lepton_parent2":     hist.Hist("Counts", dataset_axis, pdgID_axis),
     
-            "dilep_mass":        hist.Hist("Counts", dataset_axis, mass_axis),
-            "dilep_mass2":       hist.Hist("Counts", dataset_axis, mass_axis),
+            "dilep_mass1":        hist.Hist("Counts", dataset_axis, mass_axis, pt_fine_axis),
+            "dilep_mass2":        hist.Hist("Counts", dataset_axis, mass_axis, pt_fine_axis),
+            "dilep_mass3":        hist.Hist("Counts", dataset_axis, mass_axis, pt_fine_axis),
     
             "mva_id":            hist.Hist("Counts", dataset_axis, mva_id_axis, etaSC_axis),
             "mva_id2":            hist.Hist("Counts", dataset_axis, mva_id_axis, pt_axis2),
