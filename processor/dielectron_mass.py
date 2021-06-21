@@ -57,7 +57,7 @@ class dielectron_mass(processor.ProcessorABC):
       
         ## Electrons
         electron = Collections(ev, "Electron", "tightFCNC", 0, self.year).get()
-        electron = electron[(electron.pt > 20) & (np.abs(electron.eta) < 2.4)]
+        electron = electron[(electron.pt > 25) & (np.abs(electron.eta) < 2.4)]
         
         SSelectron = (ak.sum(electron.charge, axis=1) != 0) & (ak.num(electron)==2)
         OSelectron = (ak.sum(electron.charge, axis=1) == 0) & (ak.num(electron)==2)
@@ -68,7 +68,7 @@ class dielectron_mass(processor.ProcessorABC):
         
         leading_electron_idx = ak.singletons(ak.argmax(electron.pt, axis=1))
         leading_electron = electron[(leading_electron_idx)]
-        leading_electron = leading_electron[(leading_electron.pt > 25)]
+        leading_electron = leading_electron[(leading_electron.pt > 30)]
         
         trailing_electron_idx = ak.singletons(ak.argmin(electron.pt, axis=1))
         trailing_electron = electron[trailing_electron_idx]
@@ -94,6 +94,7 @@ class dielectron_mass(processor.ProcessorABC):
         ss = (SSelectron)
         os = (OSelectron)
         mass = (ak.min(np.abs(dielectron_mass-91.2), axis = 1) < 15)
+        lead_electron = (ak.min(leading_electron.pt, axis = 1) > 30)
         jet1 = (ak.num(jet) >= 1)
         jet2 = (ak.num(jet) >= 2)
         
@@ -104,11 +105,12 @@ class dielectron_mass(processor.ProcessorABC):
         selection.add('ss',          ss)
         selection.add('os',          os)
         selection.add('mass',        mass)
+        selection.add('leading',     lead_electron)
         selection.add('triggers',    triggers)
         selection.add('one jet',     jet1)
         selection.add('two jets',    jet2)
         
-        bl_reqs = ['filter'] + ['mass'] + ['mask'] + ['triggers']
+        bl_reqs = ['filter'] + ['mass'] + ['mask'] + ['triggers'] + ['leading']
 
         bl_reqs_d = { sel: True for sel in bl_reqs }
         baseline = selection.require(**bl_reqs_d)

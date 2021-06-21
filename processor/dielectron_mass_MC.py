@@ -27,7 +27,7 @@ class dielectron_mass(processor.ProcessorABC):
         
         self.btagSF = btag_scalefactor(year)
         
-        #self.leptonSF = LeptonSF(year=year)
+        self.leptonSF = LeptonSF(year=year)
                
         self._accumulator = processor.dict_accumulator( accumulator )
 
@@ -62,7 +62,7 @@ class dielectron_mass(processor.ProcessorABC):
         
         ## Electrons
         electron = Collections(ev, "Electron", "tightFCNC", 0, self.year).get()
-        electron = electron[(electron.pt > 20) & (np.abs(electron.eta) < 2.4)]
+        electron = electron[(electron.pt > 25) & (np.abs(electron.eta) < 2.4)]
 
         electron = electron[(electron.genPartIdx >= 0)]
         electron = electron[(np.abs(electron.matched_gen.pdgId)==11)]  #from here on all leptons are gen-matched
@@ -77,7 +77,7 @@ class dielectron_mass(processor.ProcessorABC):
         
         leading_electron_idx = ak.singletons(ak.argmax(electron.pt, axis=1))
         leading_electron = electron[leading_electron_idx]
-        leading_electron = leading_electron[(leading_electron.pt > 25)]
+        leading_electron = leading_electron[(leading_electron.pt > 30)]
 
         trailing_electron_idx = ak.singletons(ak.argmin(electron.pt, axis=1))
         trailing_electron = electron[trailing_electron_idx]
@@ -113,7 +113,7 @@ class dielectron_mass(processor.ProcessorABC):
         ss = (SSelectron)
         os = (OSelectron)
         mass = (ak.min(np.abs(dielectron_mass-91.2), axis = 1) < 15)
-        lead_electron = (ak.min(leading_electron.pt, axis = 1) > 25)
+        lead_electron = (ak.min(leading_electron.pt, axis = 1) > 30)
         jet1 = (ak.num(jet) >= 1)
         jet2 = (ak.num(jet) >= 2)
 

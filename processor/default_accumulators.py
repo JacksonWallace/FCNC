@@ -45,9 +45,9 @@ desired_output = {
             "PV_npvsGood2" :     hist.Hist("PV_npvsGood", dataset_axis, ext_multiplicity_axis),
             "PV_npvsGood3" :     hist.Hist("PV_npvsGood", dataset_axis, ext_multiplicity_axis),
             
-            "MET" :             hist.Hist("Counts", dataset_axis, pt_axis, phi_axis),
-            "MET2" :             hist.Hist("Counts", dataset_axis, pt_axis, phi_axis),
-            "MET3" :             hist.Hist("Counts", dataset_axis, pt_axis, phi_axis),
+            "MET" :             hist.Hist("Counts", dataset_axis, pt_fine_axis, phi_axis),
+            "MET2" :             hist.Hist("Counts", dataset_axis, pt_fine_axis, phi_axis),
+            "MET3" :             hist.Hist("Counts", dataset_axis, pt_fine_axis, phi_axis),
             
             "lead_gen_lep":     hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
             "trail_gen_lep":    hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
