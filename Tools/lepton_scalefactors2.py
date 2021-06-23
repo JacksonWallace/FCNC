@@ -1,354 +1,84 @@
 import numpy as np
 
+try:
+    import awkward1 as ak
+except ImportError:
+    import awkward as ak
+
+from Tools.helpers import yahist_2D_lookup
+
+from yahist import Hist1D, Hist2D
+
 class LeptonSF2:
     
     def __init__(self, year=2018):
         self.year = year
         
+        if self.year ==2018:
+            muonScaleFactor_RunABCD_bins = [np.array([20.,25.,30.,40.,50.,100.]),
+                                            np.array([0,0.9,1.2,2.1,2.4]),]
+
+            muonScaleFactor_RunABCD_counts = np.array([[0.9824, 1.0271, 0.9948, 0.9960, 0.9990],
+                                               [0.9784, 1.0110, 0.9906, 0.9949, 0.9970],
+                                               [1.0153, 0.9855, 1.0042, 1.0010, 1.0010],
+                                               [1.0511, 0.9913, 1.0103, 1.0041, 1.0030]])
+
+            self.h_muonScaleFactor_RunABCD = Hist2D.from_bincounts(muonScaleFactor_RunABCD_counts, muonScaleFactor_RunABCD_bins) 
+
+            muonScaleFactor_Medium_bins = [np.array([20.,25.,30.,40.,50.,60.,100.]),
+                                           np.array([0,0.9,1.2,2.1,2.4]),]
+
+            muonScaleFactor_Medium_counts = np.array([[0.9916, 0.9951, 1.0004, 0.9980, 0.9965, 0.9989],
+                                                 [1.0018, 0.9962, 0.9994, 0.9971, 0.9945, 0.9985],
+                                                 [1.0031, 0.9935, 0.9981, 0.9960, 0.9939, 0.9957],
+                                                 [0.9889, 0.9733, 0.9786, 0.9762, 0.9720, 0.9806]])
+
+
+            self.h_muonScaleFactor_Medium = Hist2D.from_bincounts(muonScaleFactor_Medium_counts, muonScaleFactor_Medium_bins) 
+
+            electronScaleFactor_RunABCD_bins = [np.array([10, 20, 35, 50, 100, 200, 300]),
+                                                np.array([-2.500, -2.000, -1.566, -1.444, -0.800, 0.000, 0.800, 1.444, 1.566, 2.000, 2.500]),]
+
+            electronScaleFactor_RunABCD_counts = np.array([[1.3737, 1.0673, 0.9891, 0.9433, 0.9245, 0.9371],
+                                                      [1.0453, 0.9401, 0.9352, 0.9310, 0.9250, 0.9500],
+                                                      [1.3240, 0.9614, 0.9598, 0.9751, 0.9432, 0.8901],
+                                                      [0.9262, 0.8841, 0.9237, 0.9311, 0.9448, 0.9460],
+                                                      [0.8536, 0.8877, 0.9294, 0.9367, 0.9443, 0.9635],
+                                                      [0.9133, 0.8955, 0.9346, 0.9417, 0.9626, 0.9709],
+                                                      [0.9344, 0.8932, 0.9231, 0.9354, 0.9644, 0.8999],
+                                                      [1.2237, 0.9316, 0.9421, 0.9530, 1.0114, 0.9646],
+                                                      [1.0047, 0.9295, 0.9343, 0.9366, 0.8989, 0.9169],
+                                                      [1.3372, 1.0471, 0.9709, 0.9212, 0.8736, 1.0113],])
+
+            self.h_electronScaleFactor_RunABCD = Hist2D.from_bincounts(electronScaleFactor_RunABCD_counts, electronScaleFactor_RunABCD_bins)
+
+            electronScaleFactorReco_RunABCD_bins = [np.array([10, 20, 45, 75, 100, 200]),
+                                                np.array([-2.500, -2.000, -1.566, -1.444, -1.000, -0.500, 0.000, 0.500, 1.000, 1.444, 1.566, 2.000, 2.500]),]
+
+            electronScaleFactorReco_RunABCD_counts = np.array([[1.0115, 0.9886, 0.9846, 1.0010, 1.0072],
+                                                           [0.9724, 0.9908, 0.9908, 1.0061, 0.9919],
+                                                           [1.4158, 0.9815, 0.9591, 1.0467, 0.9837],
+                                                           [1.0163, 0.9875, 0.9887, 1.0051, 1.0010],
+                                                           [0.9095, 0.9897, 0.9908, 1.0020, 1.0010],
+                                                           [1.0000, 0.9856, 0.9887, 1.0061, 0.9869],
+                                                           [1.0000, 0.9835, 0.9866, 1.0061, 0.9869],
+                                                           [0.9095, 0.9866, 0.9887, 1.0020, 1.0010],
+                                                           [1.0163, 0.9844, 0.9824, 1.0051, 1.0010],
+                                                           [1.4158, 0.9848, 0.9727, 1.0467, 0.9837],
+                                                           [0.9724, 0.9887, 0.9908, 1.0061, 0.9919],
+                                                           [1.0115, 0.9918, 0.9857, 1.0010, 1.0072]])
+            self.h_electronScaleFactorReco_RunABCD = Hist2D.from_bincounts(electronScaleFactorReco_RunABCD_counts, electronScaleFactorReco_RunABCD_bins)
     
     def get(self, ele, mu):
         if self.year == 2018:
-            sf = ak.prod(muonScaleFactor_RunABCD(mu.pt, mu.eta), axis=1)*ak.prod(muonScaleFactor_Medium(mu.pt, mu.eta), axis=1)*ak.prod(electronScaleFactor_RunABCD(electron.pt, electron.eta), axis=1)*ak.prod(electronScaleFactorReco_RunABCD(electron.pt, electron.eta),axis=1)
+            muonScaleFactor_RunABCD = yahist_2D_lookup(self.h_muonScaleFactor_RunABCD, mu.pt, np.abs(mu.eta))
+            muonScaleFactor_Medium = yahist_2D_lookup(self.h_muonScaleFactor_Medium, mu.pt, np.abs(mu.eta))
+            electronScaleFactor_RunABCD = yahist_2D_lookup(self.h_electronScaleFactor_RunABCD, ele.pt, ele.eta)
+            electronScaleFactorReco_RunABCD = yahist_2D_lookup(self.h_electronScaleFactorReco_RunABCD, ele.pt, ele.eta)
+            
+            sf = ak.prod(muonScaleFactor_RunABCD, axis=1)*ak.prod(muonScaleFactor_Medium, axis=1)*ak.prod(electronScaleFactor_RunABCD, axis=1)*ak.prod(electronScaleFactorReco_RunABCD, axis=1)
+            
             return sf
     
     
-    def muonScaleFactor_RunABCD(pt, eta):
-        if (pt >= 20 and pt < 25 and np.abs(eta) >= 0.000 and np.abs(eta) < 0.900):
-            return 0.9824
-        if (pt >= 20 and pt < 25 and np.abs(eta) >= 0.900 and np.abs(eta) < 1.200):
-            return 0.9784
-        if (pt >= 20 and pt < 25 and np.abs(eta) >= 1.200 and np.abs(eta) < 2.100):
-            return 1.0153
-        if (pt >= 20 and pt < 25 and np.abs(eta) >= 2.100 and np.abs(eta) < 2.400):
-            return 1.0511
-        if (pt >= 25 and pt < 30 and np.abs(eta) >= 0.000 and np.abs(eta) < 0.900):
-            return 0.9913
-        if (pt >= 25 and pt < 30 and np.abs(eta) >= 0.900 and np.abs(eta) < 1.200):
-            return 0.9855
-        if (pt >= 25 and pt < 30 and np.abs(eta) >= 1.200 and np.abs(eta) < 2.100):
-            return 1.0110
-        if (pt >= 25 and pt < 30 and np.abs(eta) >= 2.100 and np.abs(eta) < 2.400):
-            return 1.0271
-        if (pt >= 30 and pt < 40 and np.abs(eta) >= 0.000 and np.abs(eta) < 0.900):
-            return 0.9948
-        if (pt >= 30 and pt < 40 and np.abs(eta) >= 0.900 and np.abs(eta) < 1.200):
-            return 0.9906
-        if (pt >= 30 and pt < 40 and np.abs(eta) >= 1.200 and np.abs(eta) < 2.100):
-            return 1.0042
-        if (pt >= 30 and pt < 40 and np.abs(eta) >= 2.100 and np.abs(eta) < 2.400):
-            return 1.0103
-        if (pt >= 40 and pt < 50 and np.abs(eta) >= 0.000 and np.abs(eta) < 0.900):
-            return 0.9960
-        if (pt >= 40 and pt < 50 and np.abs(eta) >= 0.900 and np.abs(eta) < 1.200):
-            return 0.9949
-        if (pt >= 40 and pt < 50 and np.abs(eta) >= 1.200 and np.abs(eta) < 2.100):
-            return 1.0010
-        if (pt >= 40 and pt < 50 and np.abs(eta) >= 2.100 and np.abs(eta) < 2.400):
-            return 1.0041
-        if (pt >= 50 and np.abs(eta) >= 0.000 and np.abs(eta) < 0.900):
-            return 0.9990
-        if (pt >= 50 and np.abs(eta) >= 0.900 and np.abs(eta) < 1.200):
-            return 0.9970
-        if (pt >= 50 and np.abs(eta) >= 1.200 and np.abs(eta) < 2.100):
-            return 1.0010
-        if (pt >= 50 and np.abs(eta) >= 2.100 and np.abs(eta) < 2.400):
-            return 1.0030
-        return 1.0
-    
-    def muonScaleFactor_Medium(pt, eta):
-        if (pt >= 20 and pt < 25 and np.abs(eta) >= 0.000 and np.abs(eta) < 0.900):
-            return 0.9916
-        if (pt >= 20 and pt < 25 and np.abs(eta) >= 0.900 and np.abs(eta) < 1.200):
-            return 1.0018
-        if (pt >= 20 and pt < 25 and np.abs(eta) >= 1.200 and np.abs(eta) < 2.100):
-            return 1.0031
-        if (pt >= 20 and pt < 25 and np.abs(eta) >= 2.100 and np.abs(eta) < 2.400):
-            return 0.9889
-        if (pt >= 25 and pt < 30 and np.abs(eta) >= 0.000 and np.abs(eta) < 0.900):
-            return 0.9951
-        if (pt >= 25 and pt < 30 and np.abs(eta) >= 0.900 and np.abs(eta) < 1.200):
-            return 0.9962
-        if (pt >= 25 and pt < 30 and np.abs(eta) >= 1.200 and np.abs(eta) < 2.100):
-            return 0.9935
-        if (pt >= 25 and pt < 30 and np.abs(eta) >= 2.100 and np.abs(eta) < 2.400):
-            return 0.9733
-        if (pt >= 30 and pt < 40 and np.abs(eta) >= 0.000 and np.abs(eta) < 0.900):
-            return 1.0004
-        if (pt >= 30 and pt < 40 and np.abs(eta) >= 0.900 and np.abs(eta) < 1.200):
-            return 0.9994
-        if (pt >= 30 and pt < 40 and np.abs(eta) >= 1.200 and np.abs(eta) < 2.100):
-            return 0.9981
-        if (pt >= 30 and pt < 40 and np.abs(eta) >= 2.100 and np.abs(eta) < 2.400):
-            return 0.9786
-        if (pt >= 40 and pt < 50 and np.abs(eta) >= 0.000 and np.abs(eta) < 0.900):
-            return 0.9980
-        if (pt >= 40 and pt < 50 and np.abs(eta) >= 0.900 and np.abs(eta) < 1.200):
-            return 0.9971
-        if (pt >= 40 and pt < 50 and np.abs(eta) >= 1.200 and np.abs(eta) < 2.100):
-            return 0.9960
-        if (pt >= 40 and pt < 50 and np.abs(eta) >= 2.100 and np.abs(eta) < 2.400):
-            return 0.9762
-        if (pt >= 50 and pt < 60 and np.abs(eta) >= 0.000 and np.abs(eta) < 0.900):
-            return 0.9965
-        if (pt >= 50 and pt < 60 and np.abs(eta) >= 0.900 and np.abs(eta) < 1.200):
-            return 0.9945
-        if (pt >= 50 and pt < 60 and np.abs(eta) >= 1.200 and np.abs(eta) < 2.100):
-            return 0.9939
-        if (pt >= 50 and pt < 60 and np.abs(eta) >= 2.100 and np.abs(eta) < 2.400):
-            return 0.9720
-        if (pt >= 60 and np.abs(eta) >= 0.000 and np.abs(eta) < 0.900):
-            return 0.9989
-        if (pt >= 60 and np.abs(eta) >= 0.900 and np.abs(eta) < 1.200):
-            return 0.9985
-        if (pt >= 60 and np.abs(eta) >= 1.200 and np.abs(eta) < 2.100):
-            return 0.9957
-        if (pt >= 60 and np.abs(eta) >= 2.100 and np.abs(eta) < 2.400):
-            return 0.9806
-        return 1.0
-    
-    
-    def electronScaleFactor_RunABCD(pt, eta):
-        if (pt >= 10 and pt < 20 and eta >= -2.500 and eta < -2.000):
-            return 1.3737
-        if (pt >= 10.0 and pt < 20.0 and eta >= -2.000 and eta < -1.566):
-            return 1.0453
-        if (pt >= 10 and pt < 20 and eta >= -1.566 and eta < -1.444):
-            return 1.3240
-        if (pt >= 10 and pt < 20 and eta >= -1.444 and eta < -0.800):
-            return 0.9262
-        if (pt >= 10 and pt < 20 and eta >= -0.800 and eta < 0.000):
-            return 0.8536
-        if (pt >= 10 and pt < 20 and eta >= 0.000 and eta < 0.800):
-            return 0.9133
-        if (pt >= 10 and pt < 20 and eta >= 0.800 and eta < 1.444):
-            return 0.9344
-        if (pt >= 10 and pt < 20 and eta >= 1.444 and eta < 1.566):
-            return 1.2237
-        if (pt >= 10 and pt < 20 and eta >= 1.566 and eta < 2.000):
-            return 1.0047
-        if (pt >= 10 and pt < 20 and eta >= 2.000 and eta < 2.500):
-            return 1.3372
-        if (pt >= 20 and pt < 35 and eta >= -2.500 and eta < -2.000):
-            return 1.0673
-        if (pt >= 20 and pt < 35 and eta >= -2.000 and eta < -1.566):
-            return 0.9401
-        if (pt >= 20 and pt < 35 and eta >= -1.566 and eta < -1.444):
-            return 0.9614
-        if (pt >= 20 and pt < 35 and eta >= -1.444 and eta < -0.800):
-            return 0.8841
-        if (pt >= 20 and pt < 35 and eta >= -0.800 and eta < 0.000):
-            return 0.8877
-        if (pt >= 20 and pt < 35 and eta >= 0.000 and eta < 0.800):
-            return 0.8955
-        if (pt >= 20 and pt < 35 and eta >= 0.800 and eta < 1.444):
-            return 0.8932
-        if (pt >= 20 and pt < 35 and eta >= 1.444 and eta < 1.566):
-            return 0.9316
-        if (pt >= 20 and pt < 35 and eta >= 1.566 and eta < 2.000):
-            return 0.9295
-        if (pt >= 20 and pt < 35 and eta >= 2.000 and eta < 2.500):
-            return 1.0471
-        if (pt >= 35 and pt < 50 and eta >= -2.500 and eta < -2.000):
-            return 0.9891
-        if (pt >= 35 and pt < 50 and eta >= -2.000 and eta < -1.566):
-            return 0.9352
-        if (pt >= 35 and pt < 50 and eta >= -1.566 and eta < -1.444):
-            return 0.9598
-        if (pt >= 35 and pt < 50 and eta >= -1.444 and eta < -0.800):
-            return 0.9237
-        if (pt >= 35 and pt < 50 and eta >= -0.800 and eta < 0.000):
-            return 0.9294
-        if (pt >= 35 and pt < 50 and eta >= 0.000 and eta < 0.800):
-            return 0.9346
-        if (pt >= 35 and pt < 50 and eta >= 0.800 and eta < 1.444): 
-            return 0.9231
-        if (pt >= 35 and pt < 50 and eta >= 1.444 and eta < 1.566):
-            return 0.9421
-        if (pt >= 35 and pt < 50 and eta >= 1.566 and eta < 2.000):
-            return 0.9343
-        if (pt >= 35 and pt < 50 and eta >= 2.000 and eta < 2.500): 
-            return 0.9709
-        if (pt >= 50 and pt < 100 and eta >= -2.500 and eta < -2.000):
-            return 0.9433
-        if (pt >= 50 and pt < 100 and eta >= -2.000 and eta < -1.566):
-            return 0.9310
-        if (pt >= 50 and pt < 100 and eta >= -1.566 and eta < -1.444):
-            return 0.9751
-        if (pt >= 50 and pt < 100 and eta >= -1.444 and eta < -0.800):
-            return 0.9311
-        if (pt >= 50 and pt < 100 and eta >= -0.800 and eta < 0.000):
-            return 0.9367
-        if (pt >= 50 and pt < 100 and eta >= 0.000 and eta < 0.800):
-            return 0.9417
-        if (pt >= 50 and pt < 100 and eta >= 0.800 and eta < 1.444):
-            return 0.9354
-        if (pt >= 50 and pt < 100 and eta >= 1.444 and eta < 1.566):
-            return 0.9530
-        if (pt >= 50 and pt < 100 and eta >= 1.566 and eta < 2.000):
-            return 0.9366
-        if (pt >= 50 and pt < 100 and eta >= 2.000 and eta < 2.500):
-            return 0.9212
-        if (pt >= 100 and pt < 200 and eta >= -2.500 and eta < -2.000):
-            return 0.9245
-        if (pt >= 100 and pt < 200 and eta >= -2.000 and eta < -1.566):
-            return 0.9250
-        if (pt >= 100 and pt < 200 and eta >= -1.566 and eta < -1.444):
-            return 0.9432
-        if (pt >= 100 and pt < 200 and eta >= -1.444 and eta < -0.800):
-            return 0.9448
-        if (pt >= 100 and pt < 200 and eta >= -0.800 and eta < 0.000):
-            return 0.9443
-        if (pt >= 100 and pt < 200 and eta >= 0.000 and eta < 0.800):
-            return 0.9626
-        if (pt >= 100 and pt < 200 and eta >= 0.800 and eta < 1.444):
-            return 0.9644
-        if (pt >= 100 and pt < 200 and eta >= 1.444 and eta < 1.566):
-            return 1.0114
-        if (pt >= 100 and pt < 200 and eta >= 1.566 and eta < 2.000):
-            return 0.8989
-        if (pt >= 100 and pt < 200 and eta >= 2.000 and eta < 2.500):
-            return 0.8736
-        if (pt >= 200 and eta >= -2.500 and eta < -2.000):
-            return 0.9371
-        if (pt >= 200 and eta >= -2.000 and eta < -1.566):
-            return 0.9500
-        if (pt >= 200 and eta >= -1.566 and eta < -1.444):
-            return 0.8901
-        if (pt >= 200 and eta >= -1.444 and eta < -0.800):
-            return 0.9460
-        if (pt >= 200 and eta >= -0.800 and eta < 0.000):
-            return 0.9635
-        if (pt >= 200 and eta >= 0.000 and eta < 0.800):
-            return 0.9709
-        if (pt >= 200 and eta >= 0.800 and eta < 1.444):
-            return 0.8999
-        if (pt >= 200 and eta >= 1.444 and eta < 1.566):
-            return 0.9646
-        if (pt >= 200 and eta >= 1.566 and eta < 2.000): 
-            return 0.9169
-        if (pt >= 200 and eta >= 2.000 and eta < 2.500): 
-            return 1.0113
-        return 0.0
-    
-    def electronScaleFactorReco_RunABCD(pt, eta):
-        if (pt >= 10 and pt < 20 and eta >= -2.500 and eta < -2.000):
-            return 1.0115
-        if (pt >= 10 and pt < 20 and eta >= -2.000 and eta < -1.566):
-            return 0.9724
-        if (pt >= 10 and pt < 20 and eta >= -1.566 and eta < -1.444):
-            return 1.4158
-        if (pt >= 10 and pt < 20 and eta >= -1.444 and eta < -1.000):
-            return 1.0163
-        if (pt >= 10 and pt < 20 and eta >= -1.000 and eta < -0.500):
-            return 0.9095
-        if (pt >= 10 and pt < 20 and eta >= -0.500 and eta < 0.000):
-            return 1.0000
-        if (pt >= 10 and pt < 20 and eta >= 0.000 and eta < 0.500):
-            return 1.0000
-        if (pt >= 10 and pt < 20 and eta >= 0.500 and eta < 1.000):
-            return 0.9095
-        if (pt >= 10 and pt < 20 and eta >= 1.000 and eta < 1.444):
-            return 1.0163
-        if (pt >= 10 and pt < 20 and eta >= 1.444 and eta < 1.566):
-            return 1.4158
-        if (pt >= 10 and pt < 20 and eta >= 1.566 and eta < 2.000):
-            return 0.9724
-        if (pt >= 10 and pt < 20 and eta >= 2.000 and eta < 2.500):
-            return 1.0115
-        if (pt >= 20 and pt < 45 and eta >= -2.500 and eta < -2.000):
-            return 0.9886
-        if (pt >= 20 and pt < 45 and eta >= -2.000 and eta < -1.566):
-            return 0.9908
-        if (pt >= 20 and pt < 45 and eta >= -1.566 and eta < -1.444):
-            return 0.9815
-        if (pt >= 20 and pt < 45 and eta >= -1.444 and eta < -1.000):
-            return 0.9875
-        if (pt >= 20 and pt < 45 and eta >= -1.000 and eta < -0.500):
-            return 0.9897
-        if (pt >= 20 and pt < 45 and eta >= -0.500 and eta < 0.000):
-            return 0.9856
-        if (pt >= 20 and pt < 45 and eta >= 0.000 and eta < 0.500):
-            return 0.9835
-        if (pt >= 20 and pt < 45 and eta >= 0.500 and eta < 1.000):
-            return 0.9866
-        if (pt >= 20 and pt < 45 and eta >= 1.000 and eta < 1.444):
-            return 0.9844
-        if (pt >= 20 and pt < 45 and eta >= 1.444 and eta < 1.566):
-            return 0.9848
-        if (pt >= 20 and pt < 45 and eta >= 1.566 and eta < 2.000):
-            return 0.9887
-        if (pt >= 20 and pt < 45 and eta >= 2.000 and eta < 2.500):
-            return 0.9918
-        if (pt >= 45 and pt < 75 and eta >= -2.500 and eta < -2.000):
-            return 0.9846
-        if (pt >= 45 and pt < 75 and eta >= -2.000 and eta < -1.566):
-            return 0.9908
-        if (pt >= 45 and pt < 75 and eta >= -1.566 and eta < -1.444):
-            return 0.9591
-        if (pt >= 45 and pt < 75 and eta >= -1.444 and eta < -1.000):
-            return 0.9887
-        if (pt >= 45 and pt < 75 and eta >= -1.000 and eta < -0.500):
-            return 0.9908
-        if (pt >= 45 and pt < 75 and eta >= -0.500 and eta < 0.000):
-            return 0.9887
-        if (pt >= 45 and pt < 75 and eta >= 0.000 and eta < 0.500):
-            return 0.9866
-        if (pt >= 45 and pt < 75 and eta >= 0.500 and eta < 1.000):
-            return 0.9887
-        if (pt >= 45 and pt < 75 and eta >= 1.000 and eta < 1.444):
-            return 0.9824
-        if (pt >= 45 and pt < 75 and eta >= 1.444 and eta < 1.566):
-            return 0.9727
-        if (pt >= 45 and pt < 75 and eta >= 1.566 and eta < 2.000):
-            return 0.9908
-        if (pt >= 45 and pt < 75 and eta >= 2.000 and eta < 2.500):
-            return 0.9857
-        if (pt >= 75 and pt < 100 and eta >= -2.500 and eta < -2.000):
-            return 1.0010
-        if (pt >= 75 and pt < 100 and eta >= -2.000 and eta < -1.566):
-            return 1.0061
-        if (pt >= 75 and pt < 100 and eta >= -1.566 and eta < -1.444):
-            return 1.0467
-        if (pt >= 75 and pt < 100 and eta >= -1.444 and eta < -1.000):
-            return 1.0051
-        if (pt >= 75 and pt < 100 and eta >= -1.000 and eta < -0.500):
-            return 1.0020
-        if (pt >= 75 and pt < 100 and eta >= -0.500 and eta < 0.000):
-            return 1.0061
-        if (pt >= 75 and pt < 100 and eta >= 0.000 and eta < 0.500):
-            return 1.0061
-        if (pt >= 75 and pt < 100 and eta >= 0.500 and eta < 1.000):
-            return 1.0020
-        if (pt >= 75 and pt < 100 and eta >= 1.000 and eta < 1.444):
-            return 1.0051
-        if (pt >= 75 and pt < 100 and eta >= 1.444 and eta < 1.566):
-            return 1.0467
-        if (pt >= 75 and pt < 100 and eta >= 1.566 and eta < 2.000):
-            return 1.0061
-        if (pt >= 75 and pt < 100 and eta >= 2.000 and eta < 2.500):
-            return 1.0010
-        if (pt >= 100  and eta >= -2.500 and eta < -2.000):
-            return 1.0072
-        if (pt >= 100  and eta >= -2.000 and eta < -1.566):
-            return 0.9919
-        if (pt >= 100  and eta >= -1.566 and eta < -1.444):
-            return 0.9837
-        if (pt >= 100  and eta >= -1.444 and eta < -1.000):
-            return 1.0010
-        if (pt >= 100  and eta >= -1.000 and eta < -0.500):
-            return 1.0010
-        if (pt >= 100  and eta >= -0.500 and eta < 0.000):
-            return 0.9869
-        if (pt >= 100  and eta >= 0.000 and eta < 0.500):
-            return 0.9869
-        if (pt >= 100  and eta >= 0.500 and eta < 1.000):
-            return 1.0010
-        if (pt >= 100  and eta >= 1.000 and eta < 1.444):
-            return 1.0010
-        if (pt >= 100  and eta >= 1.444 and eta < 1.566):
-            return 0.9837
-        if (pt >= 100  and eta >= 1.566 and eta < 2.000):
-            return 0.9919
-        if (pt >= 100  and eta >= 2.000 and eta < 2.500):
-            return 1.0072
-        return 0.0
+     

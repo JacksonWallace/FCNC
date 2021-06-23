@@ -16,7 +16,7 @@ from Tools.config_helpers import *
 from Tools.helpers import build_weight_like
 from Tools.triggers import *
 from Tools.btag_scalefactors import *
-from Tools.lepton_scalefactors import *
+from Tools.lepton_scalefactors2 import *
 from Tools.charge_flip import *
 from Tools.gen import find_first_parent, get_charge_parent
 
@@ -27,7 +27,7 @@ class dielectron_mass(processor.ProcessorABC):
         
         self.btagSF = btag_scalefactor(year)
         
-        self.leptonSF = LeptonSF(year=year)
+        self.leptonSF = LeptonSF2(year=year)
                
         self._accumulator = processor.dict_accumulator( accumulator )
 
