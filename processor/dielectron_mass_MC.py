@@ -106,7 +106,8 @@ class dielectron_mass(processor.ProcessorABC):
         
         if not dataset=='MuonEG':
             # generator weight
-            weight.add("weight", ev.genWeight)                           
+            weight.add("weight", ev.genWeight)  
+            weight.add("lepton", self.leptonSF.get(electron, muon))
                       
         #selections    
         filters   = getFilters(ev, year=self.year, dataset=dataset)
