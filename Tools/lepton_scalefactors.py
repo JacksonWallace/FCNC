@@ -88,7 +88,7 @@ class LeptonSF:
             mu_sf_iso       = self.evaluator["mu_2017_iso"](mu.pt, abs(mu.eta))
 
             #sf = ele_sf_id.prod() * ele_sf_iso.prod() * ele_sf_reco.prod() * ele_sf_reco_low.prod() * mu_sf_id.prod() * mu_sf_iso.prod()
-            sf = ak.prod(ele_sf_reco, axis=1) * ak.prod(ele_sf_reco_low, axis=1) *  ele_sf_id.prod() * ele_sf_iso.prod() * mu_sf_id.prod() * mu_sf_iso.prod() #FIXME
+            sf = ak.prod(ele_sf_reco, axis=1) * ak.prod(ele_sf_reco_low, axis=1) *  ak.prod(ele_sf_id, axis=1) * ak.prod(ele_sf_iso, axis=1) * ak.prod(mu_sf_id, axis=1) * ak.prod(mu_sf_iso, axis=1)
 
         elif self.year == 2018:
             ele_sf_reco     = self.evaluator["ele_2018_reco"](ele.eta, ele.pt)
