@@ -1,3 +1,4 @@
+import awkward as ak
 from coffea import processor, hist
 import numpy as np
 
@@ -6,11 +7,6 @@ def add_processes_to_output(fileset, output):
     for sample in fileset:
         if sample not in output:
             output.update({sample: processor.defaultdict_accumulator(int)})
-
-def add_files_to_output(fileset, output):
-    for sample in fileset:
-        for f in fileset[sample]:
-            output.update({f: processor.defaultdict_accumulator(int)})
 
 
 dataset_axis            = hist.Cat("dataset",       "Primary dataset")
@@ -38,6 +34,7 @@ isolation1_axis         = hist.Bin("isolation1",    r"Iso1", np.array([0, 1/0.80
 isolation2_axis         = hist.Bin("isolation2",    r"Iso2", np.array([0, 7.2, 16]))
 
 variations = ['pt_jesTotalUp', 'pt_jesTotalDown']
+nb_variations = ['centralUp', 'centralDown', 'upCentral', 'downCentral']
 
 desired_output = {
             "PV_npvs" :         hist.Hist("PV_npvs", dataset_axis, ext_multiplicity_axis),
@@ -125,4 +122,7 @@ desired_output = {
 outputs_with_vars = ['j1', 'j2', 'j3', 'b1', 'b2', 'N_jet', 'fwd_jet', 'N_b', 'N_fwd', 'N_central', 'MET']
 for out in outputs_with_vars:
     desired_output.update( { out+'_'+var: desired_output[out].copy() for var in variations } )
-
+    
+outputs_with_nb_vars = ['N_b']
+for out in outputs_with_nb_vars:
+    desired_output.update( { out+'_'+var: desired_output[out].copy() for var in nb_variations } )
