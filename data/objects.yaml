@@ -56,6 +56,25 @@ Electron:
       max: 4
       extra: abs
       
+  looseFCNC:
+    pt:
+      min: 10
+    eta:
+      max: 2.4
+      extra: abs
+    tightCharge: 2
+    lostHits: 0
+    convVeto: 1
+    dxy:
+      max: 0.05
+      extra: abs
+    dz:
+      max: 0.1
+      extra: abs
+    sip3d:
+      max: 4
+      extra: abs
+      
   vetoTTH:
     pt:
       min: 7
@@ -252,6 +271,27 @@ Muon:
   tightFCNC:
     pt:
       min: 15
+    eta:
+      max: 2.4
+      extra: abs
+    mediumId: 1
+    looseId: 1
+    dxy:
+      max: 0.05
+      extra: abs
+    dz:
+      max: 0.1
+      extra: abs
+    sip3d:
+      max: 4
+      extra: abs
+    ptErrRel:
+      max: 0.2
+    tightCharge: 2
+    
+  looseFCNC:
+     pt:
+      min: 10
     eta:
       max: 2.4
       extra: abs

@@ -59,6 +59,9 @@ class dielectron_mass(processor.ProcessorABC):
         electron = Collections(ev, "Electron", "tightFCNC", 0, self.year).get()
         electron = electron[(electron.pt > 25) & (np.abs(electron.eta) < 2.4)]
         
+        loose_electron = Collections(ev, "Electron", "looseFCNC", 0, self.year).get()
+        loose_electron = loose_electron[(loose_electron.pt > 25) & (np.abs(loose_electron.eta) < 2.4)]
+        
         SSelectron = (ak.sum(electron.charge, axis=1) != 0) & (ak.num(electron)==2)
         OSelectron = (ak.sum(electron.charge, axis=1) == 0) & (ak.num(electron)==2)
         
@@ -77,6 +80,8 @@ class dielectron_mass(processor.ProcessorABC):
         muon = Collections(ev, "Muon", "tightFCNC").get()
         muon = muon[(muon.pt > 20) & (np.abs(muon.eta) < 2.4)]
         
+        loose_muon = Collections(ev, "Muon", "LooseFCNC").get()
+        loose_muon = loose_muon[(loose_muon.pt > 20) & (np.abs(loose_muon.eta) < 2.4)]
         
         #jets
         jet       = getJets(ev, minPt=40, maxEta=2.4, pt_var='pt')
@@ -97,6 +102,8 @@ class dielectron_mass(processor.ProcessorABC):
         lead_electron = (ak.min(leading_electron.pt, axis = 1) > 30)
         jet1 = (ak.num(jet) >= 1)
         jet2 = (ak.num(jet) >= 2)
+        num_loose = (ak.num(loose_electron == 2) & ak.num(loose_muon == 0))
+
         
         
         selection = PackedSelection()
@@ -109,8 +116,9 @@ class dielectron_mass(processor.ProcessorABC):
         selection.add('triggers',    triggers)
         selection.add('one jet',     jet1)
         selection.add('two jets',    jet2)
+        selection.add('num_loose',   num_loose)
         
-        bl_reqs = ['filter'] + ['mass'] + ['mask'] + ['triggers'] + ['leading']
+        bl_reqs = ['filter'] + ['mass'] + ['mask'] + ['triggers'] + ['leading'] + ['num_loose']
 
         bl_reqs_d = { sel: True for sel in bl_reqs }
         baseline = selection.require(**bl_reqs_d)

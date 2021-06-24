@@ -16,19 +16,17 @@ from Tools.config_helpers import *
 from Tools.helpers import build_weight_like
 from Tools.triggers import *
 from Tools.btag_scalefactors import *
-from Tools.lepton_scalefactors2 import *
+from Tools.lepton_scalefactors2 import LeptonSF2
 from Tools.charge_flip import *
-from Tools.gen import find_first_parent, get_charge_parent
+from Tools.pileup import pileup
 
 class dielectron_mass(processor.ProcessorABC):
     def __init__(self, year=2018, variations=[], accumulator={}):
         self.variations = variations
         self.year = year
-        
         self.btagSF = btag_scalefactor(year)
-        
         self.leptonSF = LeptonSF2(year=year)
-               
+        self.PU = pileup(year = 2018, UL = False)
         self._accumulator = processor.dict_accumulator( accumulator )
 
     @property
@@ -67,6 +65,9 @@ class dielectron_mass(processor.ProcessorABC):
         electron = electron[(electron.genPartIdx >= 0)]
         electron = electron[(np.abs(electron.matched_gen.pdgId)==11)]  #from here on all leptons are gen-matched
         electron = electron[( (electron.genPartFlav==1) | (electron.genPartFlav==15) )] #and now they are all prompt
+        
+        loose_electron = Collections(ev, "Electron", "looseFCNC", 0, self.year).get()
+        loose_electron = loose_electron[(loose_electron.pt > 25) & (np.abs(loose_electron.eta) < 2.4)]
     
         SSelectron = (ak.sum(electron.charge, axis=1) != 0) & (ak.num(electron)==2)
         OSelectron = (ak.sum(electron.charge, axis=1) == 0) & (ak.num(electron)==2)
@@ -90,6 +91,9 @@ class dielectron_mass(processor.ProcessorABC):
         muon = muon[(np.abs(muon.matched_gen.pdgId)==13)] #from here, all muons are gen-matched
         muon = muon[( (muon.genPartFlav==1) | (muon.genPartFlav==15) )] #and now they are all prompt
         
+        loose_muon = Collections(ev, "Muon", "LooseFCNC").get()
+        loose_muon = loose_muon[(loose_muon.pt > 20) & (np.abs(loose_muon.eta) < 2.4)]
+        
         #jets
         jet       = getJets(ev, minPt=40, maxEta=2.4, pt_var='pt')
         jet       = jet[ak.argsort(jet.pt, ascending=False)] # need to sort wrt smeared and recorrected jet pt
@@ -108,6 +112,7 @@ class dielectron_mass(processor.ProcessorABC):
             # generator weight
             weight.add("weight", ev.genWeight)  
             weight.add("lepton", self.leptonSF.get(electron, muon))
+            weight.add("pileup", self.PU.reweight(ev.Pileup.nTrueInt, to='central'), weightUp = self.PU.reweight(ev.Pileup.nTrueInt, to='up'), weightDown = self.PU.reweight(ev.Pileup.nTrueInt, to='down'), shift=False)
                       
         #selections    
         filters   = getFilters(ev, year=self.year, dataset=dataset)
@@ -117,6 +122,7 @@ class dielectron_mass(processor.ProcessorABC):
         lead_electron = (ak.min(leading_electron.pt, axis = 1) > 30)
         jet1 = (ak.num(jet) >= 1)
         jet2 = (ak.num(jet) >= 2)
+        num_loose = (ak.num(loose_electron == 2) & ak.num(loose_muon == 0))
 
         
         
@@ -129,16 +135,17 @@ class dielectron_mass(processor.ProcessorABC):
         selection.add('leading',     lead_electron)
         selection.add('one jet',     jet1)
         selection.add('two jets',    jet2)
+        selection.add('num_loose',   num_loose)
         
-        bl_reqs = ['filter']
+        bl_reqs = ['filter'] + ['triggers'] + ['num_loose']
         bl_reqs_d = { sel: True for sel in bl_reqs }
         baseline = selection.require(**bl_reqs_d)
         
-        s_reqs = bl_reqs + ['ss']  + ['leading'] + ['triggers'] +['mass']
+        s_reqs = bl_reqs + ['ss'] + ['leading'] + ['mass']
         s_reqs_d = { sel: True for sel in s_reqs }
         ss_sel = selection.require(**s_reqs_d)
         
-        o_reqs = bl_reqs + ['os'] + ['leading'] + ['triggers'] + ['mass']
+        o_reqs = bl_reqs + ['os'] + ['leading'] + ['mass']
         o_reqs_d = {sel: True for sel in o_reqs }
         os_sel = selection.require(**o_reqs_d)
         
