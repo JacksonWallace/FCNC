@@ -41,6 +41,8 @@ print ("Scaling cluster at address %s now."%cluster.scheduler_address)
 
 cluster.scale(25)
 
+print("Done scaling cluster")
+
 with open('scheduler_address.txt', 'w') as f:
     f.write(str(cluster.scheduler_address))
 

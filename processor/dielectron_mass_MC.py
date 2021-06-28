@@ -24,9 +24,8 @@ class dielectron_mass(processor.ProcessorABC):
     def __init__(self, year=2018, variations=[], accumulator={}):
         self.variations = variations
         self.year = year
-        self.btagSF = btag_scalefactor(year)
         self.leptonSF = LeptonSF2(year=year)
-        self.PU = pileup(year = 2018, UL = False)
+        self.PU = pileup(year=year, UL = False)
         self._accumulator = processor.dict_accumulator( accumulator )
 
     @property
@@ -91,7 +90,7 @@ class dielectron_mass(processor.ProcessorABC):
         muon = muon[(np.abs(muon.matched_gen.pdgId)==13)] #from here, all muons are gen-matched
         muon = muon[( (muon.genPartFlav==1) | (muon.genPartFlav==15) )] #and now they are all prompt
         
-        loose_muon = Collections(ev, "Muon", "LooseFCNC").get()
+        loose_muon = Collections(ev, "Muon", "looseFCNC").get()
         loose_muon = loose_muon[(loose_muon.pt > 20) & (np.abs(loose_muon.eta) < 2.4)]
         
         #jets
@@ -112,7 +111,7 @@ class dielectron_mass(processor.ProcessorABC):
             # generator weight
             weight.add("weight", ev.genWeight)  
             weight.add("lepton", self.leptonSF.get(electron, muon))
-            weight.add("pileup", self.PU.reweight(ev.Pileup.nTrueInt, to='central'), weightUp = self.PU.reweight(ev.Pileup.nTrueInt, to='up'), weightDown = self.PU.reweight(ev.Pileup.nTrueInt, to='down'), shift=False)
+            weight.add("pileup", self.PU.reweight(ak.to_numpy(ev.Pileup.nTrueInt), to='central'), weightUp = self.PU.reweight(ak.to_numpy(ev.Pileup.nTrueInt), to='up'), weightDown = self.PU.reweight(ak.to_numpy(ev.Pileup.nTrueInt), to='down'), shift=False)
                       
         #selections    
         filters   = getFilters(ev, year=self.year, dataset=dataset)
@@ -122,9 +121,8 @@ class dielectron_mass(processor.ProcessorABC):
         lead_electron = (ak.min(leading_electron.pt, axis = 1) > 30)
         jet1 = (ak.num(jet) >= 1)
         jet2 = (ak.num(jet) >= 2)
-        num_loose = (ak.num(loose_electron == 2) & ak.num(loose_muon == 0))
+        num_loose = ( (ak.num(loose_electron) == 2) & (ak.num(loose_muon) == 0) )
 
-        
         
         selection = PackedSelection()
         selection.add('filter',      (filters) )

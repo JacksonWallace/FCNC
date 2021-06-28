@@ -4,7 +4,7 @@ from Tools.config_helpers import redirector_ucsd, redirector_ucsd_mini, redirect
 from Tools.nano_mapping import make_fileset, nano_mapping
 
 
-fileset = make_fileset(['DY', 'top'], 2017, redirector=redirector_ucsd, small=False)
+fileset = make_fileset(['Data'], 2018, redirector=redirector_ucsd, small=False)
 good = []
 bad = []
 

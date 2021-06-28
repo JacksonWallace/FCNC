@@ -103,7 +103,7 @@ class Collections:
         id_level = None
         if wp.lower().count('veto'):
             id_level = 0
-        elif wp.lower().count('fake'):
+        elif wp.lower().count('fake') or wp.lower().count('loose'):
             id_level = 1
         elif wp.lower().count('tight'):
             id_level = 2
@@ -216,7 +216,7 @@ class Collections:
             #self.selection = self.selection & (ev.Jet[ev.Electron.jetIdx].btagDeepFlavB<0.2770)
             #if self.v>0: print (" - deepJet")
 
-        if self.obj == "Electron" and self.wp = "LooseFCNC":
+        if self.obj == "Electron" and self.wp == "looseFCNC":
             self.selection = self.selection & (ev.Electron.miniPFRelIso_all < 0.4) & self.isTriggerSafeNoIso()
             
         if self.obj == 'Muon' and (self.wp == 'fakeableTTH' or self.wp == 'fakeableSSTTH'):
@@ -224,8 +224,8 @@ class Collections:
             self.selection = self.selection & (ak.fill_none(ev.Muon.matched_jet.btagDeepFlavB,0) < self.getThreshold(self.cand.conePt, min_pt=20, max_pt=45, low=0.2770, high=0.0494))
             if self.v>0: print (" - interpolated deepJet")
         
-        if self.obj == "Muon" and self.wp == "LooseFCNC":
-            self.selection = self.selection & (ev.Electron.miniPFRelIso_all < 0.4)
+        if self.obj == "Muon" and self.wp == "looseFCNC":
+            self.selection = self.selection & (ev.Muon.miniPFRelIso_all < 0.4)
 
         
     def getValue(self, var):

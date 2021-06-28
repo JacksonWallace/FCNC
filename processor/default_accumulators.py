@@ -12,16 +12,16 @@ def add_processes_to_output(fileset, output):
 dataset_axis            = hist.Cat("dataset",       "Primary dataset")
 pt_axis                 = hist.Bin('pt',            r'$p_{T}\ (GeV)$', np.array([15, 40, 60, 80, 100, 200, 300]))
 pt_axis2                 = hist.Bin('pt',            r'$p_{T}\ (GeV)$', np.array([0, 5, 10, 25, 100, 200, 300]))
-pt_fine_axis            = hist.Bin('pt',            r'$p_{T}\ (GeV)$', 500, 0, 500)
+pt_fine_axis            = hist.Bin('pt',            r'$p_{T}\ (GeV)$', 30, 0, 150)
 p_axis                  = hist.Bin("p",             r"$p$ (GeV)", int(2500/5), 0, 2500) # 5 GeV is fine enough
 ht_axis                 = hist.Bin("ht",            r"$H_{T}$ (GeV)", 500, 0, 5000)
-mass_axis               = hist.Bin("mass",          r"M (GeV)", 1000, 0, 2000)
+mass_axis               = hist.Bin("mass",          r"M (GeV)", 250, 0, 100)
 eta_axis                = hist.Bin('eta',           r'$\eta $', np.array([0, 0.8, 1.479, 2.5]))
 etaSC_axis                = hist.Bin('eta',         r'$\eta\ SC$', np.array([0, 0.8, 1.479, 2.5]))
 eta_fine_axis           = hist.Bin('eta',           r'$\eta $', 25, -2.5, 2.5)  
-phi_axis                = hist.Bin("phi",           r"$\phi$", 64, -3.2, 3.2)
+phi_axis                = hist.Bin("phi",           r"$\phi$", 32, -3.2, 3.2)
 delta_axis              = hist.Bin("delta",         r"$\delta$", 100,0,10 )
-multiplicity_axis       = hist.Bin("multiplicity",  r"N", 20, -0.5, 19.5)
+multiplicity_axis       = hist.Bin("multiplicity",  r"N", 5, -0.5, 4.5)
 n1_axis                 = hist.Bin("n1",            r"N", 4, -0.5, 3.5)
 n2_axis                 = hist.Bin("n2",            r"N", 4, -0.5, 3.5)
 n_ele_axis              = hist.Bin("n_ele",         r"N", 4, -0.5, 3.5) # we can use this as categorization for ee/emu/mumu
@@ -42,9 +42,9 @@ desired_output = {
             "PV_npvsGood2" :     hist.Hist("PV_npvsGood", dataset_axis, ext_multiplicity_axis),
             "PV_npvsGood3" :     hist.Hist("PV_npvsGood", dataset_axis, ext_multiplicity_axis),
             
-            "MET" :             hist.Hist("Counts", dataset_axis, pt_fine_axis, phi_axis),
-            "MET2" :             hist.Hist("Counts", dataset_axis, pt_fine_axis, phi_axis),
-            "MET3" :             hist.Hist("Counts", dataset_axis, pt_fine_axis, phi_axis),
+            "MET" :             hist.Hist("Counts", dataset_axis, pt_fine_axis),
+            "MET2" :             hist.Hist("Counts", dataset_axis, pt_fine_axis),
+            "MET3" :             hist.Hist("Counts", dataset_axis, pt_fine_axis),
             
             "lead_gen_lep":     hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
             "trail_gen_lep":    hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),

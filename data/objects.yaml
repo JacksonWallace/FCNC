@@ -290,7 +290,7 @@ Muon:
     tightCharge: 2
     
   looseFCNC:
-     pt:
+    pt:
       min: 10
     eta:
       max: 2.4

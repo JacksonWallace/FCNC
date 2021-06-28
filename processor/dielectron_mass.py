@@ -36,7 +36,8 @@ class dielectron_mass(processor.ProcessorABC):
         # we can use a very loose preselection to filter the events. nothing is done with this presel, though
         presel = ak.num(events.Jet)>0
         
-        lumimask = LumiMask('../processor/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt')
+        if self.year == 2018:
+            lumimask = LumiMask('../processor/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt')
         
         ev = events[presel]
         dataset = ev.metadata['dataset']
@@ -77,16 +78,14 @@ class dielectron_mass(processor.ProcessorABC):
         trailing_electron = electron[trailing_electron_idx]
         
         ##Muons
-        muon = Collections(ev, "Muon", "tightFCNC").get()
-        muon = muon[(muon.pt > 20) & (np.abs(muon.eta) < 2.4)]
         
-        loose_muon = Collections(ev, "Muon", "LooseFCNC").get()
+        loose_muon = Collections(ev, "Muon", "looseFCNC").get()
         loose_muon = loose_muon[(loose_muon.pt > 20) & (np.abs(loose_muon.eta) < 2.4)]
         
         #jets
         jet       = getJets(ev, minPt=40, maxEta=2.4, pt_var='pt')
         jet       = jet[ak.argsort(jet.pt, ascending=False)] # need to sort wrt smeared and recorrected jet pt
-        jet       = jet[~match(jet, muon, deltaRCut=0.4)] # remove jets that overlap with muons
+        jet       = jet[~match(jet, loose_muon, deltaRCut=0.4)] # remove jets that overlap with muons
         jet       = jet[~match(jet, electron, deltaRCut=0.4)] # remove jets that overlap with electrons
  
         ## MET -> can switch to puppi MET
@@ -102,7 +101,7 @@ class dielectron_mass(processor.ProcessorABC):
         lead_electron = (ak.min(leading_electron.pt, axis = 1) > 30)
         jet1 = (ak.num(jet) >= 1)
         jet2 = (ak.num(jet) >= 2)
-        num_loose = (ak.num(loose_electron == 2) & ak.num(loose_muon == 0))
+        num_loose = ( (ak.num(loose_electron) == 2) & (ak.num(loose_muon) == 0) )
 
         
         
@@ -150,113 +149,110 @@ class dielectron_mass(processor.ProcessorABC):
         
         #outputs
         
-        output["electron_data1"].fill(
-            dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(leading_electron[os_sel].pt)),
-            eta = ak.to_numpy(ak.flatten(leading_electron[os_sel].eta)),
-            phi = ak.to_numpy(ak.flatten(leading_electron[os_sel].phi)),
-        )
+        #output["electron_data1"].fill(
+        #    dataset = dataset,
+        #    pt  = ak.to_numpy(ak.flatten(leading_electron[os_sel].pt)),
+        #    eta = ak.to_numpy(ak.flatten(leading_electron[os_sel].eta)),
+        #    phi = ak.to_numpy(ak.flatten(leading_electron[os_sel].phi)),
+        #)
         
-        output["electron_data2"].fill(
-            dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(trailing_electron[os_sel].pt)),
-            eta = ak.to_numpy(ak.flatten(trailing_electron[os_sel].eta)),
-            phi = ak.to_numpy(ak.flatten(trailing_electron[os_sel].phi)),
-        )
+        #output["electron_data2"].fill(
+        #    dataset = dataset,
+        #    pt  = ak.to_numpy(ak.flatten(trailing_electron[os_sel].pt)),
+        #    eta = ak.to_numpy(ak.flatten(trailing_electron[os_sel].eta)),
+        #    phi = ak.to_numpy(ak.flatten(trailing_electron[os_sel].phi)),
+        #)
         
-        output["electron_data3"].fill(
-            dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(leading_electron[j1os_sel].pt)),
-            eta = ak.to_numpy(ak.flatten(leading_electron[j1os_sel].eta)),
-            phi = ak.to_numpy(ak.flatten(leading_electron[j1os_sel].phi)),
-        )
+        #output["electron_data3"].fill(
+        #    dataset = dataset,
+        #    pt  = ak.to_numpy(ak.flatten(leading_electron[j1os_sel].pt)),
+        #    eta = ak.to_numpy(ak.flatten(leading_electron[j1os_sel].eta)),
+        #    phi = ak.to_numpy(ak.flatten(leading_electron[j1os_sel].phi)),
+        #)
         
-        output["electron_data4"].fill(
-            dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(trailing_electron[j1os_sel].pt)),
-            eta = ak.to_numpy(ak.flatten(trailing_electron[j1os_sel].eta)),
-            phi = ak.to_numpy(ak.flatten(trailing_electron[j1os_sel].phi)),
-        )
+        #output["electron_data4"].fill(
+        #    dataset = dataset,
+        #    pt  = ak.to_numpy(ak.flatten(trailing_electron[j1os_sel].pt)),
+        #    eta = ak.to_numpy(ak.flatten(trailing_electron[j1os_sel].eta)),
+        #    phi = ak.to_numpy(ak.flatten(trailing_electron[j1os_sel].phi)),
+        #)
         
-        output["electron_data5"].fill(
-            dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(leading_electron[j2os_sel].pt)),
-            eta = ak.to_numpy(ak.flatten(leading_electron[j2os_sel].eta)),
-            phi = ak.to_numpy(ak.flatten(leading_electron[j2os_sel].phi)),
-        )
+        #output["electron_data5"].fill(
+        #   dataset = dataset,
+        #    pt  = ak.to_numpy(ak.flatten(leading_electron[j2os_sel].pt)),
+        #    eta = ak.to_numpy(ak.flatten(leading_electron[j2os_sel].eta)),
+        #    phi = ak.to_numpy(ak.flatten(leading_electron[j2os_sel].phi)),
+        #)
         
-        output["electron_data6"].fill(
-            dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(trailing_electron[j2os_sel].pt)),
-            eta = ak.to_numpy(ak.flatten(trailing_electron[j2os_sel].eta)),
-            phi = ak.to_numpy(ak.flatten(trailing_electron[j2os_sel].phi)),
-        )
+        #output["electron_data6"].fill(
+        #    dataset = dataset,
+        #    pt  = ak.to_numpy(ak.flatten(trailing_electron[j2os_sel].pt)),
+        #    eta = ak.to_numpy(ak.flatten(trailing_electron[j2os_sel].eta)),
+        #    phi = ak.to_numpy(ak.flatten(trailing_electron[j2os_sel].phi)),
+        #)
         
-        output["dilep_mass1"].fill(
-            dataset = dataset,
-            mass = ak.to_numpy(ak.flatten(dielectron_mass[os_sel])),
-            pt = ak.to_numpy(ak.flatten(dielectron_pt[os_sel])),
-        )
+        #output["dilep_mass1"].fill(
+        #    dataset = dataset,
+        #    mass = ak.to_numpy(ak.flatten(dielectron_mass[os_sel])),
+        #    pt = ak.to_numpy(ak.flatten(dielectron_pt[os_sel])),
+        #)
         
-        output["dilep_mass2"].fill(
-            dataset = dataset,
-            mass = ak.to_numpy(ak.flatten(dielectron_mass[j1os_sel])),
-            pt = ak.to_numpy(ak.flatten(dielectron_pt[j1os_sel])),
-        )
+        #output["dilep_mass2"].fill(
+        #    dataset = dataset,
+        #    mass = ak.to_numpy(ak.flatten(dielectron_mass[j1os_sel])),
+        #    pt = ak.to_numpy(ak.flatten(dielectron_pt[j1os_sel])),
+        #)
         
-        output["dilep_mass3"].fill(
-            dataset = dataset,
-            mass = ak.to_numpy(ak.flatten(dielectron_mass[j2os_sel])),
-            pt = ak.to_numpy(ak.flatten(dielectron_pt[j2os_sel])),
-        )
+        #output["dilep_mass3"].fill(
+        #    dataset = dataset,
+        #    mass = ak.to_numpy(ak.flatten(dielectron_mass[j2os_sel])),
+        #    pt = ak.to_numpy(ak.flatten(dielectron_pt[j2os_sel])),
+        #)
         
-        output["MET"].fill(
-            dataset = dataset,
-            pt = met_pt[os_sel],
-            phi = met_phi[os_sel],
-        )
+        #output["MET"].fill(
+        #    dataset = dataset,
+        #    pt = met_pt[os_sel],
+        #)
         
         output["N_jet"].fill(
             dataset = dataset,
             multiplicity = ak.num(jet)[os_sel],
         )
         
-        output["PV_npvsGood"].fill(
-            dataset = dataset,
-            multiplicity = ev.PV[os_sel].npvsGood,
-        )
+        #output["PV_npvsGood"].fill(
+        #    dataset = dataset,
+        #    multiplicity = ev.PV[os_sel].npvsGood,
+        #)
         
-        output["MET2"].fill(
-            dataset = dataset,
-            pt = met_pt[j1os_sel],
-            phi = met_phi[j1os_sel],
-        )
+        #output["MET2"].fill(
+        #    dataset = dataset,
+        #    pt = met_pt[j1os_sel],
+        #)
         
-        output["N_jet2"].fill(
-            dataset = dataset,
-            multiplicity = ak.num(jet)[j1os_sel],
-        )
+        #output["N_jet2"].fill(
+        #    dataset = dataset,
+        #    multiplicity = ak.num(jet)[j1os_sel],
+        #)
         
-        output["PV_npvsGood2"].fill(
-            dataset = dataset,
-            multiplicity = ev.PV[j1os_sel].npvsGood,
-        )
+        #output["PV_npvsGood2"].fill(
+        #    dataset = dataset,
+        #    multiplicity = ev.PV[j1os_sel].npvsGood,
+        #)
         
-        output["MET3"].fill(
-            dataset = dataset,
-            pt = met_pt[j2os_sel],
-            phi = met_phi[j2os_sel],
-        )
+        #output["MET3"].fill(
+        #    dataset = dataset,
+        #    pt = met_pt[j2os_sel],
+        #)
         
-        output["N_jet3"].fill(
-            dataset = dataset,
-            multiplicity = ak.num(jet)[j2os_sel]
-        )
+        #output["N_jet3"].fill(
+        #    dataset = dataset,
+        #    multiplicity = ak.num(jet)[j2os_sel]
+        #)
         
-        output["PV_npvsGood3"].fill(
-            dataset = dataset,
-            multiplicity = ev.PV[j2os_sel].npvsGood,
-        )
+        #output["PV_npvsGood3"].fill(
+        #    dataset = dataset,
+        #    multiplicity = ev.PV[j2os_sel].npvsGood,
+        #)
         
         
 
