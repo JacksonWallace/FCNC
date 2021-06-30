@@ -4,6 +4,7 @@
 *.pdf
 *.cmd
 
+dask/*
 Tools/logs/worker*
 histos/*
 notebooks/histos*

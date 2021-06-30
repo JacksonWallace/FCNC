@@ -25,7 +25,6 @@ import glob
 data_path = os.path.expandvars('$TWHOME/data/')
 
 def get_samples(year, f_in='samples_'):
-    print(f_in+str(year)+'.yaml')
     with open(data_path+f_in+str(year)+'.yaml') as f:
         return load(f, Loader=Loader)
 

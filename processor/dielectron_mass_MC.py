@@ -1,23 +1,18 @@
-try:
-    import awkward1 as ak
-except ImportError:
-    import awkward as ak
+import awkward as ak
+import numpy as np
 
 from coffea import processor, hist
 from coffea.nanoevents import NanoEventsFactory, NanoAODSchema
 from coffea.analysis_tools import Weights, PackedSelection
 
 
-# this is all very bad practice
-from Tools.objects import *
-from Tools.basic_objects import *
-from Tools.cutflow import *
-from Tools.config_helpers import *
+# this is all slightly better practice
+from Tools.objects import Collections, choose, cross, match
+from Tools.basic_objects import getJets
+from Tools.config_helpers import loadConfig
 from Tools.helpers import build_weight_like
-from Tools.triggers import *
-from Tools.btag_scalefactors import *
+from Tools.triggers import getFilters
 from Tools.lepton_scalefactors2 import LeptonSF2
-from Tools.charge_flip import *
 from Tools.pileup import pileup
 
 class dielectron_mass(processor.ProcessorABC):
@@ -83,20 +78,13 @@ class dielectron_mass(processor.ProcessorABC):
         trailing_electron = electron[trailing_electron_idx]
         
         ##Muons
-        muon = Collections(ev, "Muon", "tightFCNC").get()
-        muon = muon[(muon.pt > 15) & (np.abs(muon.eta) < 2.4)]
-        
-        muon = muon[(muon.genPartIdx >= 0)]
-        muon = muon[(np.abs(muon.matched_gen.pdgId)==13)] #from here, all muons are gen-matched
-        muon = muon[( (muon.genPartFlav==1) | (muon.genPartFlav==15) )] #and now they are all prompt
-        
         loose_muon = Collections(ev, "Muon", "looseFCNC").get()
         loose_muon = loose_muon[(loose_muon.pt > 20) & (np.abs(loose_muon.eta) < 2.4)]
         
         #jets
-        jet       = getJets(ev, minPt=40, maxEta=2.4, pt_var='pt')
+        jet       = getJets(ev, minPt=40, maxEta=2.4, pt_var='pt', UL = False)
         jet       = jet[ak.argsort(jet.pt, ascending=False)] # need to sort wrt smeared and recorrected jet pt
-        jet       = jet[~match(jet, muon, deltaRCut=0.4)] # remove jets that overlap with muons
+        jet       = jet[~match(jet, loose_muon, deltaRCut=0.4)] # remove jets that overlap with muons
         jet       = jet[~match(jet, electron, deltaRCut=0.4)] # remove jets that overlap with electrons
         
         
@@ -106,12 +94,18 @@ class dielectron_mass(processor.ProcessorABC):
 
         # setting up the various weights
         weight = Weights( len(ev) )
+        weight2 = Weights( len(ev) )
         
-        if not dataset=='MuonEG':
+        if not dataset=='EGamma':
             # generator weight
             weight.add("weight", ev.genWeight)  
-            weight.add("lepton", self.leptonSF.get(electron, muon))
+            weight.add("lepton", self.leptonSF.get(electron, loose_muon))
             weight.add("pileup", self.PU.reweight(ak.to_numpy(ev.Pileup.nTrueInt), to='central'), weightUp = self.PU.reweight(ak.to_numpy(ev.Pileup.nTrueInt), to='up'), weightDown = self.PU.reweight(ak.to_numpy(ev.Pileup.nTrueInt), to='down'), shift=False)
+        
+        if not dataset=='EGamma':
+            # generator weight
+            weight2.add("weight", ev.genWeight)  
+            weight2.add("lepton", self.leptonSF.get(electron, loose_muon))
                       
         #selections    
         filters   = getFilters(ev, year=self.year, dataset=dataset)
@@ -235,30 +229,10 @@ class dielectron_mass(processor.ProcessorABC):
             weight = weight.weight()[j2os_sel]
         )
         
-        output["MET"].fill(
-            dataset = dataset,
-            pt = met_pt[os_sel],
-            phi = met_phi[os_sel],
-            weight = weight.weight()[os_sel]
-        )
-        
         output["N_jet"].fill(
             dataset = dataset,
             multiplicity = ak.num(jet)[os_sel],
             weight = weight.weight()[os_sel]
-        )
-        
-        output["PV_npvsGood"].fill(
-            dataset = dataset,
-            multiplicity = ev.PV[os_sel].npvsGood,
-            weight = weight.weight()[os_sel]
-        )
-        
-        output["MET2"].fill(
-            dataset = dataset,
-            pt = met_pt[j1os_sel],
-            phi = met_phi[j1os_sel],
-            weight = weight.weight()[j1os_sel]
         )
         
         output["N_jet2"].fill(
@@ -267,29 +241,82 @@ class dielectron_mass(processor.ProcessorABC):
             weight = weight.weight()[j1os_sel]
         )
         
-        output["PV_npvsGood2"].fill(
+         output["N_jet3"].fill(
             dataset = dataset,
-            multiplicity = ev.PV[j1os_sel].npvsGood,
+            multiplicity = ak.num(jet)[j2os_sel],
+            weight = weight.weight()[j2os_sel]
+        )
+        
+        output["MET"].fill(
+            dataset = dataset,
+            pt = met_pt[os_sel],
+            weight = weight.weight()[os_sel]
+        )
+        
+        output["MET2"].fill(
+            dataset = dataset,
+            pt = met_pt[j1os_sel],
             weight = weight.weight()[j1os_sel]
         )
         
         output["MET3"].fill(
             dataset = dataset,
             pt = met_pt[j2os_sel],
-            phi = met_phi[j2os_sel],
             weight = weight.weight()[j2os_sel]
         )
         
-        output["N_jet3"].fill(
+        output["MET4"].fill(
             dataset = dataset,
-            multiplicity = ak.num(jet)[j2os_sel],
-            weight = weight.weight()[j2os_sel]
+            pt = met_pt[os_sel],
+            weight = weight2.weight()[os_sel]
+        )
+        
+        output["MET5"].fill(
+            dataset = dataset,
+            pt = met_pt[j1os_sel],
+            weight = weight2.weight()[j1os_sel]
+        )
+        
+        output["MET6"].fill(
+            dataset = dataset,
+            pt = met_pt[j2os_sel],
+            weight = weight2.weight()[j2os_sel]
+        )
+        
+        output["PV_npvsGood"].fill(
+            dataset = dataset,
+            multiplicity = ev.PV[os_sel].npvsGood,
+            weight = weight.weight()[os_sel]
+        )
+        
+        output["PV_npvsGood2"].fill(
+            dataset = dataset,
+            multiplicity = ev.PV[j1os_sel].npvsGood,
+            weight = weight.weight()[j1os_sel]
         )
         
         output["PV_npvsGood3"].fill(
             dataset = dataset,
             multiplicity = ev.PV[j2os_sel].npvsGood,
             weight = weight.weight()[j2os_sel]
+        )
+        
+        output["PV_npvsGood4"].fill(
+            dataset = dataset,
+            multiplicity = ev.PV[os_sel].npvsGood,
+            weight = weight2.weight()[os_sel]
+        )
+        
+        output["PV_npvsGood5"].fill(
+            dataset = dataset,
+            multiplicity = ev.PV[j1os_sel].npvsGood,
+            weight = weight2.weight()[j1os_sel]
+        )
+        
+        output["PV_npvsGood6"].fill(
+            dataset = dataset,
+            multiplicity = ev.PV[j2os_sel].npvsGood,
+            weight = weight2.weight()[j2os_sel]
         )
 
         return output

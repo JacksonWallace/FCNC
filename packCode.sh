@@ -7,8 +7,8 @@ mkdir -p tW_scattering/Tools/
 mkdir -p tW_scattering/data/
 mkdir -p tW_scattering/processor/
 cp -r Tools/*.py tW_scattering/Tools/
-cp -r processor/ tW_scattering/processor/
-cp -r data/ tW_scattering/data
+cp -r processors/ tW_scattering/processors/
+cp -r data/ tW_scattering/
 
 tar -czf tW_scattering.tar.gz tW_scattering
 

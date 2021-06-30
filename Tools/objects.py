@@ -5,10 +5,8 @@ import os
 
 import copy
 import numpy as np
-try:
-    import awkward1 as ak
-except ImportError:
-    import awkward as ak
+
+import awkward as ak
 
 
 from yaml import load, dump
@@ -101,9 +99,9 @@ class Collections:
         #self.year = df['year'][0] ## to be implemented in next verison of babies
         self.year = year
         id_level = None
-        if wp.lower().count('veto'):
+        if wp.lower().count('veto') or wp.lower().count('loose'):
             id_level = 0
-        elif wp.lower().count('fake') or wp.lower().count('loose'):
+        elif wp.lower().count('fake'):
             id_level = 1
         elif wp.lower().count('tight'):
             id_level = 2
@@ -217,7 +215,7 @@ class Collections:
             #if self.v>0: print (" - deepJet")
 
         if self.obj == "Electron" and self.wp == "looseFCNC":
-            self.selection = self.selection & (ev.Electron.miniPFRelIso_all < 0.4) & self.isTriggerSafeNoIso()
+            self.selection = self.selection & (ev.Electron.miniPFRelIso_all < 0.4)
             
         if self.obj == 'Muon' and (self.wp == 'fakeableTTH' or self.wp == 'fakeableSSTTH'):
             #self.selection = self.selection & (self.cand.deepJet < self.getThreshold(self.cand.conePt, min_pt=20, max_pt=45, low=0.2770, high=0.0494))
