@@ -30,6 +30,9 @@ if __name__ == '__main__':
     def test(x):
         import yahist
         import coffea
+        import awkward
+        import sklearn
+        import onnxruntime
         from Tools.cutflow import Cutflow
         return x**2
 
