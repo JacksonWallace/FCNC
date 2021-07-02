@@ -83,7 +83,6 @@ class dielectron_mass(processor.ProcessorABC):
         
         #jets
         jet       = getJets(ev, minPt=40, maxEta=2.4, pt_var='pt', UL = False)
-        jet       = jet[ak.argsort(jet.pt, ascending=False)] # need to sort wrt smeared and recorrected jet pt
         jet       = jet[~match(jet, loose_muon, deltaRCut=0.4)] # remove jets that overlap with muons
         jet       = jet[~match(jet, electron, deltaRCut=0.4)] # remove jets that overlap with electrons
         
@@ -241,7 +240,7 @@ class dielectron_mass(processor.ProcessorABC):
             weight = weight.weight()[j1os_sel]
         )
         
-         output["N_jet3"].fill(
+        output["N_jet3"].fill(
             dataset = dataset,
             multiplicity = ak.num(jet)[j2os_sel],
             weight = weight.weight()[j2os_sel]

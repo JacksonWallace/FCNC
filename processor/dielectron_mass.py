@@ -32,8 +32,12 @@ class dielectron_mass(processor.ProcessorABC):
         # we can use a very loose preselection to filter the events. nothing is done with this presel, though
         presel = ak.num(events.Jet)>0
         
+        if self.year == 2016:
+            lumimask = LumiMask('../data/lumi/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt')
+        if self.year == 2017:
+            lumimask = LumiMask('../data/lumi/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt')
         if self.year == 2018:
-            lumimask = LumiMask('../processor/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt')
+            lumimask = LumiMask('../data/lumi/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt')
         
         ev = events[presel]
         dataset = ev.metadata['dataset']
