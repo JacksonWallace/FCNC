@@ -28,8 +28,12 @@ class charge_flip_ss(processor.ProcessorABC):
         self.btagSF = btag_scalefactor(year)
         
         #self.leptonSF = LeptonSF(year=year)
-        
-        self.charge_flip_ratio = charge_flip('histos/chargeflipfull2017June.pkl.gz')
+        if self.year == 2016:
+            self.charge_flip_ratio = charge_flip('../histos/chargeflipfull2016June.pkl.gz')
+        if self.year == 2017:
+            self.charge_flip_ratio = charge_flip('../histos/chargeflipfull2017June.pkl.gz')
+        if self.year == 2018:
+            self.charge_flip_ratio = charge_flip('../histos/chargeflipfullpt152018.pkl.gz')
         
         self._accumulator = processor.dict_accumulator( accumulator )
 

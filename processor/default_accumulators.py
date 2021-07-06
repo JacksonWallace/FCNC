@@ -112,9 +112,11 @@ desired_output = {
             "lepton_parent":      hist.Hist("Counts", dataset_axis, pdgID_axis),
             "lepton_parent2":     hist.Hist("Counts", dataset_axis, pdgID_axis),
     
+            "dilep_mass0":        hist.Hist("Counts", dataset_axis, mass_axis, pt_fine_axis),
             "dilep_mass1":        hist.Hist("Counts", dataset_axis, mass_axis, pt_fine_axis),
             "dilep_mass2":        hist.Hist("Counts", dataset_axis, mass_axis, pt_fine_axis),
             "dilep_mass3":        hist.Hist("Counts", dataset_axis, mass_axis, pt_fine_axis),
+            "dilep_mass4":        hist.Hist("Counts", dataset_axis, mass_axis, pt_fine_axis),
     
             "mva_id":            hist.Hist("Counts", dataset_axis, mva_id_axis, etaSC_axis),
             "mva_id2":            hist.Hist("Counts", dataset_axis, mva_id_axis, pt_axis2),

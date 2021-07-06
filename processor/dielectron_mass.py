@@ -78,8 +78,10 @@ class dielectron_mass(processor.ProcessorABC):
         trailing_electron = electron[trailing_electron_idx]
         
         ##Muons
+        #muon = Collections(ev, "Muon", "tightFCNC", 0, self.year).get()
+        #muon = muon[(muon.pt > 20) & (np.abs(muon.eta) < 2.4)]
         
-        loose_muon = Collections(ev, "Muon", "looseFCNC").get()
+        loose_muon = Collections(ev, "Muon", "looseFCNC", 0, self.year).get()
         loose_muon = loose_muon[(loose_muon.pt > 20) & (np.abs(loose_muon.eta) < 2.4)]
         
         #jets
@@ -101,6 +103,8 @@ class dielectron_mass(processor.ProcessorABC):
         jet1 = (ak.num(jet) >= 1)
         jet2 = (ak.num(jet) >= 2)
         num_loose = ( (ak.num(loose_electron) == 2) & (ak.num(loose_muon) == 0) )
+        #os_m = ((ak.sum(muon.charge, axis=1) == 0) & (ak.num(muon)==2))
+        #num_loose_m = ( (ak.num(loose_electron) == 0) & (ak.num(loose_muon) == 2) )
 
         
         
@@ -115,8 +119,10 @@ class dielectron_mass(processor.ProcessorABC):
         selection.add('one jet',     jet1)
         selection.add('two jets',    jet2)
         selection.add('num_loose',   num_loose)
+        #selection.add('os_m',        os_m)
+        #selection.add('num_loose_m', num_loose_m)
         
-        bl_reqs = ['filter'] + ['mass'] + ['triggers'] + ['leading'] + ['num_loose'] + ['mask']
+        bl_reqs = ['filter'] + ['triggers'] + ['mask']
 
         bl_reqs_d = { sel: True for sel in bl_reqs }
         baseline = selection.require(**bl_reqs_d)
@@ -125,15 +131,23 @@ class dielectron_mass(processor.ProcessorABC):
         #s_reqs_d = { sel: True for sel in s_reqs }
         #ss_sel = selection.require(**s_reqs_d)
         
-        o_reqs = bl_reqs + ['os']
+        o_reqs = bl_reqs + ['os'] + ['mass']+ ['num_loose'] + ['leading']
         o_reqs_d = { sel: True for sel in o_reqs }
         os_sel = selection.require(**o_reqs_d)
+        
+        #o_nm_reqs = bl_reqs + ['os'] + ['num_loose'] + ['leading']
+        #o_nm_reqs_d = {sel: True for sel in o_nm_reqs }
+        #os_nm_sel = selection.require(**o_nm_reqs_d)
+        
+        #om_reqs = bl_reqs + ['os_m'] + ['num_loose_m']
+        #om_reqs_d = {sel: True for sel in om_reqs }
+        #osm_sel = selection.require(**om_reqs_d)
         
         #j1s_reqs = s_reqs + ['one jet']
         #j1s_reqs_d = { sel: True for sel in j1s_reqs }
         #j1ss_sel = selection.require(**j1s_reqs_d)
         
-        j1o_reqs = o_reqs + ['one jet']
+        j1o_reqs = o_reqs + ['one jet'] + ['mass']+ ['num_loose'] + ['leading']
         j1o_reqs_d = {sel: True for sel in j1o_reqs }
         j1os_sel = selection.require(**j1o_reqs_d)
         
@@ -141,7 +155,7 @@ class dielectron_mass(processor.ProcessorABC):
         #j2s_reqs_d = { sel: True for sel in j2s_reqs }
         #j2ss_sel = selection.require(**j2s_reqs_d)
         
-        j2o_reqs = o_reqs + ['two jets']
+        j2o_reqs = o_reqs + ['two jets'] + ['mass']+ ['num_loose'] + ['leading']
         j2o_reqs_d = {sel: True for sel in j2o_reqs }
         j2os_sel = selection.require(**j2o_reqs_d)
    
@@ -190,6 +204,13 @@ class dielectron_mass(processor.ProcessorABC):
             phi = ak.to_numpy(ak.flatten(trailing_electron[j2os_sel].phi)),
         )
         
+        #dielectron full mass spectrum (inclusive in jets)
+        #output["dilep_mass0"].fill(
+        #    dataset = dataset,
+        #    mass = ak.to_numpy(ak.flatten(dielectron_mass[os_nm_sel])),
+        #    pt = ak.to_numpy(ak.flatten(dielectron_pt[os_nm_sel])),
+        #)
+        
         output["dilep_mass1"].fill(
             dataset = dataset,
             mass = ak.to_numpy(ak.flatten(dielectron_mass[os_sel])),
@@ -207,6 +228,13 @@ class dielectron_mass(processor.ProcessorABC):
             mass = ak.to_numpy(ak.flatten(dielectron_mass[j2os_sel])),
             pt = ak.to_numpy(ak.flatten(dielectron_pt[j2os_sel])),
         )
+        
+        #dimuon full mass spectrum (inclusive in jets)
+        #output["dilep_mass4"].fill(
+        #    dataset = dataset,
+        #    mass = ak.to_numpy(ak.flatten(dielectron_mass[osm_sel])),
+        #    pt = ak.to_numpy(ak.flatten(dielectron_pt[osm_sel])),
+        #)
         
         output["MET"].fill(
             dataset = dataset,

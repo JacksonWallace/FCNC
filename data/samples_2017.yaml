@@ -1,3 +1,11 @@
+? /DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8/RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_102X_mc2017_realistic_v8_ext3-v1/NANOAODSIM
+: files: 147
+  nEvents: 186217773
+  name: DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_102X_mc2017_realistic_v8_ext3-v1
+  path: null
+  split: 3
+  sumWeight: 3323039532679.979
+  xsec: 6021.0
 ? /DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17NanoAODv7-PU2017RECOSIMstep_12Apr2018_Nano02Apr2020_102X_mc2017_realistic_v8_ext1-v1/NANOAODSIM
 : files: 34
   nEvents: 49011552
@@ -6,6 +14,46 @@
   split: 2
   sumWeight: 48968256.0
   xsec: 6021.0
+/DoubleEG/Run2017B-02Apr2020-v1/NANOAOD:
+  files: 56
+  nEvents: 58088760
+  name: DoubleEG_Run2017B-02Apr2020-v1
+  path: null
+  split: 4
+  sumWeight: 0.0
+  xsec: 1.0
+/DoubleEG/Run2017C-02Apr2020-v1/NANOAOD:
+  files: 67
+  nEvents: 65181125
+  name: DoubleEG_Run2017C-02Apr2020-v1
+  path: null
+  split: 3
+  sumWeight: 0.0
+  xsec: 1.0
+/DoubleEG/Run2017D-02Apr2020-v1/NANOAOD:
+  files: 24
+  nEvents: 25911432
+  name: DoubleEG_Run2017D-02Apr2020-v1
+  path: null
+  split: 3
+  sumWeight: 0.0
+  xsec: 1.0
+/DoubleEG/Run2017E-02Apr2020-v1/NANOAOD:
+  files: 46
+  nEvents: 56235775
+  name: DoubleEG_Run2017E-02Apr2020-v1
+  path: null
+  split: 3
+  sumWeight: 0.0
+  xsec: 1.0
+/DoubleEG/Run2017F-02Apr2020-v1/NANOAOD:
+  files: 68
+  nEvents: 74344288
+  name: DoubleEG_Run2017F-02Apr2020-v1
+  path: null
+  split: 3
+  sumWeight: 0.0
+  xsec: 1.0
 ? /ST_t-channel_4f_leptonDecays_TuneCP5_PSweights_13TeV-amcatnlo-pythia8/RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_102X_mc2017_realistic_v8-v1/NANOAODSIM
 : files: 175
   nEvents: 44684000
