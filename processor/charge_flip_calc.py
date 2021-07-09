@@ -1,7 +1,4 @@
-try:
-    import awkward1 as ak
-except ImportError:
-    import awkward as ak
+import awkward as ak
 
 from coffea import processor, hist
 from coffea.nanoevents import NanoEventsFactory, NanoAODSchema
@@ -9,21 +6,14 @@ from coffea.analysis_tools import Weights, PackedSelection
 
 
 # this is all very bad practice
-from Tools.objects import *
-from Tools.basic_objects import *
-from Tools.cutflow import *
-from Tools.config_helpers import *
-from Tools.triggers import *
-from Tools.btag_scalefactors import *
-from Tools.lepton_scalefactors import *
+from Tools.objects import Collections, choose, cross, match
+from Tools.config_helpers import loadConfig
 from Tools.gen import get_charge_parent, find_first_parent
 
 class charge_flip_calc(processor.ProcessorABC):
     def __init__(self, year=2018, variations=[], accumulator={}):
         self.variations = variations
         self.year = year
-        self.btagSF = btag_scalefactor(year)
-        #self.leptonSF = LeptonSF(year)
         self._accumulator = processor.dict_accumulator( accumulator )
 
     @property
@@ -46,9 +36,7 @@ class charge_flip_calc(processor.ProcessorABC):
         
         output['totalEvents']['all'] += len(events)
         output['skimmedEvents']['all'] += len(ev)
-        
-        ## Muons
-        
+                
         ## Electrons
         electron   = Collections(ev, "Electron", "tightFCNC", 0, self.year).get()
         electron   = electron[(electron.pt > 15) & (np.abs(electron.eta) < 2.4)]
@@ -56,8 +44,6 @@ class charge_flip_calc(processor.ProcessorABC):
         electron = electron[(electron.genPartIdx >= 0)]
         electron = electron[(np.abs(electron.matched_gen.pdgId)==11)]  #from here on all leptons are gen-matched
         electron = electron[( (electron.genPartFlav==1) | (electron.genPartFlav==15) )] #and now they are all prompt
-        #trying delta R matching instead
-        #electron = electron[(delta_r(electron, electron.matched_gen) < 0.4)]
         
         is_flipped = ( ( (electron.matched_gen.pdgId*(-1) == electron.pdgId) | (find_first_parent(electron.matched_gen)*(-1) == electron.pdgId) ) & (np.abs(electron.pdgId) == 11) )        
         
@@ -81,21 +67,13 @@ class charge_flip_calc(processor.ProcessorABC):
             elif self.year == 2018:
                 MVA = np.minimum(np.maximum(electron.mvaFall17V2noIso, -1.0 + 1.e-6), 1.0 - 1.e-6)
                 return -0.5*np.log(2/(MVA+1)-1)
-        
-        ## MET -> can switch to puppi MET
-        met_pt  = ev.MET.pt
-        met_phi = ev.MET.phi
 
         # setting up the various weights
-        weight = Weights( len(ev) )
+        #weight = Weights( len(ev) )
         
-        if not dataset=='MuonEG':
+        #if not dataset=='MuonEG':
             # generator weight
-            weight.add("weight", ev.genWeight)
-            
-        #weight.add("leptonSF", self.leptonSF.get(electron, muon))
-        #weight.add("PU", ev.puWeight, weightUp=ev.puWeightUp, weightDown=ev.puWeightDown, shift=False)
-        #weight.add("btagSF", self.btagSF.Method1a(btag, light))
+            # weight.add("weight", ev.genWeight)
                       
         #selections    
         filters   = getFilters(ev, year=self.year, dataset=dataset)
@@ -118,44 +96,35 @@ class charge_flip_calc(processor.ProcessorABC):
         flip_sel = selection.require(**f_reqs_d)
                       
         #adjust weights to prevent length mismatch
-        ak_weight_gen = ak.ones_like(electron[baseline].pt) * weight.weight()[baseline]
-        ak_weight_flip = ak.ones_like(flipped_electron[flip_sel].pt) * weight.weight()[flip_sel]
+        #ak_weight_gen = ak.ones_like(electron[baseline].pt) * weight.weight()[baseline]
+        #ak_weight_flip = ak.ones_like(flipped_electron[flip_sel].pt) * weight.weight()[flip_sel]
     
                                         
         output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(electron)[baseline], weight=weight.weight()[baseline])
         output['electron_flips'].fill(dataset=dataset, multiplicity=n_flips[baseline], weight=weight.weight()[baseline])
 
-        
         output["electron"].fill(
             dataset = dataset,
             pt  = ak.to_numpy(ak.flatten(electron[baseline].pt)),
             eta = abs(ak.to_numpy(ak.flatten(electron[baseline].eta))),
-            #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
-            #weight = ak.to_numpy(ak.flatten(ak_weight_gen))
         )
         
         output["electron2"].fill(
             dataset = dataset,
             pt  = ak.to_numpy(ak.flatten(electron[baseline].pt)),
             eta = ak.to_numpy(ak.flatten(electron[baseline].eta)),
-            #phi = ak.to_numpy(ak.flatten(leading_electron[baseline].phi)),
-            #weight = ak.to_numpy(ak.flatten(ak_weight_gen))
         )
         
         output["flipped_electron"].fill(
             dataset = dataset,
             pt  = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].pt)),
             eta = abs(ak.to_numpy(ak.flatten(flipped_electron[flip_sel].eta))),
-            #phi = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].phi)),
-            #weight = ak.to_numpy(ak.flatten(ak_weight_flip))
         ) 
         
         output["flipped_electron2"].fill(
             dataset = dataset,
             pt  = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].pt)),
             eta = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].eta)),
-            #phi = ak.to_numpy(ak.flatten(flipped_electron[flip_sel].phi)),
-            #weight = ak.to_numpy(ak.flatten(ak_weight_flip))
         )
         
         output["mva_id"].fill(
@@ -176,8 +145,6 @@ class charge_flip_calc(processor.ProcessorABC):
             isolation2 = ak.to_numpy(ak.flatten(electron.jetPtRelv2[baseline])),
         )
         
-        
-
         return output
 
     def postprocess(self, accumulator):

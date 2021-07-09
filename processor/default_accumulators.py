@@ -7,6 +7,11 @@ def add_processes_to_output(fileset, output):
     for sample in fileset:
         if sample not in output:
             output.update({sample: processor.defaultdict_accumulator(int)})
+            
+def add_files_to_output(fileset, output):
+    for sample in fileset:
+        for f in fileset[sample]:
+            output.update({f: processor.defaultdict_accumulator(int)})
 
 
 dataset_axis            = hist.Cat("dataset",       "Primary dataset")
@@ -77,6 +82,12 @@ desired_output = {
             "electron_data4":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
             "electron_data5":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
             "electron_data6":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
+            "electron_data7":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
+            "electron_data8":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
+            "electron_data9":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
+            "electron_data10":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
+            "electron_data11":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
+            "electron_data12":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
             "flipped_electron":      hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
             "flipped_electron2":     hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
             "flipped_electron3":     hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
@@ -100,6 +111,9 @@ desired_output = {
             "N_jet" :         hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_jet2" :        hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_jet3" :        hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_jet4" :         hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_jet5" :        hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_jet6" :        hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_fwd" :         hist.Hist("Counts", dataset_axis, multiplicity_axis),
 
             "nLepFromTop" :       hist.Hist("Counts", dataset_axis, multiplicity_axis),
@@ -112,12 +126,13 @@ desired_output = {
             "lepton_parent":      hist.Hist("Counts", dataset_axis, pdgID_axis),
             "lepton_parent2":     hist.Hist("Counts", dataset_axis, pdgID_axis),
     
-            "dilep_mass0":        hist.Hist("Counts", dataset_axis, mass_axis, pt_fine_axis),
             "dilep_mass1":        hist.Hist("Counts", dataset_axis, mass_axis, pt_fine_axis),
             "dilep_mass2":        hist.Hist("Counts", dataset_axis, mass_axis, pt_fine_axis),
             "dilep_mass3":        hist.Hist("Counts", dataset_axis, mass_axis, pt_fine_axis),
             "dilep_mass4":        hist.Hist("Counts", dataset_axis, mass_axis, pt_fine_axis),
-    
+            "dilep_mass5":        hist.Hist("Counts", dataset_axis, mass_axis, pt_fine_axis),
+            "dilep_mass6":        hist.Hist("Counts", dataset_axis, mass_axis, pt_fine_axis),
+            
             "mva_id":            hist.Hist("Counts", dataset_axis, mva_id_axis, etaSC_axis),
             "mva_id2":            hist.Hist("Counts", dataset_axis, mva_id_axis, pt_axis2),
             "isolation":         hist.Hist("Counts", dataset_axis, isolation1_axis, isolation2_axis),

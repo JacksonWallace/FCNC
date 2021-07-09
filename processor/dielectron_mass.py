@@ -13,12 +13,19 @@ from Tools.basic_objects import getJets
 from Tools.config_helpers import loadConfig
 from Tools.helpers import build_weight_like
 from Tools.triggers import getFilters
+from Tools.charge_flip import charge_flip
 
 class dielectron_mass(processor.ProcessorABC):
     def __init__(self, year=2018, variations=[], accumulator={}):
         self.variations = variations
         self.year = year
         self._accumulator = processor.dict_accumulator( accumulator )
+        if self.year == 2016:
+            self.charge_flip_ratio = charge_flip('../histos/chargeflipfull2016June.pkl.gz')
+        if self.year == 2017:
+            self.charge_flip_ratio = charge_flip('../histos/chargeflipfull2017June.pkl.gz')
+        if self.year == 2018:
+            self.charge_flip_ratio = charge_flip('../histos/chargeflipfullpt152018.pkl.gz')
 
     @property
     def accumulator(self):
@@ -78,8 +85,6 @@ class dielectron_mass(processor.ProcessorABC):
         trailing_electron = electron[trailing_electron_idx]
         
         ##Muons
-        #muon = Collections(ev, "Muon", "tightFCNC", 0, self.year).get()
-        #muon = muon[(muon.pt > 20) & (np.abs(muon.eta) < 2.4)]
         
         loose_muon = Collections(ev, "Muon", "looseFCNC", 0, self.year).get()
         loose_muon = loose_muon[(loose_muon.pt > 20) & (np.abs(loose_muon.eta) < 2.4)]
@@ -93,6 +98,11 @@ class dielectron_mass(processor.ProcessorABC):
         met_pt  = ev.MET.pt
         met_phi = ev.MET.phi                                   
                       
+        #weights
+        weight = Weights( len(ev) )
+        weight2 = Weights( len(ev) )
+        weight2.add("charge flip", self.charge_flip_ratio.flip_weight(electron))
+        
         #selections    
         filters   = getFilters(ev, year=self.year, dataset=dataset)
         mask = lumimask(ev.run, ev.luminosityBlock)
@@ -103,8 +113,6 @@ class dielectron_mass(processor.ProcessorABC):
         jet1 = (ak.num(jet) >= 1)
         jet2 = (ak.num(jet) >= 2)
         num_loose = ( (ak.num(loose_electron) == 2) & (ak.num(loose_muon) == 0) )
-        #os_m = ((ak.sum(muon.charge, axis=1) == 0) & (ak.num(muon)==2))
-        #num_loose_m = ( (ak.num(loose_electron) == 0) & (ak.num(loose_muon) == 2) )
 
         
         
@@ -119,43 +127,34 @@ class dielectron_mass(processor.ProcessorABC):
         selection.add('one jet',     jet1)
         selection.add('two jets',    jet2)
         selection.add('num_loose',   num_loose)
-        #selection.add('os_m',        os_m)
-        #selection.add('num_loose_m', num_loose_m)
+
         
         bl_reqs = ['filter'] + ['triggers'] + ['mask']
 
         bl_reqs_d = { sel: True for sel in bl_reqs }
         baseline = selection.require(**bl_reqs_d)
         
-        #s_reqs = bl_reqs + ['ss']
-        #s_reqs_d = { sel: True for sel in s_reqs }
-        #ss_sel = selection.require(**s_reqs_d)
+        s_reqs = bl_reqs + ['ss'] + ['mass']+ ['num_loose'] + ['leading']
+        s_reqs_d = { sel: True for sel in s_reqs }
+        ss_sel = selection.require(**s_reqs_d)
         
         o_reqs = bl_reqs + ['os'] + ['mass']+ ['num_loose'] + ['leading']
         o_reqs_d = { sel: True for sel in o_reqs }
         os_sel = selection.require(**o_reqs_d)
         
-        #o_nm_reqs = bl_reqs + ['os'] + ['num_loose'] + ['leading']
-        #o_nm_reqs_d = {sel: True for sel in o_nm_reqs }
-        #os_nm_sel = selection.require(**o_nm_reqs_d)
+        j1s_reqs = s_reqs + ['one jet']
+        j1s_reqs_d = { sel: True for sel in j1s_reqs }
+        j1ss_sel = selection.require(**j1s_reqs_d)
         
-        #om_reqs = bl_reqs + ['os_m'] + ['num_loose_m']
-        #om_reqs_d = {sel: True for sel in om_reqs }
-        #osm_sel = selection.require(**om_reqs_d)
-        
-        #j1s_reqs = s_reqs + ['one jet']
-        #j1s_reqs_d = { sel: True for sel in j1s_reqs }
-        #j1ss_sel = selection.require(**j1s_reqs_d)
-        
-        j1o_reqs = o_reqs + ['one jet'] + ['mass']+ ['num_loose'] + ['leading']
+        j1o_reqs = o_reqs + ['one jet']
         j1o_reqs_d = {sel: True for sel in j1o_reqs }
         j1os_sel = selection.require(**j1o_reqs_d)
         
-        #j2s_reqs = s_reqs + ['two jets']
-        #j2s_reqs_d = { sel: True for sel in j2s_reqs }
-        #j2ss_sel = selection.require(**j2s_reqs_d)
+        j2s_reqs = s_reqs + ['two jets']
+        j2s_reqs_d = { sel: True for sel in j2s_reqs }
+        j2ss_sel = selection.require(**j2s_reqs_d)
         
-        j2o_reqs = o_reqs + ['two jets'] + ['mass']+ ['num_loose'] + ['leading']
+        j2o_reqs = o_reqs + ['two jets']
         j2o_reqs_d = {sel: True for sel in j2o_reqs }
         j2os_sel = selection.require(**j2o_reqs_d)
    
@@ -167,6 +166,7 @@ class dielectron_mass(processor.ProcessorABC):
             pt  = ak.to_numpy(ak.flatten(leading_electron[os_sel].pt)),
             eta = ak.to_numpy(ak.flatten(leading_electron[os_sel].eta)),
             phi = ak.to_numpy(ak.flatten(leading_electron[os_sel].phi)),
+            weight=weight2.weight()[os_sel]
         )
         
         output["electron_data2"].fill(
@@ -174,6 +174,7 @@ class dielectron_mass(processor.ProcessorABC):
             pt  = ak.to_numpy(ak.flatten(trailing_electron[os_sel].pt)),
             eta = ak.to_numpy(ak.flatten(trailing_electron[os_sel].eta)),
             phi = ak.to_numpy(ak.flatten(trailing_electron[os_sel].phi)),
+            weight=weight2.weight()[os_sel]
         )
         
         output["electron_data3"].fill(
@@ -181,6 +182,7 @@ class dielectron_mass(processor.ProcessorABC):
             pt  = ak.to_numpy(ak.flatten(leading_electron[j1os_sel].pt)),
             eta = ak.to_numpy(ak.flatten(leading_electron[j1os_sel].eta)),
             phi = ak.to_numpy(ak.flatten(leading_electron[j1os_sel].phi)),
+            weight=weight2.weight()[j1os_sel]
         )
         
         output["electron_data4"].fill(
@@ -188,6 +190,7 @@ class dielectron_mass(processor.ProcessorABC):
             pt  = ak.to_numpy(ak.flatten(trailing_electron[j1os_sel].pt)),
             eta = ak.to_numpy(ak.flatten(trailing_electron[j1os_sel].eta)),
             phi = ak.to_numpy(ak.flatten(trailing_electron[j1os_sel].phi)),
+            weight=weight2.weight()[j1os_sel]
         )
         
         output["electron_data5"].fill(
@@ -195,6 +198,7 @@ class dielectron_mass(processor.ProcessorABC):
             pt  = ak.to_numpy(ak.flatten(leading_electron[j2os_sel].pt)),
             eta = ak.to_numpy(ak.flatten(leading_electron[j2os_sel].eta)),
             phi = ak.to_numpy(ak.flatten(leading_electron[j2os_sel].phi)),
+            weight=weight2.weight()[j2os_sel]
         )
         
         output["electron_data6"].fill(
@@ -202,86 +206,206 @@ class dielectron_mass(processor.ProcessorABC):
             pt  = ak.to_numpy(ak.flatten(trailing_electron[j2os_sel].pt)),
             eta = ak.to_numpy(ak.flatten(trailing_electron[j2os_sel].eta)),
             phi = ak.to_numpy(ak.flatten(trailing_electron[j2os_sel].phi)),
+            weight=weight2.weight()[j2os_sel]
         )
         
-        #dielectron full mass spectrum (inclusive in jets)
-        #output["dilep_mass0"].fill(
-        #    dataset = dataset,
-        #    mass = ak.to_numpy(ak.flatten(dielectron_mass[os_nm_sel])),
-        #    pt = ak.to_numpy(ak.flatten(dielectron_pt[os_nm_sel])),
-        #)
+        output["electron_data7"].fill(
+            dataset = dataset,
+            pt  = ak.to_numpy(ak.flatten(leading_electron[ss_sel].pt)),
+            eta = ak.to_numpy(ak.flatten(leading_electron[ss_sel].eta)),
+            phi = ak.to_numpy(ak.flatten(leading_electron[ss_sel].phi)),
+            weight = weight.weight()[ss_sel]
+        )
+        
+        output["electron_data8"].fill(
+            dataset = dataset,
+            pt  = ak.to_numpy(ak.flatten(trailing_electron[ss_sel].pt)),
+            eta = ak.to_numpy(ak.flatten(trailing_electron[ss_sel].eta)),
+            phi = ak.to_numpy(ak.flatten(trailing_electron[ss_sel].phi)),
+            weight = weight.weight()[ss_sel]
+        )
+        
+        output["electron_data9"].fill(
+            dataset = dataset,
+            pt  = ak.to_numpy(ak.flatten(leading_electron[j1ss_sel].pt)),
+            eta = ak.to_numpy(ak.flatten(leading_electron[j1ss_sel].eta)),
+            phi = ak.to_numpy(ak.flatten(leading_electron[j1ss_sel].phi)),
+            weight = weight.weight()[j1ss_sel]
+        )
+        
+        output["electron_data10"].fill(
+            dataset = dataset,
+            pt  = ak.to_numpy(ak.flatten(trailing_electron[j1ss_sel].pt)),
+            eta = ak.to_numpy(ak.flatten(trailing_electron[j1ss_sel].eta)),
+            phi = ak.to_numpy(ak.flatten(trailing_electron[j1ss_sel].phi)),
+            weight = weight.weight()[j1ss_sel]
+        )
+        
+        output["electron_data11"].fill(
+           dataset = dataset,
+            pt  = ak.to_numpy(ak.flatten(leading_electron[j2ss_sel].pt)),
+            eta = ak.to_numpy(ak.flatten(leading_electron[j2ss_sel].eta)),
+            phi = ak.to_numpy(ak.flatten(leading_electron[j2ss_sel].phi)),
+            weight = weight.weight()[j2ss_sel]
+        )
+        
+        output["electron_data12"].fill(
+            dataset = dataset,
+            pt  = ak.to_numpy(ak.flatten(trailing_electron[j2ss_sel].pt)),
+            eta = ak.to_numpy(ak.flatten(trailing_electron[j2ss_sel].eta)),
+            phi = ak.to_numpy(ak.flatten(trailing_electron[j2ss_sel].phi)),
+            weight = weight.weight()[j2ss_sel]
+        )
         
         output["dilep_mass1"].fill(
             dataset = dataset,
             mass = ak.to_numpy(ak.flatten(dielectron_mass[os_sel])),
             pt = ak.to_numpy(ak.flatten(dielectron_pt[os_sel])),
+            weight=weight2.weight()[os_sel]
         )
         
         output["dilep_mass2"].fill(
             dataset = dataset,
             mass = ak.to_numpy(ak.flatten(dielectron_mass[j1os_sel])),
             pt = ak.to_numpy(ak.flatten(dielectron_pt[j1os_sel])),
+            weight=weight2.weight()[j1os_sel]
         )
         
         output["dilep_mass3"].fill(
             dataset = dataset,
             mass = ak.to_numpy(ak.flatten(dielectron_mass[j2os_sel])),
             pt = ak.to_numpy(ak.flatten(dielectron_pt[j2os_sel])),
+            weight=weight2.weight()[j2os_sel]
         )
         
-        #dimuon full mass spectrum (inclusive in jets)
-        #output["dilep_mass4"].fill(
-        #    dataset = dataset,
-        #    mass = ak.to_numpy(ak.flatten(dielectron_mass[osm_sel])),
-        #    pt = ak.to_numpy(ak.flatten(dielectron_pt[osm_sel])),
-        #)
+        output["dilep_mass4"].fill(
+            dataset = dataset,
+            mass = ak.to_numpy(ak.flatten(dielectron_mass[ss_sel])),
+            pt = ak.to_numpy(ak.flatten(dielectron_pt[ss_sel])),
+            weight = weight.weight()[ss_sel]
+        )
+        
+        output["dilep_mass5"].fill(
+            dataset = dataset,
+            mass = ak.to_numpy(ak.flatten(dielectron_mass[j1ss_sel])),
+            pt = ak.to_numpy(ak.flatten(dielectron_pt[j1ss_sel])),
+            weight = weight.weight()[j1ss_sel]
+        )
+        
+        output["dilep_mass6"].fill(
+            dataset = dataset,
+            mass = ak.to_numpy(ak.flatten(dielectron_mass[j2ss_sel])),
+            pt = ak.to_numpy(ak.flatten(dielectron_pt[j2ss_sel])),
+            weight = weight.weight()[j2ss_sel]
+        )
         
         output["MET"].fill(
             dataset = dataset,
             pt = met_pt[os_sel],
-        )
-        
-        output["N_jet"].fill(
-            dataset = dataset,
-            multiplicity = ak.num(jet)[os_sel],
-        )
-        
-        output["PV_npvsGood"].fill(
-            dataset = dataset,
-            multiplicity = ev.PV[os_sel].npvsGood,
+            weight=weight2.weight()[os_sel]
         )
         
         output["MET2"].fill(
             dataset = dataset,
             pt = met_pt[j1os_sel],
-        )
-        
-        output["N_jet2"].fill(
-            dataset = dataset,
-            multiplicity = ak.num(jet)[j1os_sel],
-        )
-        
-        output["PV_npvsGood2"].fill(
-            dataset = dataset,
-            multiplicity = ev.PV[j1os_sel].npvsGood,
+            weight=weight2.weight()[j1os_sel]
         )
         
         output["MET3"].fill(
             dataset = dataset,
             pt = met_pt[j2os_sel],
+            weight=weight2.weight()[j2os_sel]
         )
         
+        output["MET4"].fill(
+            dataset = dataset,
+            pt = met_pt[ss_sel],
+            weight = weight.weight()[ss_sel]
+        )
+        
+        output["MET5"].fill(
+            dataset = dataset,
+            pt = met_pt[j1ss_sel],
+            weight = weight.weight()[j1ss_sel]
+        )
+        
+        output["MET6"].fill(
+            dataset = dataset,
+            pt = met_pt[j2ss_sel],
+            weight = weight.weight()[j2ss_sel]
+        )
+        
+        output["N_jet"].fill(
+            dataset = dataset,
+            multiplicity = ak.num(jet)[os_sel],
+            weight=weight2.weight()[os_sel]
+        )
+        
+        output["N_jet2"].fill(
+            dataset = dataset,
+            multiplicity = ak.num(jet)[j1os_sel],
+            weight=weight2.weight()[j1os_sel]
+        )
+            
         output["N_jet3"].fill(
             dataset = dataset,
-            multiplicity = ak.num(jet)[j2os_sel]
+            multiplicity = ak.num(jet)[j2os_sel],
+            weight=weight2.weight()[j2os_sel]
+        )
+        
+        output["N_jet4"].fill(
+            dataset = dataset,
+            multiplicity = ak.num(jet)[ss_sel],
+            weight = weight.weight()[ss_sel]
+        )
+        
+        output["N_jet5"].fill(
+            dataset = dataset,
+            multiplicity = ak.num(jet)[j1ss_sel],
+            weight = weight.weight()[j1ss_sel]
+        )
+            
+        output["N_jet6"].fill(
+            dataset = dataset,
+            multiplicity = ak.num(jet)[j2ss_sel],
+            weight = weight.weight()[j2ss_sel]
+        )
+        
+        output["PV_npvsGood"].fill(
+            dataset = dataset,
+            multiplicity = ev.PV[os_sel].npvsGood,
+            weight=weight2.weight()[os_sel]
+        )
+       
+        output["PV_npvsGood2"].fill(
+            dataset = dataset,
+            multiplicity = ev.PV[j1os_sel].npvsGood,
+            weight=weight2.weight()[j1os_sel]
         )
         
         output["PV_npvsGood3"].fill(
             dataset = dataset,
             multiplicity = ev.PV[j2os_sel].npvsGood,
+            weight=weight2.weight()[j2os_sel]
         )
         
+        output["PV_npvsGood4"].fill(
+            dataset = dataset,
+            multiplicity = ev.PV[ss_sel].npvsGood,
+            weight = weight.weight()[ss_sel]
+        )
+       
+        output["PV_npvsGood5"].fill(
+            dataset = dataset,
+            multiplicity = ev.PV[j1ss_sel].npvsGood,
+            weight = weight.weight()[j1ss_sel]
+        )
         
+        output["PV_npvsGood6"].fill(
+            dataset = dataset,
+            multiplicity = ev.PV[j2ss_sel].npvsGood,
+            weight = weight.weight()[j2ss_sel]
+        )
 
         return output
 

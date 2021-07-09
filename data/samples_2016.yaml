@@ -254,6 +254,14 @@
   split: 1
   sumWeight: 149681.0
   xsec: 0.0539
+/ZZTo2L2Nu_13TeV_powheg_pythia8/RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1/NANOAODSIM:
+  files: 7
+  nEvents: 8931750
+  name: ZZTo2L2Nu_13TeV_powheg_pythia8_RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1
+  path: null
+  split: 2
+  sumWeight: 8931750.0
+  xsec: 0.564
 ? /ZZTo2L2Nu_mZMin-18_TuneCUETP8M1_13TeV-powheg-pythia8/RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1/NANOAODSIM
 : files: 58
   nEvents: 23963400

@@ -47,7 +47,7 @@ class meta_processor(processor.ProcessorABC):
 
 def get_sample_meta(fileset, samples, workers=10, skipbadfiles=True):
     
-    from processor.default_accumulators import add_processes_to_output, add_files_to_output
+    from processor.default_accumulators import add_files_to_output, add_processes_to_output
 
     meta_accumulator = {}
     add_files_to_output(fileset, meta_accumulator)
