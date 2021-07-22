@@ -252,3 +252,30 @@ def get_four_vec(cand):
     )
     vec4.__dict__.update(cand.__dict__)
     return vec4
+
+def cutflow_scale_and_merge(output, samples, fileset, nano_mapping, lumi=60):
+    """
+    Scale NanoAOD samples to a physical cross section.
+    Merge NanoAOD samples into categories, e.g. several ttZ samples into one ttZ category.
+    
+    output -- output coffea histograms
+    samples -- samples dictionary that contains the x-sec and sumWeight
+    fileset -- fileset dictionary used in the coffea processor
+    nano_mapping -- dictionary to map NanoAOD samples into categories
+    lumi -- integrated luminosity in 1/fb
+    """
+    merged = {}
+    
+    for group in nano_mapping:
+        combined = {}
+        for sample in nano_mapping[group]:
+            if sample in fileset:
+                temp = output[sample].copy()
+                scale = lumi*1000*samples[sample]['xsec']/samples[sample]['sumWeight']
+                # scale according to cross sections
+                for key in temp.keys():
+                    temp[key] *= scale
+                combined += temp
+        merged[group] = combined
+                   
+    return merged

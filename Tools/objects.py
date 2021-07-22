@@ -87,7 +87,7 @@ nonprompt = lambda x: x[((x.genPartFlav!=1)&(x.genPartFlav!=15))]
 
 class Collections:
 
-   def __init__(self, ev, obj, wp, year=2018, verbose=0):
+    def __init__(self, ev, obj, wp, year=2018, verbose=0):
         self.obj = obj
         self.wp = wp
         if self.wp == None:
