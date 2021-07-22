@@ -13,6 +13,10 @@ def add_files_to_output(fileset, output):
         for f in fileset[sample]:
             output.update({f: processor.defaultdict_accumulator(int)})
 
+def add_files_to_output(fileset, output):
+     for sample in fileset:
+         for f in fileset[sample]:
+             output.update({f: processor.defaultdict_accumulator(int)})
 
 dataset_axis            = hist.Cat("dataset",       "Primary dataset")
 pt_axis                 = hist.Bin('pt',            r'$p_{T}\ (GeV)$', np.array([15, 40, 60, 80, 100, 200, 300]))
