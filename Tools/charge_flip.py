@@ -1,7 +1,4 @@
-try:
-    import awkward1 as ak
-except ImportError:
-    import awkward as ak
+import awkward as ak
 
 from coffea.lookup_tools import extractor
 from Tools.helpers import yahist_2D_lookup

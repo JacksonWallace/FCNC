@@ -1,4 +1,5 @@
 import awkward as ak
+import numpy as np
 
 from coffea import processor, hist
 from coffea.nanoevents import NanoEventsFactory, NanoAODSchema
@@ -8,6 +9,7 @@ from coffea.analysis_tools import Weights, PackedSelection
 # this is all very bad practice
 from Tools.objects import Collections, choose, cross, match
 from Tools.config_helpers import loadConfig
+from Tools.triggers import getFilters
 from Tools.gen import get_charge_parent, find_first_parent
 
 class charge_flip_calc(processor.ProcessorABC):
@@ -100,8 +102,8 @@ class charge_flip_calc(processor.ProcessorABC):
         #ak_weight_flip = ak.ones_like(flipped_electron[flip_sel].pt) * weight.weight()[flip_sel]
     
                                         
-        output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(electron)[baseline], weight=weight.weight()[baseline])
-        output['electron_flips'].fill(dataset=dataset, multiplicity=n_flips[baseline], weight=weight.weight()[baseline])
+        #output['N_ele'].fill(dataset=dataset, multiplicity=ak.num(electron)[baseline], weight=weight.weight()[baseline])
+        #output['electron_flips'].fill(dataset=dataset, multiplicity=n_flips[baseline], weight=weight.weight()[baseline])
 
         output["electron"].fill(
             dataset = dataset,

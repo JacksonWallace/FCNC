@@ -107,7 +107,7 @@ class dielectron_mass(processor.ProcessorABC):
           #  weight2.add("lepton", self.leptonSF.get(electron, loose_muon))
                       
         #selections    
-        filters   = getFilters(ev, year=self.year, dataset=dataset)
+        filters   = getFilters(ev, year=self.year, dataset=dataset, UL = False)
         ss = (SSelectron)
         os = (OSelectron)
         mass = (ak.min(np.abs(dielectron_mass-91.2), axis = 1) < 15)

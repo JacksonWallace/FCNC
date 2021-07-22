@@ -1,7 +1,4 @@
-try:
-    import awkward1 as ak
-except ImportError:
-    import awkward as ak
+import awkward as ak
 
 import numpy as np
 

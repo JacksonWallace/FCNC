@@ -22,7 +22,7 @@ from Tools.btag_scalefactors import btag_scalefactor
 from Tools.ttH_lepton_scalefactors import LeptonSF
 from Tools.selections import Selection
 from Tools.nonprompt_weight import NonpromptWeight
-from Tools.chargeFlip import charge_flip
+from Tools.charge_flip import charge_flip
 
 import warnings
 warnings.filterwarnings("ignore")

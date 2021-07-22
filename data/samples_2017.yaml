@@ -182,6 +182,38 @@
   split: 2
   sumWeight: 199286.6288913028
   xsec: 0.001573
+? /TT_FCNC-TtoHJ_aTleptonic_HToWWZZtautau_eta_hct_TuneCP5-MadGraph5-pythia8/RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_tauDecays_102X_mc2017_realistic_v8-v1/NANOAODSIM
+: files: 13
+  nEvents: 1006059
+  name: TT_FCNC-TtoHJ_aTleptonic_HToWWZZtautau_eta_hct_TuneCP5-MadGraph5-pythia8_RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_tauDecays_102X_mc2017_realistic_v8-v1
+  path: null
+  split: 13
+  sumWeight: 1004738.7190980074
+  xsec: 83.88144
+? /TT_FCNC-TtoHJ_aTleptonic_HToWWZZtautau_eta_hut_TuneCP5-MadGraph5-pythia8/RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_tauDecays_102X_mc2017_realistic_v8-v1/NANOAODSIM
+: files: 22
+  nEvents: 961929
+  name: TT_FCNC-TtoHJ_aTleptonic_HToWWZZtautau_eta_hut_TuneCP5-MadGraph5-pythia8_RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_tauDecays_102X_mc2017_realistic_v8-v1
+  path: null
+  split: 22
+  sumWeight: 960625.0484403262
+  xsec: 83.88144
+? /TT_FCNC-aTtoHJ_Tleptonic_HToWWZZtautau_eta_hct_TuneCP5-MadGraph5-pythia8/RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_tauDecays_102X_mc2017_realistic_v8-v1/NANOAODSIM
+: files: 15
+  nEvents: 967943
+  name: TT_FCNC-aTtoHJ_Tleptonic_HToWWZZtautau_eta_hct_TuneCP5-MadGraph5-pythia8_RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_tauDecays_102X_mc2017_realistic_v8-v1
+  path: null
+  split: 15
+  sumWeight: 966551.365265758
+  xsec: 83.88144
+? /TT_FCNC-aTtoHJ_Tleptonic_HToWWZZtautau_eta_hut_TuneCP5-MadGraph5-pythia8/RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_tauDecays_102X_mc2017_realistic_v8-v1/NANOAODSIM
+: files: 15
+  nEvents: 992025
+  name: TT_FCNC-aTtoHJ_Tleptonic_HToWWZZtautau_eta_hut_TuneCP5-MadGraph5-pythia8_RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_tauDecays_102X_mc2017_realistic_v8-v1
+  path: null
+  split: 15
+  sumWeight: 990670.3125011572
+  xsec: 83.88144
 ? /WWTo2L2Nu_DoubleScattering_13TeV-pythia8/RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_102X_mc2017_realistic_v8-v1/NANOAODSIM
 : files: 17
   nEvents: 968000
@@ -262,6 +294,14 @@
   split: 18
   sumWeight: 148394.0
   xsec: 0.0539
+/ZZTo2L2Nu_13TeV_powheg_pythia8/RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_102X_mc2017_realistic_v8-v1/NANOAODSIM:
+  files: 14
+  nEvents: 8744768
+  name: ZZTo2L2Nu_13TeV_powheg_pythia8_RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_102X_mc2017_realistic_v8-v1
+  path: null
+  split: 4
+  sumWeight: 5254421.928882001
+  xsec: 0.564
 ? /ZZTo2L2Nu_mZMin-18_TuneCP5_13TeV-powheg-pythia8/RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_102X_mc2017_realistic_v8-v1/NANOAODSIM
 : files: 88
   nEvents: 24386000

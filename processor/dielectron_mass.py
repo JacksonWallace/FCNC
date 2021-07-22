@@ -23,7 +23,7 @@ class dielectron_mass(processor.ProcessorABC):
         if self.year == 2016:
             self.charge_flip_ratio = charge_flip('../histos/chargeflipfull2016June.pkl.gz')
         if self.year == 2017:
-            self.charge_flip_ratio = charge_flip('../histos/chargeflipfull2017June.pkl.gz')
+            self.charge_flip_ratio = charge_flip('histos/chargeflipfull2017June.pkl.gz')
         if self.year == 2018:
             self.charge_flip_ratio = charge_flip('../histos/chargeflipfullpt152018.pkl.gz')
 
@@ -104,7 +104,7 @@ class dielectron_mass(processor.ProcessorABC):
         weight2.add("charge flip", self.charge_flip_ratio.flip_weight(electron))
         
         #selections    
-        filters   = getFilters(ev, year=self.year, dataset=dataset)
+        filters   = getFilters(ev, year=self.year, dataset=dataset, UL = False)
         mask = lumimask(ev.run, ev.luminosityBlock)
         ss = (SSelectron)
         os = (OSelectron)
