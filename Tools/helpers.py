@@ -86,8 +86,9 @@ def getCutFlowTable(output, processes=['tW_scattering', 'TTW', 'ttbar'], lines=[
     # if a signal is specified, calculate S/B
     if signal is not None:
         backgrounds = copy.deepcopy(processes)
-        backgrounds.remove(signal)
-        res['S/B'] = {line: round( output[signal][line]/sum([ output[proc][line] for proc in backgrounds ]) if sum([ output[proc][line] for proc in backgrounds ])>0 else 1, significantFigures) for line in lines }
+        for s in signal:
+            backgrounds.remove(s)
+        res['S/B'] = {line: round( sum([output[s][line] for s in signal])/sum([ output[proc][line] for proc in backgrounds ]) if sum([ output[proc][line] for proc in backgrounds ])>0 else 1, significantFigures) for line in lines }
             
     if not absolute:
         res=eff
@@ -271,7 +272,10 @@ def cutflow_scale_and_merge(output, samples, fileset, nano_mapping, lumi=60):
         for sample in nano_mapping[group]:
             if sample in fileset:
                 temp = output[sample].copy()
-                scale = lumi*1000*samples[sample]['xsec']/samples[sample]['sumWeight']
+                if group == 'hct' or group == 'hut':
+                    scale = lumi*1000*samples[sample]['xsec']/samples[sample]['sumWeight']*0.01
+                else:
+                    scale = lumi*1000*samples[sample]['xsec']/samples[sample]['sumWeight']
                 # scale according to cross sections
                 for key in temp.keys():
                     temp[key] *= scale

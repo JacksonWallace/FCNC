@@ -244,4 +244,3 @@ def getTriggers(ev, leading_pdg, subleading_pdg, year=2018, dataset='None'):
     #    return mask_or(ev, "HLT", triggers[dataset])
     #else:
     #    return mask_or(ev, "HLT", triggers['MuonEG'] + triggers['DoubleMuon'] + triggers['DoubleEG'])  # should be OR of all dilepton triggers
-

@@ -170,10 +170,10 @@ class Collections:
            #conePt = 0.9 * ak.fill_none(ev.Electron.matched_jet.pt,0) * mask_close + ev.Electron.pt*(1 + ev.Electron.miniPFRelIso_all)*mask_far
             
             PF_unflatten = ak.from_regular(ev.Electron.miniPFRelIso_all[:,:,np.newaxis])
-            max_miniIso = ak.max(ak.concatenate([PF_unflatten - I_1, ak.zeros_like(PF_unflatten)], axis=2), axis=2) #equivalent to max(0, ev.Muon.miniPFRelIso_all - I_1)
+            max_miniIso = ak.max(ak.concatenate([PF_unflatten - I_1, ak.zeros_like(PF_unflatten)], axis=2), axis=2) #equivalent to max(0, ev.electron.miniPFRelIso_all - I_1)
             electron_pt_unflatten = ak.from_regular(ev.Electron.pt[:,:,np.newaxis])
             jet_pt_unflatten = ak.from_regular(ev.Electron.matched_jet.pt[:,:,np.newaxis])
-            max_pt = ak.max(ak.concatenate([electron_pt_unflatten, jet_pt_unflatten * I_2], axis=2), axis=2) #max(ev.Muon.pt, ev.Muon.matched_jet.pt * I_2)
+            max_pt = ak.max(ak.concatenate([electron_pt_unflatten, jet_pt_unflatten * I_2], axis=2), axis=2) #max(ev.Electron.pt, ev.Electron.matched_jet.pt * I_2)
             conePt = (ev.Electron.pt*(1 + max_miniIso)) * (ev.Electron.jetPtRelv2 > I_3) + (max_pt * ~(ev.Electron.jetPtRelv2 > I_3))
             
             ev['Electron', 'deepJet'] = ak.copy(deepJet)
@@ -193,20 +193,9 @@ class Collections:
             if self.v>0: print (" - custom ID and multi-isolation")
                 
         if self.obj == "Electron" and self.wp == "tightFCNC":
-            self.selection = self.selection & self.getElectronMVAID() & self.getFCNCIsolation(ev.Electron.jetRelIso, ev.Electron.jetPtRelv2, I_2, I_3) & (ev.Electron.miniPFRelIso_all < I_1) & self.isTriggerSafeNoIso()
+            self.selection = self.selection & (ev.Electron.miniPFRelIso_all < I_1) & self.isTriggerSafeNoIso() & self.getElectronMVAID() & self.getFCNCIsolation(ev.Electron.jetRelIso, ev.Electron.jetPtRelv2, I_2, I_3)
             if self.v>0: print (" - custom ID and multi-isolation")
-
-        if self.obj == "Muon" and self.wp == "tight":
-            self.selection = self.selection & self.getIsolation(0.11, 0.74, 6.8)
-            if self.v>0: print (" - custom multi-isolation")
-            #self.selection = self.selection & ak.fill_none(ev.Muon.matched_jet.btagDeepFlavB<0.2770, True)
-            #self.selection = self.selection & (ev.Muon.matched_jet.btagDeepFlavB<0.2770)
-            #if self.v>0: print (" - deepJet")
-            
-        if self.obj == "Muon" and self.wp == "tightFCNC":
-            self.selection = self.selection & self.getFCNCIsolation(ev.Muon.jetRelIso, ev.Muon.jetPtRelv2, I_2, I_3) & (ev.Muon.miniPFRelIso_all < I_1)
-            if self.v>0: print (" - custom multi-isolation")
-
+                
         if self.obj == "Electron" and (self.wp == "tightTTH" or self.wp == 'fakeableTTH' or self.wp == "tightSSTTH" or self.wp == 'fakeableSSTTH'):
             self.selection = self.selection & self.getSigmaIEtaIEta
             if self.v>0: print (" - SigmaIEtaIEta")
@@ -216,7 +205,18 @@ class Collections:
             #if self.v>0: print (" - deepJet")
 
         if self.obj == "Electron" and self.wp == "looseFCNC":
-            self.selection = self.selection & (ev.Electron.miniPFRelIso_all < 0.4)
+            self.selection = self.selection & (ev.Electron.miniPFRelIso_all < 0.4) #& self.isTriggerSafeNoIso()
+
+        if self.obj == "Muon" and self.wp == "tight":
+            self.selection = self.selection & self.getIsolation(0.11, 0.74, 6.8)
+            if self.v>0: print (" - custom multi-isolation")
+            #self.selection = self.selection & ak.fill_none(ev.Muon.matched_jet.btagDeepFlavB<0.2770, True)
+            #self.selection = self.selection & (ev.Muon.matched_jet.btagDeepFlavB<0.2770)
+            #if self.v>0: print (" - deepJet")
+            
+        if self.obj == "Muon" and self.wp == "tightFCNC":
+            self.selection = self.selection & (ev.Muon.miniPFRelIso_all < I_1) & self.getFCNCIsolation(ev.Muon.jetRelIso, ev.Muon.jetPtRelv2, I_2, I_3)
+            if self.v>0: print (" - custom multi-isolation")
             
         if self.obj == 'Muon' and (self.wp == 'fakeableTTH' or self.wp == 'fakeableSSTTH'):
             #self.selection = self.selection & (self.cand.deepJet < self.getThreshold(self.cand.conePt, min_pt=20, max_pt=45, low=0.2770, high=0.0494))

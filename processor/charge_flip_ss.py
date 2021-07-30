@@ -159,7 +159,6 @@ class charge_flip_ss(processor.ProcessorABC):
         selection.add('no_mumu',     nmm)
         
         bl_reqs = ['filter'] + ['jet']
-
         bl_reqs_d = { sel: True for sel in bl_reqs }
         baseline = selection.require(**bl_reqs_d)
         

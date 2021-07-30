@@ -15,7 +15,7 @@ def add_files_to_output(fileset, output):
 
 def add_files_to_output(fileset, output):
      for sample in fileset:
-         for f in fileset[sample]:
+        for f in fileset[sample]:
              output.update({f: processor.defaultdict_accumulator(int)})
 
 dataset_axis            = hist.Cat("dataset",       "Primary dataset")
@@ -24,7 +24,7 @@ pt_axis2                = hist.Bin('pt',            r'$p_{T}\ (GeV)$', np.array(
 pt_fine_axis            = hist.Bin('pt',            r'$p_{T}\ (GeV)$', 500, 0, 500)
 p_axis                  = hist.Bin("p",             r"$p$ (GeV)", int(2500/5), 0, 2500) # 5 GeV is fine enough
 ht_axis                 = hist.Bin("ht",            r"$H_{T}$ (GeV)", 500, 0, 5000)
-mass_axis               = hist.Bin("mass",          r"M (GeV)", 1000, 0, 2000)
+mass_axis               = hist.Bin("mass",          r"M (GeV)", 1000, 0, 1000)
 eta_axis                = hist.Bin('eta',           r'$\eta $', np.array([0, 0.8, 1.479, 2.5]))
 etaSC_axis              = hist.Bin('eta',         r'$\eta\ SC$', np.array([0, 0.8, 1.479, 2.5]))
 eta_fine_axis           = hist.Bin('eta',           r'$\eta $', 25, -2.5, 2.5)  
@@ -41,6 +41,7 @@ pdgID_axis              = hist.Bin("pdgID",         r"N", 26, 0, 25)
 mva_id_axis             = hist.Bin("mva_id",        r"mva ID", np.array([-1, -0.01, 0.11, 0.48, 0.52, 0.56, 0.77, 100]))
 isolation1_axis         = hist.Bin("isolation1",    r"Iso1", np.array([0, 1/0.80-1, 1]))
 isolation2_axis         = hist.Bin("isolation2",    r"Iso2", np.array([0, 7.2, 16]))
+charge_axis             = hist.Bin("charge",        r"Charge", 5, -2, 2)
 
 variations = ['pt_jesTotalUp', 'pt_jesTotalDown']
 nb_variations = ['centralUp', 'centralDown', 'upCentral', 'downCentral']
@@ -62,24 +63,24 @@ desired_output = {
             "MET5" :             hist.Hist("Counts", dataset_axis, pt_fine_axis),
             "MET6" :             hist.Hist("Counts", dataset_axis, pt_fine_axis),
             
-            "lead_gen_lep":     hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
-            "trail_gen_lep":    hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
-            "j1":               hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
-            "j2":               hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
-            "j3":               hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
+            "lead_gen_lep":     hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
+            "trail_gen_lep":    hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
+            "j1":               hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
+            "j2":               hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
+            "j3":               hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
 
-            "b1":               hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
-            "b2":               hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis),
+            "b1":               hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
+            "b2":               hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
 
             "chargeFlip_vs_nonprompt": hist.Hist("Counts", dataset_axis, n1_axis, n2_axis, n_ele_axis),
             
             "high_p_fwd_p":     hist.Hist("Counts", dataset_axis, p_axis),
             
     
-            "electron":              hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
-            "electron2":             hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
-            "electron3":             hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
-            "electron4":             hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
+            "electron":              hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis),
+            "electron2":             hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis),
+            "electron3":             hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis),
+            "electron4":             hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis),
             "electron_data1":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
             "electron_data2":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
             "electron_data3":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
@@ -115,7 +116,7 @@ desired_output = {
             "N_jet" :         hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_jet2" :        hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_jet3" :        hist.Hist("Counts", dataset_axis, multiplicity_axis),
-            "N_jet4" :         hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_jet4" :        hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_jet5" :        hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_jet6" :        hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_fwd" :         hist.Hist("Counts", dataset_axis, multiplicity_axis),
@@ -137,10 +138,11 @@ desired_output = {
             "dilep_mass5":        hist.Hist("Counts", dataset_axis, mass_axis, pt_fine_axis),
             "dilep_mass6":        hist.Hist("Counts", dataset_axis, mass_axis, pt_fine_axis),
             
-            "mva_id":            hist.Hist("Counts", dataset_axis, mva_id_axis, etaSC_axis),
+            "mva_id":             hist.Hist("Counts", dataset_axis, mva_id_axis, etaSC_axis),
             "mva_id2":            hist.Hist("Counts", dataset_axis, mva_id_axis, pt_axis2),
-            "isolation":         hist.Hist("Counts", dataset_axis, isolation1_axis, isolation2_axis),
-
+            "isolation":          hist.Hist("Counts", dataset_axis, isolation1_axis, isolation2_axis),
+            
+            "charge":             hist.Hist("Counts", dataset_axis, charge_axis),
 
             'skimmedEvents':    processor.defaultdict_accumulator(int),
             'totalEvents':      processor.defaultdict_accumulator(int),
