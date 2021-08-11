@@ -22,12 +22,14 @@ dataset_axis            = hist.Cat("dataset",       "Primary dataset")
 pt_axis                 = hist.Bin('pt',            r'$p_{T}\ (GeV)$', np.array([15, 40, 60, 80, 100, 200, 300]))
 pt_axis2                = hist.Bin('pt',            r'$p_{T}\ (GeV)$', np.array([0, 5, 10, 25, 100, 200, 300]))
 pt_fine_axis            = hist.Bin('pt',            r'$p_{T}\ (GeV)$', 500, 0, 500)
+pt_fine_axis2           = hist.Bin('pt',           r'$p_{T}\ (GeV)$', 100, 0, 3000)
 p_axis                  = hist.Bin("p",             r"$p$ (GeV)", int(2500/5), 0, 2500) # 5 GeV is fine enough
 ht_axis                 = hist.Bin("ht",            r"$H_{T}$ (GeV)", 500, 0, 5000)
 mass_axis               = hist.Bin("mass",          r"M (GeV)", 1000, 0, 1000)
 eta_axis                = hist.Bin('eta',           r'$\eta $', np.array([0, 0.8, 1.479, 2.5]))
 etaSC_axis              = hist.Bin('eta',         r'$\eta\ SC$', np.array([0, 0.8, 1.479, 2.5]))
-eta_fine_axis           = hist.Bin('eta',           r'$\eta $', 25, -2.5, 2.5)  
+eta_fine_axis           = hist.Bin('eta',           r'$\eta $', 25, -2.5, 2.5)
+eta_fine_axis2           = hist.Bin('eta',           r'$\eta $', 50, -5, 5)  
 phi_axis                = hist.Bin("phi",           r"$\phi$", 64, -3.2, 3.2)
 delta_axis              = hist.Bin("delta",         r"$\delta$", 100,0,10 )
 multiplicity_axis       = hist.Bin("multiplicity",  r"N", 5, -0.5, 4.5)
@@ -63,8 +65,10 @@ desired_output = {
             "MET5" :             hist.Hist("Counts", dataset_axis, pt_fine_axis),
             "MET6" :             hist.Hist("Counts", dataset_axis, pt_fine_axis),
             
-            "lead_gen_lep":     hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
-            "trail_gen_lep":    hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
+            "lead_gen_lep":     hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis2, phi_axis),
+            "trail_gen_lep":    hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis2, phi_axis),
+            "lead_gen_lep2":     hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis2, phi_axis),
+            "trail_gen_lep2":    hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis2, phi_axis),
             "j1":               hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
             "j2":               hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
             "j3":               hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
@@ -93,10 +97,14 @@ desired_output = {
             "electron_data10":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
             "electron_data11":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
             "electron_data12":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
-            "flipped_electron":      hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
-            "flipped_electron2":     hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
-            "flipped_electron3":     hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
-            "flipped_electron4":     hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_axis),
+            "electron_data13":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
+            "electron_data14":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
+            "electron_data15":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
+            "electron_data16":        hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
+            "flipped_electron":      hist.Hist("Counts", dataset_axis, pt_fine_axis2, eta_fine_axis2),
+            "flipped_electron2":     hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis2),
+            "flipped_electron3":     hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis2),
+            "flipped_electron4":     hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis2),
             "electron_flips":        hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "electron_flips2":       hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "electron_flips3":        hist.Hist("Counts", dataset_axis, multiplicity_axis),
@@ -107,7 +115,7 @@ desired_output = {
             "fwd_jet":               hist.Hist("Counts", dataset_axis, pt_axis, eta_axis, phi_axis), 
 
             "N_b" :           hist.Hist("Counts", dataset_axis, multiplicity_axis),
-            "N_central" :     hist.Hist("Counts", dataset_axis, multiplicity_axis),
+            "N_h" :     hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_ele" :         hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_ele2" :        hist.Hist("Counts", dataset_axis, multiplicity_axis),
             "N_ele3" :        hist.Hist("Counts", dataset_axis, multiplicity_axis),
@@ -143,13 +151,14 @@ desired_output = {
             "isolation":          hist.Hist("Counts", dataset_axis, isolation1_axis, isolation2_axis),
             
             "charge":             hist.Hist("Counts", dataset_axis, charge_axis),
+            "X":                  hist.Hist("Counts", dataset_axis, score_axis),
 
             'skimmedEvents':    processor.defaultdict_accumulator(int),
             'totalEvents':      processor.defaultdict_accumulator(int),
 
 }
 
-outputs_with_vars = ['j1', 'j2', 'j3', 'b1', 'b2', 'N_jet', 'fwd_jet', 'N_b', 'N_fwd', 'N_central', 'MET']
+outputs_with_vars = ['j1', 'j2', 'j3', 'b1', 'b2', 'N_jet', 'fwd_jet', 'N_b', 'N_fwd', 'N_h', 'MET']
 for out in outputs_with_vars:
     desired_output.update( { out+'_'+var: desired_output[out].copy() for var in variations } )
     

@@ -56,14 +56,12 @@ class dielectron_mass(processor.ProcessorABC):
         
         ## Electrons
         electron = Collections(ev, "Electron", "tightFCNC", self.year, 0).get()
-        electron2 = electron #for lepton pt distribution purposes
-        electron = electron[(electron.pt > 20) & (electron.conePt > 20) & (np.abs(electron.eta) < 2.4)] #matches skim
-        electron3 = electron[(electron.pt > 25)] #matches lepton pt reqs
+        electron = electron[((electron.pt > 20) | (electron.conePt > 20)) & (np.abs(electron.eta) < 2.4)] #matches skim 
+        electron2 = electron[(electron.pt > 25)] #matches lepton pt reqs
         
         loose_electron = Collections(ev, "Electron", "looseFCNC", self.year, 0).get()
-        loose_electron2 = loose_electron #for lepton pt distribution purposes
-        loose_electron = loose_electron[(loose_electron.pt > 20) & (loose_electron.conePt > 20) & (np.abs(loose_electron.eta) < 2.4)] #matches skim
-        loose_electron3 = loose_electron[(loose_electron.pt > 25)] #matches lepton pt reqs
+        loose_electron2 = loose_electron[((loose_electron.pt > 20) | (loose_electron.conePt > 20) ) & (np.abs(loose_electron.eta) < 2.4)] #matches skim 
+        loose_electron3 = loose_electron2[(loose_electron2.pt > 25)] #matches lepton pt reqs
         
         SSelectron = (ak.sum(electron.charge, axis=1) != 0) & (ak.num(electron)==2)
         OSelectron = (ak.sum(electron.charge, axis=1) == 0) & (ak.num(electron)==2)
@@ -72,55 +70,50 @@ class dielectron_mass(processor.ProcessorABC):
         dielectron_mass = (dielectron['0']+dielectron['1']).mass
         dielectron_pt = (dielectron['0']+dielectron['1']).pt
         
-        #at some point switch from argmax/min to slicing
-        leading_electron_idx = ak.singletons(ak.argmax(electron.pt, axis=1))
-        leading_electron = electron[leading_electron_idx]
+        dielectron2 = choose(electron2, 2)
+        dielectron_mass2 = (dielectron2['0']+dielectron2['1']).mass
         
-        trailing_electron_idx = ak.singletons(ak.argmin(electron.pt, axis=1))
-        trailing_electron = electron[trailing_electron_idx]
+        electron       = electron[ak.argsort(electron.pt, ascending=False)]
+        leading_electron = electron[:,0:1]
+        trailing_electron = electron[:,1:2]
+        
+        loose_electron       = loose_electron[ak.argsort(loose_electron.pt, ascending=False)]
+        leading_loose_electron = loose_electron[:,0:1]
+        trailing_loose_electron = loose_electron[:,1:2]
         
         ##Muons
         muon = Collections(ev, "Muon", "tightFCNC", self.year, 0).get()
-        muon2 = muon #for lepton pt distribution purposes
-        muon = muon[(muon.pt > 20) & (muon.conePt > 20) & (np.abs(muon.eta) < 2.4)] #matches skim
+        muon = muon[((muon.pt > 20) | (muon.conePt > 20)) & (np.abs(muon.eta) < 2.4)] #matches skim
         
         loose_muon = Collections(ev, "Muon", "looseFCNC", self.year, 0).get()
-        loose_muon2 = loose_muon #for lepton pt distribution purposes
-        loose_muon = loose_muon[(loose_muon.pt > 20) & (loose_muon.conePt > 20) & (np.abs(loose_muon.eta) < 2.4)] #matches skim
+        loose_muon2 = loose_muon[((loose_muon.pt > 20) | (loose_muon.conePt > 20)) & (np.abs(loose_muon.eta) < 2.4)] #matches skim 
         
-        leading_muon_idx = ak.singletons(ak.argmax(muon.pt, axis=1))
-        leading_muon = muon[leading_muon_idx]
+        muon       = muon[ak.argsort(muon.pt, ascending=False)]
+        leading_muon = muon[:,0:1]
+        trailing_muon = muon[:,1:2]
         
-        trailing_muon_idx = ak.singletons(ak.argmin(muon.pt, axis=1))
-        trailing_muon = muon[trailing_muon_idx]
+        loose_muon       = loose_muon[ak.argsort(loose_muon.pt, ascending=False)]
+        leading_loose_muon = loose_muon[:,0:1]
+        trailing_loose_muon = loose_muon[:,1:2]
         
         ##Leptons
         lepton   = ak.concatenate([muon, electron], axis=1) #tight leptons
-        lepton2   = ak.concatenate([muon2, electron2], axis=1) #for lepton pt distribution purposes
-        lepton3 = ak.concatenate([muon, electron3], axis=1) #matches lepton pt reqs
+        lepton2 = ak.concatenate([muon, electron2], axis=1) #matches lepton pt reqs
                                  
         SSlepton = ( (ak.sum(lepton.charge, axis=1) != 0) & (ak.num(lepton)==2) )
         OSlepton = ( (ak.sum(lepton.charge, axis=1) == 0) & (ak.num(lepton)==2) )
+        SSlepton2 = ( (ak.sum(lepton2.charge, axis=1) != 0) & (ak.num(lepton2)==2) )
         
         dilepton = choose(lepton, 2)
         dilepton_mass = (dilepton['0']+dilepton['1']).mass
         dilepton_pt = (dilepton['0']+dilepton['1']).pt
         
-        leading_lepton_idx = ak.singletons(ak.argmax(lepton.pt, axis=1))
-        leading_lepton = lepton[leading_lepton_idx]
+        dilepton2 = choose(lepton2, 2)
+        dilepton_mass2 = (dilepton2['0']+dilepton2['1']).mass
         
-        leading_lepton_idx2 = ak.singletons(ak.argmax(lepton2.pt, axis=1))
-        leading_lepton2 = lepton2[leading_lepton_idx2]
-
-        trailing_lepton_idx = ak.singletons(ak.argmin(lepton.pt, axis=1))
-        trailing_lepton = lepton[trailing_lepton_idx]
-        
-        trailing_lepton_idx2 = ak.singletons(ak.argmin(lepton2.pt, axis=1))
-        trailing_lepton2 = lepton2[trailing_lepton_idx2]
-        
-        loose_lepton = ak.concatenate([loose_muon, loose_electron], axis=1) #matches skim
-        loose_lepton2 = ak.concatenate([loose_muon2, loose_electron2], axis=1) #for lepton pt distribution purposes
-        loose_lepton3 = ak.concatenate([loose_muon, loose_electron3], axis=1) #matches lepton pt reqs
+        loose_lepton = ak.concatenate([loose_muon, loose_electron], axis=1) 
+        loose_lepton2 = ak.concatenate([loose_muon2, loose_electron2], axis=1) #matches skim
+        loose_lepton3 = ak.concatenate([loose_muon2, loose_electron3], axis=1) #matches lepton pt reqs
                 
         #jets
         jet       = getJets(ev, minPt=40, maxEta=2.4, pt_var='pt', UL = False)
@@ -156,6 +149,26 @@ class dielectron_mass(processor.ProcessorABC):
         ## MET -> can switch to puppi MET
         met_pt  = ev.MET.pt
         met_phi = ev.MET.phi
+        
+        #gen information
+        gen_particles = ev.GenPart
+        
+        gen_Higgs = gen_particles[(gen_particles.pdgId == 25)][:,-1]
+        
+        #Higgs momentum
+        gHp = gen_Higgs.pvec.absolute()
+        
+        gen_t = gen_particles[(np.abs(gen_particles.pdgId) == 6)][:,-1]
+        
+        gen_lepton = ev.GenDressedLepton
+        gen_lepton = gen_lepton[ak.argsort(gen_lepton.pt, ascending=False)]
+        
+        leading_gen_lepton = gen_lepton[:,0:1]
+        trailing_gen_lepton = gen_lepton[:,1:2]
+        
+        gen = ev.Generator
+        X = ak.concatenate([gen[np.abs(gen.id2) != 21].x2, gen[np.abs(gen.id1) != 21].x1])        
+
 
         # setting up the various weights
         weight = Weights( len(ev) )
@@ -170,22 +183,21 @@ class dielectron_mass(processor.ProcessorABC):
             
                       
         #selections
-        skim = (((ak.num(loose_lepton) == 2) & (ak.sum(loose_lepton.charge, axis=1) != 0)) | (ak.num(loose_lepton) > 2))
+        skim = (((ak.num(loose_lepton2) == 2) & (ak.sum(loose_lepton2.charge, axis=1) != 0)) | (ak.num(loose_lepton2) > 2))
         skim2 = (((ak.num(loose_lepton3) == 2) & (ak.sum(loose_lepton3.charge, axis=1) != 0)) | (ak.num(loose_lepton3) > 2))
-        tight = (((ak.num(lepton) == 2) & (ak.sum(lepton.charge, axis=1) != 0)) | (ak.num(lepton) > 2))
+        tight = (((ak.num(lepton2) == 2) & (ak.sum(lepton2.charge, axis=1) != 0)) | (ak.num(lepton2) > 2))
         filters = getFilters(ev, year=self.year, dataset=dataset, UL = False)
-        gmass = ak.fill_none(((ak.num(electron) == 2) & ((ak.min(dielectron_mass, axis = 1) > 12))) | (ak.num(electron) == 1) | (ak.num(electron) == 0), True)
-        ss = (SSlepton & gmass)
-        Zmass = (((ak.num(electron) == 2) & (ak.all(np.abs(dielectron_mass-90) > 15, axis=1))) | (ak.num(electron) == 1) | (ak.num(electron) == 0))
-        #Zmass = ak.fill_none(((ak.num(electron) == 2) & ((ak.min(np.abs(dielectron_mass-90), axis = 1) > 15))) | (ak.num(electron) == 1) | (ak.num(electron) == 0), True)
-        gmass 
+        gmass = ak.fill_none(((ak.num(electron2) == 2) & ((ak.min(dielectron_mass2, axis = 1) > 12))) | (ak.num(electron2) == 1) | (ak.num(electron2) == 0), True)
+        ss = (SSlepton2 & gmass)
+        Zmass = (((ak.num(electron2) == 2) & (ak.all(np.abs(dielectron_mass2-90) > 15, axis=1))) | (ak.num(electron2) == 1) | (ak.num(electron2) == 0))
+        #Zmass = ak.fill_none(((ak.num(electron) == 2) & ((ak.min(np.abs(dielectron_mass-90), axis = 1) > 15))) | (ak.num(electron) == 1) | (ak.num(electron) == 0), True) 
         jets2 = (ak.num(jet) >= 2)
         met =  ( met_pt > 50 )
-        diele = (ak.num(electron2) == 2)
-        dimu = (ak.num(muon2) == 2)
-        dilep = (ak.num(lepton2) == 2)
-        leading_ele = (ak.min(leading_electron.pt, axis=1) > 25)
-        leading_mu = (ak.min(leading_muon.pt, axis=1) > 20)
+        ele1 = (ak.num(leading_loose_electron) >= 1)
+        mu1 = (ak.num(leading_loose_muon) >= 1)
+        ele2 = (ak.num(trailing_loose_electron) >= 1)
+        mu2 = (ak.num(trailing_loose_muon) >= 1)
+
 
 
         
@@ -193,47 +205,16 @@ class dielectron_mass(processor.ProcessorABC):
         selection.add('"skim"',      skim)
         selection.add('lepton kinematics',      skim2)
         selection.add('lepton selection',   tight)
-        selection.add('diele',       diele)
-        selection.add('dimu',        dimu)
-        selection.add('dilep',       dilep)
-        selection.add('leading e',   leading_ele)
-        selection.add('leading m',   leading_mu)
-        #selection.add('lep kin',     lep_kin)
         selection.add('triggers',    (triggers))
         selection.add('filter',      (filters))
         selection.add('ss',          ss)
         selection.add('SS onZ veto', Zmass)
         selection.add('two jets',    jets2)
         selection.add ('MET > 50',   met)
-        #selection.add('leading',     lead_electron)
 
         sk_reqs = ['"skim"']
         sk_reqs_d = { sel: True for sel in sk_reqs }
         skim = selection.require(**sk_reqs_d)
-        
-        diele_reqs = ['diele'] + ['leading e']
-        diele_reqs_d = { sel: True for sel in diele_reqs }
-        diele = selection.require(**diele_reqs_d)
-        
-        diele_t_reqs = diele_reqs + ['triggers']
-        diele_t_reqs_d = { sel: True for sel in diele_t_reqs }
-        diele_t = selection.require(**diele_t_reqs_d)
-        
-        dimu_reqs = ['dimu'] + ['leading m']
-        dimu_reqs_d = { sel: True for sel in dimu_reqs }
-        dimu = selection.require(**dimu_reqs_d)
-        
-        dimu_t_reqs = dimu_reqs + ['triggers']
-        dimu_t_reqs_d = { sel: True for sel in dimu_t_reqs }
-        dimu_t = selection.require(**dimu_t_reqs_d)
-        
-        dilep_reqs = ['dilep']
-        dilep_reqs_d = { sel: True for sel in dilep_reqs }
-        dilep = selection.require(**dilep_reqs_d)
-        
-        dilep_t_reqs = dilep_reqs + ['triggers']
-        dilep_t_reqs_d = { sel: True for sel in dilep_t_reqs }
-        dilep_t = selection.require(**dilep_t_reqs_d)
         
         ss_reqs = sk_reqs + ['lepton kinematics'] + ['lepton selection'] + ['triggers'] + ['filter'] + ['ss']
         ss_reqs_d = { sel: True for sel in ss_reqs }
@@ -252,7 +233,7 @@ class dielectron_mass(processor.ProcessorABC):
         met_sel = selection.require(**met_reqs_d)
         
         #cutflow
-        cutflow = Cutflow(output, ev, weight=weight2)
+        cutflow = Cutflow(output, ev, weight=weight)
         
         cutflow_reqs_d = {}
         for req in met_reqs:
@@ -260,155 +241,255 @@ class dielectron_mass(processor.ProcessorABC):
             cutflow.addRow(req, selection.require(**cutflow_reqs_d) )
         
         
+        #plot gen level information
+        #take a look at plots of the number of loose leptons between the signals
+        
         #outputs
+        
+        output["lead_gen_lep"].fill(
+            dataset = dataset,
+            pt = ak.to_numpy(ak.flatten(leading_gen_lepton[(ak.num(leading_gen_lepton) == 1)].pt)),
+            eta = ak.to_numpy(ak.flatten(leading_gen_lepton[(ak.num(leading_gen_lepton) == 1)].eta)),
+            phi = ak.to_numpy(ak.flatten(leading_gen_lepton[(ak.num(leading_gen_lepton) == 1)].phi)),
+            weight = weight.weight()[(ak.num(leading_gen_lepton) == 1)]
+        )
+        
+        output["trail_gen_lep"].fill(
+            dataset = dataset,
+            pt = ak.to_numpy(ak.flatten(trailing_gen_lepton[(ak.num(trailing_gen_lepton) == 1)].pt)),
+            eta = ak.to_numpy(ak.flatten(trailing_gen_lepton[(ak.num(trailing_gen_lepton) == 1)].eta)),
+            phi = ak.to_numpy(ak.flatten(trailing_gen_lepton[(ak.num(trailing_gen_lepton) == 1)].phi)),
+            weight = weight.weight()[(ak.num(trailing_gen_lepton) == 1)]
+        )
+        
+        output["lead_gen_lep2"].fill(
+            dataset = dataset,
+            pt = ak.to_numpy(ak.flatten(leading_gen_lepton[skim & (ak.num(leading_gen_lepton) == 1)].pt)),
+            eta = ak.to_numpy(ak.flatten(leading_gen_lepton[skim & (ak.num(leading_gen_lepton) == 1)].eta)),
+            phi = ak.to_numpy(ak.flatten(leading_gen_lepton[skim & (ak.num(leading_gen_lepton) == 1)].phi)),
+            weight = weight.weight()[skim & (ak.num(leading_gen_lepton) == 1)]
+        )
+        
+        output["trail_gen_lep2"].fill(
+            dataset = dataset,
+            pt = ak.to_numpy(ak.flatten(trailing_gen_lepton[skim & (ak.num(trailing_gen_lepton) == 1)].pt)),
+            eta = ak.to_numpy(ak.flatten(trailing_gen_lepton[skim & (ak.num(trailing_gen_lepton) == 1)].eta)),
+            phi = ak.to_numpy(ak.flatten(trailing_gen_lepton[skim & (ak.num(trailing_gen_lepton) == 1)].phi)),
+            weight = weight.weight()[skim & (ak.num(trailing_gen_lepton) == 1)]
+        )
+        
+        output["N_ele"].fill(
+            dataset = dataset,
+            multiplicity = ak.num(loose_lepton),
+            weight = weight.weight()
+        )
+        
+        output["N_ele2"].fill(
+            dataset = dataset,
+            multiplicity = ak.num(loose_lepton[skim]),
+            weight = weight.weight()[skim]
+        )
+        
+        output["flipped_electron"].fill(       #don't worry, this is actually a Higgs
+            dataset = dataset,
+            pt = gHp,             #full momentum, not just transverse
+            eta = gen_Higgs.eta,
+            weight = weight.weight()
+        )
+        
+        output["X"].fill(
+            dataset = dataset,
+            score = X,
+            weight = weight.weight()
+        )
+             
+        #output["flipped_electron2"].fill(       #don't worry, this is actually a top
+        #    dataset = dataset,
+        #    pt = ak.to_numpy(ak.flatten(gen_t.pt)),
+        #    eta = ak.to_numpy(ak.flatten(gen_t.eta)),
+        #    weight = weight.weight()
+        #)
+        
         output["electron_data1"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(leading_electron[diele].pt)),
-            eta = ak.to_numpy(ak.flatten(leading_electron[diele].eta)),
-            phi = ak.to_numpy(ak.flatten(leading_electron[diele].phi)),
-            weight=weight.weight()[diele]
+            pt  = ak.to_numpy(ak.flatten(leading_loose_electron[ele1].pt)),
+            eta = ak.to_numpy(ak.flatten(leading_loose_electron[ele1].eta)),
+            phi = ak.to_numpy(ak.flatten(leading_loose_electron[ele1].phi)),
+            weight=weight.weight()[ele1]
         )
         
         output["electron_data2"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(leading_electron[diele_t].pt)),
-            eta = ak.to_numpy(ak.flatten(leading_electron[diele_t].eta)),
-            phi = ak.to_numpy(ak.flatten(leading_electron[diele_t].phi)),
-            weight=weight.weight()[diele_t]
+            pt  = ak.to_numpy(ak.flatten(leading_loose_electron[skim & ele1].pt)),
+            eta = ak.to_numpy(ak.flatten(leading_loose_electron[skim & ele1].eta)),
+            phi = ak.to_numpy(ak.flatten(leading_loose_electron[skim & ele1].phi)),
+            weight=weight.weight()[skim & ele1]
         )
         
         output["electron_data3"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(leading_muon[dimu].pt)),
-            eta = ak.to_numpy(ak.flatten(leading_muon[dimu].eta)),
-            phi = ak.to_numpy(ak.flatten(leading_muon[dimu].phi)),
-            weight=weight.weight()[dimu]
+            pt  = ak.to_numpy(ak.flatten(leading_loose_muon[mu1].pt)),
+            eta = ak.to_numpy(ak.flatten(leading_loose_muon[mu1].eta)),
+            phi = ak.to_numpy(ak.flatten(leading_loose_muon[mu1].phi)),
+            weight=weight.weight()[mu1]
         )
         
         output["electron_data4"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(leading_muon[dimu_t].pt)),
-            eta = ak.to_numpy(ak.flatten(leading_muon[dimu_t].eta)),
-            phi = ak.to_numpy(ak.flatten(leading_muon[dimu_t].phi)),
-            weight=weight.weight()[dimu_t]
+            pt  = ak.to_numpy(ak.flatten(leading_loose_muon[skim & mu1].pt)),
+            eta = ak.to_numpy(ak.flatten(leading_loose_muon[skim & mu1].eta)),
+            phi = ak.to_numpy(ak.flatten(leading_loose_muon[skim & mu1].phi)),
+            weight=weight.weight()[skim & mu1]
         )
         
         output["electron_data5"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(trailing_electron[diele].pt)),
-            eta = ak.to_numpy(ak.flatten(trailing_electron[diele].eta)),
-            phi = ak.to_numpy(ak.flatten(trailing_electron[diele].phi)),
-            weight=weight.weight()[diele]
+            pt  = ak.to_numpy(ak.flatten(trailing_loose_electron[ele2].pt)),
+            eta = ak.to_numpy(ak.flatten(trailing_loose_electron[ele2].eta)),
+            phi = ak.to_numpy(ak.flatten(trailing_loose_electron[ele2].phi)),
+            weight=weight.weight()[ele2]
         )
         
         output["electron_data6"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(trailing_electron[diele_t].pt)),
-            eta = ak.to_numpy(ak.flatten(trailing_electron[diele_t].eta)),
-            phi = ak.to_numpy(ak.flatten(trailing_electron[diele_t].phi)),
-            weight=weight.weight()[diele_t]
+            pt  = ak.to_numpy(ak.flatten(trailing_loose_electron[skim & ele2].pt)),
+            eta = ak.to_numpy(ak.flatten(trailing_loose_electron[skim & ele2].eta)),
+            phi = ak.to_numpy(ak.flatten(trailing_loose_electron[skim & ele2].phi)),
+            weight=weight.weight()[skim & ele2]
         )
         
         output["electron_data7"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(trailing_muon[dimu].pt)),
-            eta = ak.to_numpy(ak.flatten(trailing_muon[dimu].eta)),
-            phi = ak.to_numpy(ak.flatten(trailing_muon[dimu].phi)),
-            weight=weight.weight()[dimu]
+            pt  = ak.to_numpy(ak.flatten(trailing_loose_muon[mu2].pt)),
+            eta = ak.to_numpy(ak.flatten(trailing_loose_muon[mu2].eta)),
+            phi = ak.to_numpy(ak.flatten(trailing_loose_muon[mu2].phi)),
+            weight=weight.weight()[mu2]
         )
         
         output["electron_data8"].fill(
             dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(trailing_muon[dimu_t].pt)),
-            eta = ak.to_numpy(ak.flatten(trailing_muon[dimu_t].eta)),
-            phi = ak.to_numpy(ak.flatten(trailing_muon[dimu_t].phi)),
-            weight=weight.weight()[dimu_t]
+            pt  = ak.to_numpy(ak.flatten(trailing_loose_muon[skim & mu2].pt)),
+            eta = ak.to_numpy(ak.flatten(trailing_loose_muon[skim & mu2].eta)),
+            phi = ak.to_numpy(ak.flatten(trailing_loose_muon[skim & mu2].phi)),
+            weight=weight.weight()[skim & mu2]
         )
         
-        output["electron_data9"].fill(
-            dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(leading_lepton2[dilep].pt)),
-            eta = ak.to_numpy(ak.flatten(leading_lepton2[dilep].eta)),
-            phi = ak.to_numpy(ak.flatten(leading_lepton2[dilep].phi)),
-            weight=weight.weight()[dilep]
-        )
+        #output["electron_data9"].fill(
+        #    dataset = dataset,
+        #    pt2  = ak.to_numpy(ak.flatten(leading_loose_electron[ele1].conePt)),
+        #    eta = ak.to_numpy(ak.flatten(leading_loose_electron[ele1].eta)),
+        #    phi = ak.to_numpy(ak.flatten(leading_loose_electron[ele1].phi)),
+        #    weight=weight.weight()[ele1]
+        #)
         
-        output["electron_data10"].fill(
-            dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(leading_lepton2[dilep_t].pt)),
-            eta = ak.to_numpy(ak.flatten(leading_lepton2[dilep_t].eta)),
-            phi = ak.to_numpy(ak.flatten(leading_lepton2[dilep_t].phi)),
-            weight=weight.weight()[dilep_t]
-        )
+        #output["electron_data10"].fill(
+        #    dataset = dataset,
+        #    pt2  = ak.to_numpy(ak.flatten(leading_loose_electron[skim & ele1].conePt)),
+        #    eta = ak.to_numpy(ak.flatten(leading_loose_electron[skim & ele1].eta)),
+        #    phi = ak.to_numpy(ak.flatten(leading_loose_electron[skim & ele1].phi)),
+        #    weight=weight.weight()[skim & ele1]
+        #)
         
-        output["electron_data11"].fill(
-            dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(trailing_lepton2[dilep].pt)),
-            eta = ak.to_numpy(ak.flatten(trailing_lepton2[dilep].eta)),
-            phi = ak.to_numpy(ak.flatten(trailing_lepton2[dilep].phi)),
-            weight=weight.weight()[dilep]
-        )
+        #output["electron_data11"].fill(
+        #    dataset = dataset,
+        #    pt2  = ak.to_numpy(ak.flatten(leading_loose_muon[mu1].conePt)),
+        #    eta = ak.to_numpy(ak.flatten(leading_loose_muon[mu1].eta)),
+        #    phi = ak.to_numpy(ak.flatten(leading_loose_muon[mu1].phi)),
+        #    weight=weight.weight()[mu1]
+        #)
         
-        output["electron_data12"].fill(
-            dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(trailing_lepton2[dilep_t].pt)),
-            eta = ak.to_numpy(ak.flatten(trailing_lepton2[dilep_t].eta)),
-            phi = ak.to_numpy(ak.flatten(trailing_lepton2[dilep_t].phi)),
-            weight=weight.weight()[dilep_t]
-        )
+        #output["electron_data12"].fill(
+        #    dataset = dataset,
+        #    pt2  = ak.to_numpy(ak.flatten(leading_loose_muon[skim & mu1].conePt)),
+        #    eta = ak.to_numpy(ak.flatten(leading_loose_muon[skim & mu1].eta)),
+        #    phi = ak.to_numpy(ak.flatten(leading_loose_muon[skim & mu1].phi)),
+        #    weight=weight.weight()[skim & mu1]
+        #)
         
-        output["j1"].fill(
-            dataset = dataset,
-            pt = ak.to_numpy(ak.flatten(leading_jet[mass_veto_sel & (ak.num(jet2) >= 1)].pt)),
-            eta = ak.to_numpy(ak.flatten(leading_jet[mass_veto_sel & (ak.num(jet2) >= 1)].eta)),
-            phi = ak.to_numpy(ak.flatten(leading_jet[mass_veto_sel & (ak.num(jet2) >= 1)].phi)),
-            weight=weight.weight()[mass_veto_sel & (ak.num(jet2) >= 1)]
+        #output["electron_data13"].fill(
+        #    dataset = dataset,
+        #    pt2  = ak.to_numpy(ak.flatten(trailing_loose_electron[ele2].conePt)),
+        #    eta = ak.to_numpy(ak.flatten(trailing_loose_electron[ele2].eta)),
+        #    phi = ak.to_numpy(ak.flatten(trailing_loose_electron[ele2].phi)),
+        #    weight=weight.weight()[ele2]
+        #)
+        
+        #output["electron_data14"].fill(
+        #    dataset = dataset,
+        #    pt2  = ak.to_numpy(ak.flatten(trailing_loose_electron[skim & ele2].conePt)),
+        #    eta = ak.to_numpy(ak.flatten(trailing_loose_electron[skim & ele2].eta)),
+        #    phi = ak.to_numpy(ak.flatten(trailing_loose_electron[skim & ele2].phi)),
+        #    weight=weight.weight()[skim & ele2]
+        #)
+        
+        #output["electron_data15"].fill(
+        #    dataset = dataset,
+        #    pt2  = ak.to_numpy(ak.flatten(trailing_loose_muon[mu2].conePt)),
+        #    eta = ak.to_numpy(ak.flatten(trailing_loose_muon[mu2].eta)),
+        #    phi = ak.to_numpy(ak.flatten(trailing_loose_muon[mu2].phi)),
+        #    weight=weight.weight()[mu2]
+        #)
+        
+        #output["electron_data16"].fill(
+        #    dataset = dataset,
+        #    pt2  = ak.to_numpy(ak.flatten(trailing_loose_muon[skim & mu2].conePt)),
+        #    eta = ak.to_numpy(ak.flatten(trailing_loose_muon[skim & mu2].eta)),
+        #    phi = ak.to_numpy(ak.flatten(trailing_loose_muon[skim & mu2].phi)),
+        #    weight=weight.weight()[skim & mu2]
+        #)
+        
+        #output["j1"].fill(
+        #    dataset = dataset,
+        #    pt = ak.to_numpy(ak.flatten(leading_jet[mass_veto_sel & (ak.num(jet2) >= 1)].pt)),
+        #    eta = ak.to_numpy(ak.flatten(leading_jet[mass_veto_sel & (ak.num(jet2) >= 1)].eta)),
+        #    phi = ak.to_numpy(ak.flatten(leading_jet[mass_veto_sel & (ak.num(jet2) >= 1)].phi)),
+        #    weight=weight.weight()[mass_veto_sel & (ak.num(jet2) >= 1)]
 
-        )
+        #)
             
-        output["j2"].fill(
-            dataset = dataset,
-            pt = ak.to_numpy(ak.flatten(subleading_jet[mass_veto_sel & (ak.num(jet2) >= 2)].pt)),
-            eta = ak.to_numpy(ak.flatten(subleading_jet[mass_veto_sel & (ak.num(jet2) >= 2)].eta)),
-            phi = ak.to_numpy(ak.flatten(subleading_jet[mass_veto_sel & (ak.num(jet2) >= 2)].phi)),
-            weight=weight.weight()[mass_veto_sel & (ak.num(jet2) >= 2)]
-        )
+        #output["j2"].fill(
+        #    dataset = dataset,
+        #    pt = ak.to_numpy(ak.flatten(subleading_jet[mass_veto_sel & (ak.num(jet2) >= 2)].pt)),
+        #    eta = ak.to_numpy(ak.flatten(subleading_jet[mass_veto_sel & (ak.num(jet2) >= 2)].eta)),
+        #    phi = ak.to_numpy(ak.flatten(subleading_jet[mass_veto_sel & (ak.num(jet2) >= 2)].phi)),
+        #    weight=weight.weight()[mass_veto_sel & (ak.num(jet2) >= 2)]
+        #)
         
-        output["j3"].fill(
-            dataset = dataset,
-            pt = ak.to_numpy(ak.flatten(subsubleading_jet[mass_veto_sel & (ak.num(jet2) >= 3)].pt)),
-            eta = ak.to_numpy(ak.flatten(subsubleading_jet[mass_veto_sel & (ak.num(jet2) >= 3)].eta)),
-            phi = ak.to_numpy(ak.flatten(subsubleading_jet[mass_veto_sel & (ak.num(jet2) >= 3)].phi)),
-            weight=weight.weight()[mass_veto_sel & (ak.num(jet2) >= 3)]
-        )
+        #output["j3"].fill(
+        #    dataset = dataset,
+        #    pt = ak.to_numpy(ak.flatten(subsubleading_jet[mass_veto_sel & (ak.num(jet2) >= 3)].pt)),
+        #    eta = ak.to_numpy(ak.flatten(subsubleading_jet[mass_veto_sel & (ak.num(jet2) >= 3)].eta)),
+        #    phi = ak.to_numpy(ak.flatten(subsubleading_jet[mass_veto_sel & (ak.num(jet2) >= 3)].phi)),
+        #    weight=weight.weight()[mass_veto_sel & (ak.num(jet2) >= 3)]
+        #)
         
-        output["b1"].fill(
-            dataset = dataset,
-            pt = ak.to_numpy(ak.flatten(leading_btag[mass_veto_sel & (ak.num(btag) >= 1)].pt)),
-            eta = ak.to_numpy(ak.flatten(leading_btag[mass_veto_sel & (ak.num(btag) >= 1)].eta)),
-            phi = ak.to_numpy(ak.flatten(leading_btag[mass_veto_sel & (ak.num(btag) >= 1)].phi)),
-            weight=weight.weight()[mass_veto_sel & (ak.num(btag) >= 1)]
-        )
+        #output["b1"].fill(
+        #    dataset = dataset,
+        #    pt = ak.to_numpy(ak.flatten(leading_btag[mass_veto_sel & (ak.num(btag) >= 1)].pt)),
+        #    eta = ak.to_numpy(ak.flatten(leading_btag[mass_veto_sel & (ak.num(btag) >= 1)].eta)),
+        #    phi = ak.to_numpy(ak.flatten(leading_btag[mass_veto_sel & (ak.num(btag) >= 1)].phi)),
+        #    weight=weight.weight()[mass_veto_sel & (ak.num(btag) >= 1)]
+        #)
             
-        output["b2"].fill(
-            dataset = dataset,
-            pt = ak.to_numpy(ak.flatten(subleading_btag[mass_veto_sel & (ak.num(btag) >= 2)].pt)),
-            eta = ak.to_numpy(ak.flatten(subleading_btag[mass_veto_sel & (ak.num(btag) >= 2)].eta)),
-            phi = ak.to_numpy(ak.flatten(subleading_btag[mass_veto_sel & (ak.num(btag) >= 2)].phi)),
-            weight=weight.weight()[mass_veto_sel & (ak.num(btag) >= 2)]
-        )
+        #output["b2"].fill(
+        #    dataset = dataset,
+        #    pt = ak.to_numpy(ak.flatten(subleading_btag[mass_veto_sel & (ak.num(btag) >= 2)].pt)),
+        #    eta = ak.to_numpy(ak.flatten(subleading_btag[mass_veto_sel & (ak.num(btag) >= 2)].eta)),
+        #    phi = ak.to_numpy(ak.flatten(subleading_btag[mass_veto_sel & (ak.num(btag) >= 2)].phi)),
+        #    weight=weight.weight()[mass_veto_sel & (ak.num(btag) >= 2)]
+        #)
         
-        output["N_jet"].fill(
-            dataset = dataset,
-            multiplicity = ak.num(jet3)[mass_veto_sel],
-            weight=weight.weight()[mass_veto_sel]
-        )
+        #output["N_jet"].fill(
+        #    dataset = dataset,
+        #    multiplicity = ak.num(jet3)[mass_veto_sel],
+        #    weight=weight.weight()[mass_veto_sel]
+        #)
         
-        output["N_b"].fill(
-            dataset = dataset,
-            multiplicity = ak.num(btag3)[mass_veto_sel],
-            weight=weight.weight()[mass_veto_sel]
-        )
+        #output["N_b"].fill(
+        #    dataset = dataset,
+        #    multiplicity = ak.num(btag3)[mass_veto_sel],
+        #    weight=weight.weight()[mass_veto_sel]
+        #)
 
         
         return output    

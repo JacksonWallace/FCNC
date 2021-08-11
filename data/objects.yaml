@@ -287,7 +287,6 @@ Muon:
       extra: abs
     ptErrRel:
       max: 0.2
-    tightCharge: 2
     
   looseFCNC:
     pt:
@@ -308,7 +307,6 @@ Muon:
       extra: abs
     ptErrRel:
       max: 0.2
-    tightCharge: 2
 
   vetoTTH:
     pt:
