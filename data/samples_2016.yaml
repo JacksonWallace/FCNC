@@ -85,7 +85,7 @@
   path: null
   split: 3
   sumWeight: 1999581.0
-  xsec: 1.0
+  xsec: 6.99
 ? /ST_FCNC-TH_Tleptonic_HToWWZZtautau_eta_hut-MadGraph5-pythia8/RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1/NANOAODSIM
 : files: 2
   nEvents: 1997221
@@ -93,7 +93,7 @@
   path: null
   split: 2
   sumWeight: 1997221.0
-  xsec: 1.0
+  xsec: 50.82
 ? /ST_tW_antitop_5f_NoFullyHadronicDecays_TuneCP5_PSweights_13TeV-powheg-pythia8/RunIISummer16NanoAODv7-Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1/NANOAODSIM
 : files: 11
   nEvents: 10240710

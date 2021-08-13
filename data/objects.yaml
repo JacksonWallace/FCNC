@@ -53,10 +53,10 @@ Electron:
       max: 0.1
       extra: abs
     sip3d:
-      max: 4
+      max: 4.0
       extra: abs
       
-  looseFCNC:
+  fakeFCNC:
     pt:
       min: 10
     eta:
@@ -72,7 +72,7 @@ Electron:
       max: 0.1
       extra: abs
     sip3d:
-      max: 4
+      max: 4.0
       extra: abs
       
   vetoTTH:
@@ -283,12 +283,12 @@ Muon:
       max: 0.1
       extra: abs
     sip3d:
-      max: 4
+      max: 4.0
       extra: abs
     ptErrRel:
       max: 0.2
     
-  looseFCNC:
+  fakeFCNC:
     pt:
       min: 10
     eta:
@@ -303,7 +303,7 @@ Muon:
       max: 0.1
       extra: abs
     sip3d:
-      max: 4
+      max: 4.0
       extra: abs
     ptErrRel:
       max: 0.2

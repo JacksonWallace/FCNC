@@ -7,16 +7,11 @@ def add_processes_to_output(fileset, output):
     for sample in fileset:
         if sample not in output:
             output.update({sample: processor.defaultdict_accumulator(int)})
-            
+
 def add_files_to_output(fileset, output):
     for sample in fileset:
         for f in fileset[sample]:
             output.update({f: processor.defaultdict_accumulator(int)})
-
-def add_files_to_output(fileset, output):
-     for sample in fileset:
-        for f in fileset[sample]:
-             output.update({f: processor.defaultdict_accumulator(int)})
 
 dataset_axis            = hist.Cat("dataset",       "Primary dataset")
 pt_axis                 = hist.Bin('pt',            r'$p_{T}\ (GeV)$', np.array([15, 40, 60, 80, 100, 200, 300]))
@@ -33,8 +28,8 @@ eta_fine_axis2           = hist.Bin('eta',           r'$\eta $', 50, -5, 5)
 phi_axis                = hist.Bin("phi",           r"$\phi$", 64, -3.2, 3.2)
 delta_axis              = hist.Bin("delta",         r"$\delta$", 100,0,10 )
 multiplicity_axis       = hist.Bin("multiplicity",  r"N", 5, -0.5, 4.5)
-n1_axis                 = hist.Bin("n1",            r"N", 4, -0.5, 3.5)
-n2_axis                 = hist.Bin("n2",            r"N", 4, -0.5, 3.5)
+n1_axis                 = hist.Bin('n1',            r"$N$", 2, 1.5, 3.5)
+n2_axis                 = hist.Bin('n2',            r"$N$", 2, -0.5, 1.5)
 n_ele_axis              = hist.Bin("n_ele",         r"N", 4, -0.5, 3.5) # we can use this as categorization for ee/emu/mumu
 ext_multiplicity_axis   = hist.Bin("multiplicity",  r"N", 100, -0.5, 99.5) # e.g. for PV
 norm_axis               = hist.Bin("norm",          r"N", 25, 0, 1)
@@ -77,6 +72,8 @@ desired_output = {
             "b2":               hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
 
             "chargeFlip_vs_nonprompt": hist.Hist("Counts", dataset_axis, n1_axis, n2_axis, n_ele_axis),
+            "j_vs_b_ss":           hist.Hist("Counts", dataset_axis, n1_axis, n2_axis),
+            "j_vs_b_ml":           hist.Hist("Counts", dataset_axis, n1_axis, n2_axis),
             
             "high_p_fwd_p":     hist.Hist("Counts", dataset_axis, p_axis),
             

@@ -209,8 +209,11 @@ class Collections:
             if self.v>0: print (" - custom ID and multi-isolation")
                 
         if self.obj == "Electron" and self.wp == "tightFCNC":
-            self.selection = self.selection & (ev.Electron.miniPFRelIso_all < I_1) & self.isTriggerSafeNoIso() & self.getElectronMVAID() & self.getFCNCIsolation(ev.Electron.jetRelIso, ev.Electron.jetPtRelv2, I_2, I_3)
+            self.selection = self.selection & (ev.Electron.miniPFRelIso_all < I_1) & self.isTriggerSafeNoIso() & self.getElectronMVAID(wp = 'tight') & self.getFCNCIsolation(ev.Electron.jetRelIso, ev.Electron.jetPtRelv2, I_2, I_3)
             if self.v>0: print (" - custom ID and multi-isolation")
+       
+        if self.obj == "Electron" and self.wp == "fakeFCNC":
+            self.selection = self.selection & (ev.Electron.miniPFRelIso_all < 0.4) & self.isTriggerSafeNoIso() & self.getElectronMVAID(wp = 'fake')
                 
         if self.obj == "Electron" and (self.wp == "tightTTH" or self.wp == 'fakeableTTH' or self.wp == "tightSSTTH" or self.wp == 'fakeableSSTTH'):
             self.selection = self.selection & self.getSigmaIEtaIEta
@@ -219,9 +222,6 @@ class Collections:
             #self.selection = self.selection & (ev.Electron.matched_jet.btagDeepFlavB<0.2770)
             #self.selection = self.selection & (ev.Jet[ev.Electron.jetIdx].btagDeepFlavB<0.2770)
             #if self.v>0: print (" - deepJet")
-
-        if self.obj == "Electron" and self.wp == "looseFCNC":
-            self.selection = self.selection & (ev.Electron.miniPFRelIso_all < 0.4) #& self.isTriggerSafeNoIso()
 
         if self.obj == "Muon" and self.wp == "tight":
             self.selection = self.selection & self.getIsolation(0.11, 0.74, 6.8)
@@ -233,14 +233,14 @@ class Collections:
         if self.obj == "Muon" and self.wp == "tightFCNC":
             self.selection = self.selection & (ev.Muon.miniPFRelIso_all < I_1) & self.getFCNCIsolation(ev.Muon.jetRelIso, ev.Muon.jetPtRelv2, I_2, I_3)
             if self.v>0: print (" - custom multi-isolation")
+                
+        if self.obj == "Muon" and self.wp == "fakeFCNC":
+            self.selection = self.selection & (ev.Muon.miniPFRelIso_all < 0.4)
             
         if self.obj == 'Muon' and (self.wp == 'fakeableTTH' or self.wp == 'fakeableSSTTH'):
             #self.selection = self.selection & (self.cand.deepJet < self.getThreshold(self.cand.conePt, min_pt=20, max_pt=45, low=0.2770, high=0.0494))
             self.selection = self.selection & (ak.fill_none(ev.Muon.matched_jet.btagDeepFlavB,0) < self.getThreshold(self.cand.conePt, min_pt=20, max_pt=45))
             if self.v>0: print (" - interpolated deepJet")
-        
-        if self.obj == "Muon" and self.wp == "looseFCNC":
-            self.selection = self.selection & (ev.Muon.miniPFRelIso_all < 0.4)
 
         
     def getValue(self, var):
@@ -345,7 +345,7 @@ class Collections:
             return -0.5*np.log(2/(MVA+1)-1)
     
     ## some more involved cuts from SS analysis
-    def getElectronMVAID(self):
+    def getElectronMVAID(self, wp):
         
         lowEta      = ( abs(self.cand.etaSC) < 0.8 )
         midEta      = ( (abs(self.cand.etaSC) <= 1.479) & (abs(self.cand.etaSC) >= 0.8) )
@@ -357,26 +357,42 @@ class Collections:
         MVA = self.getMVAscore()
         
         if self.year == 2016:
-            lowEtaCuts = 0, 0.77, 0.52
-            midEtaCuts = 0, 0.56, 0.11
-            highEtaCuts = 0, 0.48, -0.01
-            ll = ( lowEta & lowPt & (MVA > lowEtaCuts[0] ) )
-            lm = ( lowEta & midPt & (MVA > lowEtaCuts[1] ) )
-            lh = ( lowEta & highPt & (MVA > lowEtaCuts[2] ) )
+            if wp == 'tight':
+                lowEtaCuts = 0.77, 0.52, 0.77
+                midEtaCuts = 0.56, 0.11, 0.56  
+                highEtaCuts = 0.48, -0.01, 0.48 
+                if self.v>0: print (" - tight electron MVA ID")
+                    
+            if wp == 'fake':
+                lowEtaCuts = -0.86, -0.96, -0.3
+                midEtaCuts = -0.85, -0.96, -0.36
+                highEtaCuts = -0.81, -0.95, -0.63
+                if self.v>0: print (" - fakeable electron MVA ID")
+                
+            ll = ( lowEta & ( self.cand.pt < 15 ) & (MVA > lowEtaCuts[2] ) )
+            lm = ( lowEta & ( (self.cand.pt <= 25) & (self.cand.pt >= 15) ) & (MVA > lowEtaCuts[0]+(lowEtaCuts[1]-lowEtaCuts[0])/10*(self.cand.pt - 15) ) )
+            lh = ( lowEta & highPt & (MVA > lowEtaCuts[1] ) )
 
-            ml = ( midEta & lowPt & (MVA > midEtaCuts[0] ) )
-            mm = ( midEta & midPt & (MVA > midEtaCuts[1] ) )
-            mh = ( midEta & highPt & (MVA > midEtaCuts[2] ) )
+            ml = ( midEta & ( self.cand.pt < 15 ) & (MVA > midEtaCuts[2] ) )
+            mm = ( midEta & ( (self.cand.pt <= 25) & (self.cand.pt >= 15) ) & (MVA > midEtaCuts[0]+(midEtaCuts[1]-midEtaCuts[0])/10*(self.cand.pt - 15) ) )
+            mh = ( midEta & highPt & (MVA > midEtaCuts[1] ) )
 
-            hl = ( highEta & lowPt & (MVA > highEtaCuts[0] ) )
-            hm = ( highEta & midPt & (MVA > highEtaCuts[1] ) )
-            hh = ( highEta & highPt & (MVA > highEtaCuts[2] ) )
-            if self.v>0: print (" - tight electron MVA ID")
+            hl = ( highEta & ( self.cand.pt < 15 ) & (MVA > highEtaCuts[2] ) )
+            hm = ( highEta & ( (self.cand.pt <= 25) & (self.cand.pt >= 15) ) & (MVA > highEtaCuts[0]+(highEtaCuts[1]-highEtaCuts[0])/10*(self.cand.pt - 15) ) )
         
         elif self.year == 2017:
-            lowEtaCuts = 0.2, 0.68, 0.2
-            midEtaCuts = 0.1, 0.475, 0.1
-            highEtaCuts = -0.1, 0.320, -0.1
+            if wp == 'tight':
+                lowEtaCuts = 0.2, 0.68, 0.2
+                midEtaCuts = 0.1, 0.475, 0.1
+                highEtaCuts = -0.1, 0.32, -0.1
+                if self.v>0: print (" - tight electron MVA ID")
+            
+            if wp == 'fake':
+                lowEtaCuts = -0.93, -0.887, -0.135
+                midEtaCuts = -0.93, -0.89, -0.417
+                highEtaCuts = -0.942, -0.91, -0.47
+                if self.v>0: print (" - fakeable electron MVA ID")
+                
         
             ll = ( lowEta & lowPt & (MVA > lowEtaCuts[2] ) )
             lm = ( lowEta & midPt & (MVA > (lowEtaCuts[0]+(lowEtaCuts[1]-lowEtaCuts[0])/15*(self.cand.pt-10)) ) )
@@ -389,12 +405,19 @@ class Collections:
             hl = ( highEta & lowPt & (MVA > highEtaCuts[2] ) )
             hm = ( highEta & midPt & (MVA > (highEtaCuts[0]+(highEtaCuts[1]-highEtaCuts[0])/15*(self.cand.pt-10)) ) )
             hh = ( highEta & highPt & (MVA > highEtaCuts[1] ) )
-            if self.v>0: print (" - tight electron MVA ID")
                 
         elif self.year == 2018:
-            lowEtaCuts  = 2.597, 4.277, 2.597
-            midEtaCuts  = 2.252, 3.152, 2.252
-            highEtaCuts = 1.054, 2.359, 1.054
+            if wp == 'tight':
+                lowEtaCuts  = 2.597, 4.277, 2.597
+                midEtaCuts  = 2.252, 3.152, 2.252
+                highEtaCuts = 1.054, 2.359, 1.054
+                if self.v>0: print (" - tight electron MVA ID")
+                    
+            if wp == 'fake':
+                lowEtaCuts = -1.036, -0.106, 0.053
+                midEtaCuts = -1.339, -0.769, -0.434
+                highEtaCuts = -2.091, -1.461, -0.956
+                if self.v>0: print (" - fakeable electron MVA ID")
 
             ll = ( lowEta & lowPt & (MVA > lowEtaCuts[2] ) )
             lm = ( lowEta & midPt & (MVA > (lowEtaCuts[0]+(lowEtaCuts[1]-lowEtaCuts[0])/15*(self.cand.pt-10)) ) )
@@ -407,8 +430,7 @@ class Collections:
             hl = ( highEta & lowPt & (MVA > highEtaCuts[2] ) )
             hm = ( highEta & midPt & (MVA > (highEtaCuts[0]+(highEtaCuts[1]-highEtaCuts[0])/15*(self.cand.pt-10)) ) )
             hh = ( highEta & highPt & (MVA > highEtaCuts[1] ) )
-            if self.v>0: print (" - tight electron MVA ID")
-        
+            
         
         return ( ll | lm | lh | ml | mm | mh | hl | hm | hh )
 
