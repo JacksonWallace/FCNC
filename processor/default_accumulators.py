@@ -38,7 +38,7 @@ pdgID_axis              = hist.Bin("pdgID",         r"N", 26, 0, 25)
 mva_id_axis             = hist.Bin("mva_id",        r"mva ID", np.array([-1, -0.01, 0.11, 0.48, 0.52, 0.56, 0.77, 100]))
 isolation1_axis         = hist.Bin("isolation1",    r"Iso1", np.array([0, 1/0.80-1, 1]))
 isolation2_axis         = hist.Bin("isolation2",    r"Iso2", np.array([0, 7.2, 16]))
-charge_axis             = hist.Bin("charge",        r"Charge", 5, -2, 2)
+charge_axis             = hist.Bin("charge",        r"Charge", 5, -2.5, 2.5)
 
 variations = ['pt_jesTotalUp', 'pt_jesTotalDown']
 nb_variations = ['centralUp', 'centralDown', 'upCentral', 'downCentral']
@@ -148,6 +148,7 @@ desired_output = {
             "isolation":          hist.Hist("Counts", dataset_axis, isolation1_axis, isolation2_axis),
             
             "charge":             hist.Hist("Counts", dataset_axis, charge_axis),
+            "charge2":            hist.Hist("Counts", dataset_axis, charge_axis),
             "X":                  hist.Hist("Counts", dataset_axis, score_axis),
 
             'skimmedEvents':    processor.defaultdict_accumulator(int),
