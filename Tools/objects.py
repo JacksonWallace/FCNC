@@ -220,7 +220,7 @@ class Collections:
             self.selection = self.selection & (ev.Electron.miniPFRelIso_all < 0.4) & self.isTriggerSafeNoIso() & self.getElectronMVAID(wp = 'fake')
                 
         if self.obj == "Electron" and (self.wp == "tightTTH" or self.wp == 'fakeableTTH' or self.wp == "tightSSTTH" or self.wp == 'fakeableSSTTH'):
-            self.selection = self.selection & self.getSigmaIEtaIEta
+            self.selection = self.selection & self.getSigmaIEtaIEta()
             if self.v>0: print (" - SigmaIEtaIEta")
             #self.selection = self.selection & ak.fill_none(ev.Electron.matched_jet.btagDeepFlavB<0.2770, True)
             #self.selection = self.selection & (ev.Electron.matched_jet.btagDeepFlavB<0.2770)
@@ -329,9 +329,9 @@ class Collections:
     def get(self):
         if self.v>0: print ("Found %s objects passing the selection"%sum(ak.num(self.cand[self.selection])))
         return self.cand[self.selection]
-
+    
     def getSigmaIEtaIEta(self):
-        return ((abs(self.cand.etaSC)<=1.479) & (self.cand.sieie<0.011)) | ((abs(self.cand.etaSC)>1.479) & (self.cand.sieie<0.030))
+        return ( ((abs(self.cand.etaSC)<=1.479) & (self.cand.sieie<0.011)) | ((abs(self.cand.etaSC)>1.479) & (self.cand.sieie<0.030)) )
 
     def isTriggerSafeNoIso(self):
         if self.v>0: print (" - trigger safe")

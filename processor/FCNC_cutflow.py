@@ -52,7 +52,8 @@ class FCNC_cutflow(processor.ProcessorABC):
         #Begin defining objects
         
         ## Electrons
-        electron = Collections(ev, "Electron", "tightFCNC", self.year, 0).get()
+        #electron = Collections(ev, "Electron", "tightFCNC", self.year, 0).get()
+        electron = Collections(ev, "Electron", "tightSSTTH", self.year, 0).get()
         electron = electron[( (electron.pt > 20) & (np.abs(electron.eta) < 2.4) )] #matches skim 
         
         electron       = electron[ak.argsort(electron.pt, ascending=False)]
@@ -66,7 +67,8 @@ class FCNC_cutflow(processor.ProcessorABC):
         SSelectron = (ak.sum(electron.charge, axis=1) != 0) & (ak.num(electron)==2)
         OSelectron = (ak.sum(electron.charge, axis=1) == 0) & (ak.num(electron)==2)
         
-        loose_electron = Collections(ev, "Electron", "fakeFCNC", self.year, 0).get()
+        #loose_electron = Collections(ev, "Electron", "fakeFCNC", self.year, 0).get()
+        loose_electron = Collections(ev, "Electron", "vetoTTH", self.year, 0).get()
         loose_electron = loose_electron[( ((loose_electron.pt > 20) | (loose_electron.conePt > 20) ) & (np.abs(loose_electron.eta) < 2.4) )] #matches skim 
         
         loose_electron       = loose_electron[ak.argsort(loose_electron.pt, ascending=False)]
@@ -78,14 +80,16 @@ class FCNC_cutflow(processor.ProcessorABC):
         
         
         ##Muons
-        muon = Collections(ev, "Muon", "tightFCNC", self.year, 0).get()
+        #muon = Collections(ev, "Muon", "tightFCNC", self.year, 0).get()
+        muon = Collections(ev, "Muon", "tightSSTTH", self.year, 0).get()
         muon = muon[( (muon.pt > 20) & (np.abs(muon.eta) < 2.4) )] 
         
         muon       = muon[ak.argsort(muon.pt, ascending=False)]
         leading_muon = muon[:,0:1]
         trailing_muon = muon[:,1:2]
         
-        loose_muon = Collections(ev, "Muon", "fakeFCNC", self.year, 0).get()
+        #loose_muon = Collections(ev, "Muon", "fakeFCNC", self.year, 0).get()
+        loose_muon = Collections(ev, "Muon", "vetoTTH", self.year, 0).get()
         loose_muon = loose_muon[( ((loose_muon.pt > 20) | (loose_muon.conePt > 20)) & (np.abs(loose_muon.eta) < 2.4) )] #matches skim 
    
         loose_muon       = loose_muon[ak.argsort(loose_muon.pt, ascending=False)]
@@ -134,28 +138,11 @@ class FCNC_cutflow(processor.ProcessorABC):
                 
         
         ## MET -> can switch to puppi MET
-        met_pt  = ev.MET.pt
-        met_phi = ev.MET.phi
-        
-        
-        #gen information
-        gen_particles = ev.GenPart
-        
-        #gen_Higgs = gen_particles[(gen_particles.pdgId == 25)][:,-1]
-        
-        #Higgs momentum
-        #gHp = gen_Higgs.pvec.absolute()
-        
-        #gen_t = gen_particles[(np.abs(gen_particles.pdgId) == 6)][:,-1]
-        
-        gen_lepton = ev.GenDressedLepton
-        gen_lepton = gen_lepton[ak.argsort(gen_lepton.pt, ascending=False)]
-        
-        leading_gen_lepton = gen_lepton[:,0:1]
-        trailing_gen_lepton = gen_lepton[:,1:2]
-        
-        gen = ev.Generator
-        X = ak.concatenate([gen[np.abs(gen.id2) != 21].x2, gen[np.abs(gen.id1) != 21].x1])        
+        if self.year == 2016 or self.year == 2018:
+            met_pt = ev.MET.pt
+        elif self.year == 2017:
+            met_pt = ev.METFixEE2017.pt
+        met_phi = ev.MET.phi      
 
 
         # setting up the various weights
@@ -184,7 +171,7 @@ class FCNC_cutflow(processor.ProcessorABC):
         if self.year == 2017:
             triggers = ev.HLT.Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_Mass3p8 | ev.HLT.Ele23_Ele12_CaloIdL_TrackIdL_IsoVL | ev.HLT.Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ | ev.HLT.Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ
         if self.year == 2016:
-            triggers = ev.HLT.Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ | ev.HLT.Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ | ev.HLT.TkMu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ | ev.HLT.Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
+            triggers = ev.HLT.Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ | ev.HLT.Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL | ev.HLT.Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ | ev.HLT.Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL | ev.HLT.Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ | ev.HLT.Mu17_TrkIsoVVL_Mu8_TrkIsoVVL | ev.HLT.Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ
 
         
         #SS SRs
@@ -282,178 +269,6 @@ class FCNC_cutflow(processor.ProcessorABC):
             n2 = ak.num(btag[met_sel_ml]),
             weight = weight.weight()[met_sel_ml]
         )
-        
-        #output["lead_gen_lep"].fill(
-        #    dataset = dataset,
-        #    pt = ak.to_numpy(ak.flatten(leading_gen_lepton[(ak.num(leading_gen_lepton) == 1)].pt)),
-        #    eta = ak.to_numpy(ak.flatten(leading_gen_lepton[(ak.num(leading_gen_lepton) == 1)].eta)),
-        #    phi = ak.to_numpy(ak.flatten(leading_gen_lepton[(ak.num(leading_gen_lepton) == 1)].phi)),
-        #    weight = weight.weight()[(ak.num(leading_gen_lepton) == 1)]
-        #)
-        
-        #output["trail_gen_lep"].fill(
-        #    dataset = dataset,
-        #    pt = ak.to_numpy(ak.flatten(trailing_gen_lepton[(ak.num(trailing_gen_lepton) == 1)].pt)),
-        #    eta = ak.to_numpy(ak.flatten(trailing_gen_lepton[(ak.num(trailing_gen_lepton) == 1)].eta)),
-        #    phi = ak.to_numpy(ak.flatten(trailing_gen_lepton[(ak.num(trailing_gen_lepton) == 1)].phi)),
-        #    weight = weight.weight()[(ak.num(trailing_gen_lepton) == 1)]
-        #)
-        
-        #output["lead_gen_lep2"].fill(
-        #    dataset = dataset,
-        #    pt = ak.to_numpy(ak.flatten(leading_gen_lepton[skim & (ak.num(leading_gen_lepton) == 1)].pt)),
-        #    eta = ak.to_numpy(ak.flatten(leading_gen_lepton[skim & (ak.num(leading_gen_lepton) == 1)].eta)),
-        #    phi = ak.to_numpy(ak.flatten(leading_gen_lepton[skim & (ak.num(leading_gen_lepton) == 1)].phi)),
-        #    weight = weight.weight()[skim & (ak.num(leading_gen_lepton) == 1)]
-        #)
-        
-        #output["trail_gen_lep2"].fill(
-        #    dataset = dataset,
-        #    pt = ak.to_numpy(ak.flatten(trailing_gen_lepton[skim & (ak.num(trailing_gen_lepton) == 1)].pt)),
-        #    eta = ak.to_numpy(ak.flatten(trailing_gen_lepton[skim & (ak.num(trailing_gen_lepton) == 1)].eta)),
-        #    phi = ak.to_numpy(ak.flatten(trailing_gen_lepton[skim & (ak.num(trailing_gen_lepton) == 1)].phi)),
-        #    weight = weight.weight()[skim & (ak.num(trailing_gen_lepton) == 1)]
-        #)
-        
-        output["N_ele"].fill(
-            dataset = dataset,
-            multiplicity = ak.num(lepton[met_sel_ss]),
-            weight = weight.weight()[met_sel_ss]
-        )
-        
-        output["N_ele2"].fill(
-            dataset = dataset,
-            multiplicity = ak.num(lepton[met_sel_ml]),
-            weight = weight.weight()[met_sel_ml]
-        )
-        
-        output["electron_data1"].fill(
-            dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(leading_lepton[met_sel_ss].pt)),
-            eta = ak.to_numpy(ak.flatten(leading_lepton[met_sel_ss].eta)),
-            phi = ak.to_numpy(ak.flatten(leading_lepton[met_sel_ss].phi)),
-            weight=weight.weight()[met_sel_ss]
-        )
-        
-        output["electron_data2"].fill(
-            dataset = dataset,
-            pt  = ak.to_numpy(ak.flatten(leading_lepton[met_sel_ml].pt)),
-            eta = ak.to_numpy(ak.flatten(leading_lepton[met_sel_ml].eta)),
-            phi = ak.to_numpy(ak.flatten(leading_lepton[met_sel_ml].phi)),
-            weight=weight.weight()[met_sel_ml]
-        )
-        
-        output["dilep_mass1"].fill(
-            dataset = dataset,
-            mass = ak.to_numpy(ak.flatten(dielectron_mass[( met_sel_ss & (ak.num(electron) >= 2) )])),
-            pt = ak.to_numpy(ak.flatten(dielectron_mass[( met_sel_ss & (ak.num(electron) >= 2) )])),
-            weight=weight.weight()[( met_sel_ss & (ak.num(electron) >= 2) )]
-        )
-        
-        output["charge"].fill(
-            dataset = dataset,
-            charge = ak.sum(lepton.charge, axis=1)[met_sel_ss],
-            weight=weight.weight()[met_sel_ss]
-        )
-        
-        output["charge2"].fill(
-            dataset = dataset,
-            charge = ak.sum(lepton.charge, axis=1)[met_sel_ml],
-            weight=weight.weight()[met_sel_ml]
-        )
-               
-        
-        #output["flipped_electron"].fill(       #don't worry, this is actually a Higgs
-        #    dataset = dataset,
-        #    pt = gHp,             #full momentum, not just transverse
-        #    eta = gen_Higgs.eta,
-        #    weight = weight.weight()
-        #)
-        
-        #output["X"].fill(
-        #    dataset = dataset,
-        #    score = X,
-        #    weight = weight.weight()
-        #)
-             
-        #output["flipped_electron2"].fill(       #don't worry, this is actually a top
-        #    dataset = dataset,
-        #    pt = ak.to_numpy(ak.flatten(gen_t.pt)),
-        #    eta = ak.to_numpy(ak.flatten(gen_t.eta)),
-        #    weight = weight.weight()
-        #)
-        
-        #output["j1"].fill(
-        #    dataset = dataset,
-        #    pt = ak.to_numpy(ak.flatten(leading_jet[mass_veto_sel & (ak.num(jet2) >= 1)].pt)),
-        #    eta = ak.to_numpy(ak.flatten(leading_jet[mass_veto_sel & (ak.num(jet2) >= 1)].eta)),
-        #    phi = ak.to_numpy(ak.flatten(leading_jet[mass_veto_sel & (ak.num(jet2) >= 1)].phi)),
-        #    weight=weight.weight()[mass_veto_sel & (ak.num(jet2) >= 1)]
-
-        #)
-            
-        #output["j2"].fill(
-        #    dataset = dataset,
-        #    pt = ak.to_numpy(ak.flatten(subleading_jet[mass_veto_sel & (ak.num(jet2) >= 2)].pt)),
-        #    eta = ak.to_numpy(ak.flatten(subleading_jet[mass_veto_sel & (ak.num(jet2) >= 2)].eta)),
-        #    phi = ak.to_numpy(ak.flatten(subleading_jet[mass_veto_sel & (ak.num(jet2) >= 2)].phi)),
-        #    weight=weight.weight()[mass_veto_sel & (ak.num(jet2) >= 2)]
-        #)
-        
-        #output["j3"].fill(
-        #    dataset = dataset,
-        #    pt = ak.to_numpy(ak.flatten(subsubleading_jet[mass_veto_sel & (ak.num(jet2) >= 3)].pt)),
-        #    eta = ak.to_numpy(ak.flatten(subsubleading_jet[mass_veto_sel & (ak.num(jet2) >= 3)].eta)),
-        #    phi = ak.to_numpy(ak.flatten(subsubleading_jet[mass_veto_sel & (ak.num(jet2) >= 3)].phi)),
-        #    weight=weight.weight()[mass_veto_sel & (ak.num(jet2) >= 3)]
-        #)
-        
-        #output["b1"].fill(
-        #    dataset = dataset,
-        #    pt = ak.to_numpy(ak.flatten(leading_btag[mass_veto_sel & (ak.num(btag) >= 1)].pt)),
-        #    eta = ak.to_numpy(ak.flatten(leading_btag[mass_veto_sel & (ak.num(btag) >= 1)].eta)),
-        #    phi = ak.to_numpy(ak.flatten(leading_btag[mass_veto_sel & (ak.num(btag) >= 1)].phi)),
-        #    weight=weight.weight()[mass_veto_sel & (ak.num(btag) >= 1)]
-        #)
-            
-        #output["b2"].fill(
-        #    dataset = dataset,
-        #    pt = ak.to_numpy(ak.flatten(subleading_btag[mass_veto_sel & (ak.num(btag) >= 2)].pt)),
-        #    eta = ak.to_numpy(ak.flatten(subleading_btag[mass_veto_sel & (ak.num(btag) >= 2)].eta)),
-        #    phi = ak.to_numpy(ak.flatten(subleading_btag[mass_veto_sel & (ak.num(btag) >= 2)].phi)),
-        #    weight=weight.weight()[mass_veto_sel & (ak.num(btag) >= 2)]
-        #)
-        
-        output["N_jet"].fill(
-            dataset = dataset,
-            multiplicity = ak.num(jet)[met_sel_ss],
-            weight=weight.weight()[met_sel_ss]
-        )
-        
-        output["N_jet2"].fill(
-            dataset = dataset,
-            multiplicity = ak.num(jet)[met_sel_ml],
-            weight=weight.weight()[met_sel_ml]
-        )
-        
-        output["MET"].fill(
-            dataset = dataset,
-            pt = met_pt[met_sel_ss],
-            weight=weight.weight()[met_sel_ss]
-        )
-        
-        output["MET2"].fill(
-            dataset = dataset,
-            pt = met_pt[met_sel_ml],
-            weight=weight.weight()[met_sel_ml]
-        )
-        
-        #output["N_b"].fill(
-        #    dataset = dataset,
-        #    multiplicity = ak.num(btag3)[mass_veto_sel],
-        #    weight=weight.weight()[mass_veto_sel]
-        #)
-
         
         return output    
 
