@@ -71,9 +71,14 @@ desired_output = {
             "b1":               hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
             "b2":               hist.Hist("Counts", dataset_axis, pt_fine_axis, eta_fine_axis, phi_axis),
 
-            "chargeFlip_vs_nonprompt": hist.Hist("Counts", dataset_axis, n1_axis, n2_axis, n_ele_axis),
-            "j_vs_b_ss":           hist.Hist("Counts", dataset_axis, n1_axis, n2_axis),
-            "j_vs_b_ml":           hist.Hist("Counts", dataset_axis, n1_axis, n2_axis),
+            "chargeFlip_vs_nonprompt":     hist.Hist("Counts", dataset_axis, n1_axis, n2_axis, n_ele_axis),
+            "j_vs_b_ss":                   hist.Hist("Counts", dataset_axis, n1_axis, n2_axis),
+            "j_vs_b_ss_flips":             hist.Hist("Counts", dataset_axis, n1_axis, n2_axis),
+            "j_vs_b_ss_fakes":             hist.Hist("Counts", dataset_axis, n1_axis, n2_axis),
+            "j_vs_b_ss_non_fakes_flips":   hist.Hist("Counts", dataset_axis, n1_axis, n2_axis),
+            "j_vs_b_ml":                   hist.Hist("Counts", dataset_axis, n1_axis, n2_axis),
+            "j_vs_b_ml_fakes":             hist.Hist("Counts", dataset_axis, n1_axis, n2_axis),
+            "j_vs_b_ml_non_fakes":         hist.Hist("Counts", dataset_axis, n1_axis, n2_axis),
             
             "high_p_fwd_p":     hist.Hist("Counts", dataset_axis, p_axis),
             

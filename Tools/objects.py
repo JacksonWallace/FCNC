@@ -90,7 +90,7 @@ def getNonPromptFromFlavour(obj, allow_tau=True):
 
 def getChargeFlips(obj, gen=0):
     # gen is not needed, but keep to not break things
-    return ak.num(obj[(obj.matched_gen.pdgId/abs(obj.matched_gen.pdgId) != obj.pdgId/abs(obj.pdgId))])
+    return ak.num(obj[(obj.matched_gen.pdgId/np.abs(obj.matched_gen.pdgId) != obj.pdgId/np.abs(obj.pdgId))])
 
 with open(os.path.expandvars('$TWHOME/data/objects.yaml')) as f:
     obj_def = load(f, Loader=Loader)
@@ -103,7 +103,7 @@ nonprompt = lambda x: x[((x.genPartFlav!=1)&(x.genPartFlav!=15)&(x.genPartFlav!=
 
 conversion = lambda x: x[(x.genPartFlav==22)]
 
-chargeflip = lambda x: x[((x.matched_gen.pdgId*(-1) == x.pdgId) & (abs(x.pdgId) == 11))]  # we only care about electron charge flips
+chargeflip = lambda x: x[((x.matched_gen.pdgId*(-1) == x.pdgId) & (np.abs(x.pdgId) == 11))]  # we only care about electron charge flips
 
 class Collections:
 
@@ -236,7 +236,6 @@ class Collections:
             
         if self.obj == "Muon" and self.wp == "tightFCNC":
             self.selection = self.selection & (ev.Muon.miniPFRelIso_all < I_1) & self.getFCNCIsolation(ev.Muon.jetRelIso, ev.Muon.jetPtRelv2, I_2, I_3)
-            if self.v>0: print (" - custom multi-isolation")
                 
         if self.obj == "Muon" and self.wp == "fakeFCNC":
             self.selection = self.selection & (ev.Muon.miniPFRelIso_all < 0.4)
@@ -284,22 +283,22 @@ class Collections:
                 extra = obj_def[self.obj][self.wp][var].get('extra')
                 if extra=='abs':
                     try:
-                        self.selection = self.selection & (abs(self.getValue(var)) >= obj_def[self.obj][self.wp][var][self.year]['min'])
+                        self.selection = self.selection & (np.abs(self.getValue(var)) >= obj_def[self.obj][self.wp][var][self.year]['min'])
                         if self.v>0: print (" - abs(%s) >= %s"%(var, obj_def[self.obj][self.wp][var][self.year]['min']))
                     except:
                         pass
                     try:
-                        self.selection = self.selection & (abs(self.getValue(var)) >= obj_def[self.obj][self.wp][var]['min'])
+                        self.selection = self.selection & (np.abs(self.getValue(var)) >= obj_def[self.obj][self.wp][var]['min'])
                         if self.v>0: print (" - abs(%s) >= %s"%(var, obj_def[self.obj][self.wp][var]['min']))
                     except:
                         pass
                     try:
-                        self.selection = self.selection & (abs(self.getValue(var)) <= obj_def[self.obj][self.wp][var][self.year]['max'])
+                        self.selection = self.selection & (np.abs(self.getValue(var)) <= obj_def[self.obj][self.wp][var][self.year]['max'])
                         if self.v>0: print (" - abs(%s) <= %s"%(var, obj_def[self.obj][self.wp][var][self.year]['max']))
                     except:
                         pass
                     try:
-                        self.selection = self.selection & (abs(self.getValue(var)) <= obj_def[self.obj][self.wp][var]['max'])
+                        self.selection = self.selection & (np.abs(self.getValue(var)) <= obj_def[self.obj][self.wp][var]['max'])
                         if self.v>0: print (" - abs(%s) <= %s"%(var, obj_def[self.obj][self.wp][var]['max']))
                     except:
                         pass
@@ -331,11 +330,11 @@ class Collections:
         return self.cand[self.selection]
     
     def getSigmaIEtaIEta(self):
-        return ( ((abs(self.cand.etaSC)<=1.479) & (self.cand.sieie<0.011)) | ((abs(self.cand.etaSC)>1.479) & (self.cand.sieie<0.030)) )
+        return ( ((np.abs(self.cand.etaSC)<=1.479) & (self.cand.sieie<0.011)) | ((np.abs(self.cand.etaSC)>1.479) & (self.cand.sieie<0.030)) )
 
     def isTriggerSafeNoIso(self):
         if self.v>0: print (" - trigger safe")
-        return ((abs(self.cand.etaSC)<=1.479) & (self.cand.sieie<0.011) & (self.cand.hoe<0.08) & (abs(self.cand.eInvMinusPInv)<0.01) ) | ((abs(self.cand.etaSC)>1.479) & (self.cand.sieie<0.031) & (self.cand.hoe<0.08) & (abs(self.cand.eInvMinusPInv)<0.01))
+        return ( (np.abs(self.cand.etaSC)<=1.479) & (self.cand.sieie<0.011) & (self.cand.hoe<0.08) & (np.abs(self.cand.eInvMinusPInv)<0.01) ) | ( (np.abs(self.cand.etaSC)>1.479) & (self.cand.sieie<0.031) & (self.cand.hoe<0.08) & (np.abs(self.cand.eInvMinusPInv)<0.01) )
         
     def getMVAscore(self):
         if self.year == 2016:
@@ -346,17 +345,17 @@ class Collections:
             return MVA
         elif self.year == 2018:
             MVA = np.minimum(np.maximum(self.cand.mvaFall17V2noIso, -1.0 + 1.e-6), 1.0 - 1.e-6)
-            return -0.5*np.log(2/(MVA+1)-1)
+            return -0.5*np.log((2/(MVA+1))-1)
     
     ## some more involved cuts from SS analysis
     def getElectronMVAID(self, wp):
         
-        lowEta      = ( abs(self.cand.etaSC) < 0.8 )
-        midEta      = ( (abs(self.cand.etaSC) <= 1.479) & (abs(self.cand.etaSC) >= 0.8) )
-        highEta     = ( abs(self.cand.etaSC) > 1.479 )
-        lowPt       = ( self.cand.pt < 10 )
+        lowEta      = (  np.abs(self.cand.etaSC) < 0.8 )
+        midEta      = ( (np.abs(self.cand.etaSC) <= 1.479) & (np.abs(self.cand.etaSC) >= 0.8) )
+        highEta     = (  np.abs(self.cand.etaSC) > 1.479 )
+        lowPt       = (  self.cand.pt < 10 )
         midPt       = ( (self.cand.pt <= 25) & (self.cand.pt >= 10) )
-        highPt      = (self.cand.pt > 25)
+        highPt      = (  self.cand.pt > 25)
 
         MVA = self.getMVAscore()
         
@@ -461,4 +460,5 @@ class Collections:
     
     def getFCNCIsolation(self, jetRelIso, jetPtRelv2, I_2, I_3):
             jetRelIso_cut = 1/I_2 - 1
-            return ((jetRelIso < jetRelIso_cut) | (jetPtRelv2 > I_3)) 
+            if self.v>0: print (" - custom multi isolation")
+            return ( (jetRelIso < jetRelIso_cut) | (jetPtRelv2 > I_3) ) 

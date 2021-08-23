@@ -39,9 +39,9 @@ Electron:
       
   tightFCNC:
     pt:
-      min: 15
-    eta:
-      max: 2.4
+      min: 10
+    etaSC:
+      max: 2.5
       extra: abs
     tightCharge: 2
     lostHits: 0
@@ -59,8 +59,8 @@ Electron:
   fakeFCNC:
     pt:
       min: 10
-    eta:
-      max: 2.4
+    etaSC:
+      max: 2.5
       extra: abs
     tightCharge: 2
     lostHits: 0
@@ -270,7 +270,7 @@ Muon:
   
   tightFCNC:
     pt:
-      min: 15
+      min: 10
     eta:
       max: 2.4
       extra: abs
