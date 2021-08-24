@@ -330,8 +330,8 @@ def scale_and_merge(histogram, samples, fileset, nano_mapping, lumi=60):
     temp = histogram.copy()
 
     # scale according to cross sections    
-    scales = {sample: lumi*1000*samples[sample]['xsec']/samples[sample]['sumWeight'] for sample in samples if sample in fileset}
-    temp.scale(scales, axis='dataset')
+    #scales = {sample: lumi*1000*samples[sample]['xsec']/samples[sample]['sumWeight'] for sample in samples if sample in fileset}
+    #temp.scale(scales, axis='dataset')
 
     
     # merge according to categories:

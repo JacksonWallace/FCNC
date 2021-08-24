@@ -1,9 +1,22 @@
 import awkward as ak
 import numpy as np
+import pandas as pd
 
 from coffea import processor, hist
 from coffea.nanoevents import NanoEventsFactory, NanoAODSchema
 from coffea.analysis_tools import Weights, PackedSelection
+
+from Tools.helpers import get_samples
+from Tools.config_helpers import redirector_ucsd
+from Tools.nano_mapping import make_fileset, nano_mapping
+from processor.meta_processor import get_sample_meta
+
+year = 2018
+
+samples = get_samples(year)
+nano_mappings = nano_mapping(year)
+fileset = make_fileset(['Fakes_Flips', 'Rares', 'hct', 'hut'], year, redirector=redirector_ucsd, small=False)
+meta = get_sample_meta(fileset, samples)
 
 
 # this is all slightly better practice
@@ -11,15 +24,16 @@ from Tools.basic_objects import getJets, getBTagsDeepFlavB
 from Tools.btag_scalefactors import btag_scalefactor
 from Tools.config_helpers import loadConfig
 from Tools.cutflow import Cutflow
-from Tools.helpers import build_weight_like
+from Tools.helpers import pad_and_flatten, mt, build_weight_like
 from Tools.lepton_scalefactors2 import LeptonSF2
+from Tools.nano_mapping import nano_mapping
 from Tools.objects import Collections, choose, cross, match
 from Tools.pileup import pileup
 from Tools.trigger_scalefactors import triggerSF
 from Tools.triggers import getFilters
 
 class FCNC_cutflow(processor.ProcessorABC):
-    def __init__(self, year=2018, variations=[], accumulator={}):
+    def __init__(self, year=2018, variations=[], accumulator={}, dump=False):
         self.variations = variations
         self.year = year
         self.leptonSF = LeptonSF2(year=year)
@@ -27,6 +41,7 @@ class FCNC_cutflow(processor.ProcessorABC):
         self.btagSF = btag_scalefactor(year, UL = False)
         self.triggerSF = triggerSF(year=year)
         self._accumulator = processor.dict_accumulator( accumulator )
+        self.dump = dump
 
     @property
     def accumulator(self):
@@ -52,16 +67,13 @@ class FCNC_cutflow(processor.ProcessorABC):
         #Begin defining objects
         
         ## Electrons
-        electron = Collections(ev, "Electron", "tightFCNC", self.year, 0).get()
-        #electron = Collections(ev, "Electron", "tightSSTTH", self.year, 0).get()
+        #electron = Collections(ev, "Electron", "tightFCNC", self.year, 0).get()
+        electron = Collections(ev, "Electron", "tightSSTTH", self.year, 0).get()
         electron = electron[( (electron.pt > 20) & (np.abs(electron.eta) < 2.4) )] #matches skim 
         
         gen_electron = electron[(electron.genPartIdx >= 0)]
         gen_electron = gen_electron[(np.abs(gen_electron.matched_gen.pdgId)==11)]  #from here on all leptons are gen-matched
-        non_prompt_electron = gen_electron[( (gen_electron.genPartFlav!=1) & (gen_electron.genPartFlav!=15) )]
-        
         prompt_electron = gen_electron[( (gen_electron.genPartFlav==1) | (gen_electron.genPartFlav==15) )] #and now they are all prompt
-        
         flip_electron = prompt_electron[( (prompt_electron.matched_gen.pdgId*(-1) == prompt_electron.pdgId) & (np.abs(prompt_electron.pdgId) == 11) )]        
         
         electron       = electron[ak.argsort(electron.pt, ascending=False)]
@@ -75,8 +87,8 @@ class FCNC_cutflow(processor.ProcessorABC):
         SSelectron = (ak.sum(electron.charge, axis=1) != 0) & (ak.num(electron)==2)
         OSelectron = (ak.sum(electron.charge, axis=1) == 0) & (ak.num(electron)==2)
         
-        loose_electron = Collections(ev, "Electron", "fakeFCNC", self.year, 0).get()
-        #loose_electron = Collections(ev, "Electron", "vetoTTH", self.year, 0).get()
+        #loose_electron = Collections(ev, "Electron", "fakeFCNC", self.year, 0).get()
+        loose_electron = Collections(ev, "Electron", "vetoTTH", self.year, 0).get()
         loose_electron = loose_electron[( ((loose_electron.pt > 20) | (loose_electron.conePt > 20) ) & (np.abs(loose_electron.eta) < 2.4) )] #matches skim 
         
         loose_electron       = loose_electron[ak.argsort(loose_electron.pt, ascending=False)]
@@ -88,19 +100,16 @@ class FCNC_cutflow(processor.ProcessorABC):
         
         
         ##Muons
-        muon = Collections(ev, "Muon", "tightFCNC", self.year, 0).get()
-        #muon = Collections(ev, "Muon", "tightSSTTH", self.year, 0).get()
+        #muon = Collections(ev, "Muon", "tightFCNC", self.year, 0).get()
+        muon = Collections(ev, "Muon", "tightSSTTH", self.year, 0).get()
         muon = muon[( (muon.pt > 20) & (np.abs(muon.eta) < 2.4) )]
-        gen_muon = muon[(muon.genPartIdx >= 0)]
-        gen_muon = gen_muon[(np.abs(gen_muon.matched_gen.pdgId)==13)]
-        non_prompt_muon = gen_muon[( (gen_muon.genPartFlav!=1) & (gen_muon.genPartFlav!=15) )]
         
         muon       = muon[ak.argsort(muon.pt, ascending=False)]
         leading_muon = muon[:,0:1]
         trailing_muon = muon[:,1:2]
         
-        loose_muon = Collections(ev, "Muon", "fakeFCNC", self.year, 0).get()
-        #loose_muon = Collections(ev, "Muon", "vetoTTH", self.year, 0).get()
+        #loose_muon = Collections(ev, "Muon", "fakeFCNC", self.year, 0).get()
+        loose_muon = Collections(ev, "Muon", "vetoTTH", self.year, 0).get()
         loose_muon = loose_muon[( ((loose_muon.pt > 20) | (loose_muon.conePt > 20)) & (np.abs(loose_muon.eta) < 2.4) )] #matches skim 
    
         loose_muon       = loose_muon[ak.argsort(loose_muon.pt, ascending=False)]
@@ -114,7 +123,7 @@ class FCNC_cutflow(processor.ProcessorABC):
         ##Leptons
         lepton   = ak.concatenate([muon, electron], axis=1) #tight leptons, matches skim
         
-        non_prompt_lepton = ak.concatenate([non_prompt_muon, non_prompt_electron], axis=1)
+        non_prompt_lepton = lepton[( (lepton.genPartFlav!=1) & (lepton.genPartFlav!=15) )]
         
         lepton = lepton[ak.argsort(lepton.pt, ascending = False)]
         leading_lepton = lepton[:,0:1]
@@ -124,6 +133,9 @@ class FCNC_cutflow(processor.ProcessorABC):
         dilepton = choose(lepton, 2)
         dilepton_mass = dilepton.mass
         dilepton_pt = dilepton.pt
+        
+        di_leading_lepton = choose(lepton[:,0:2], 2)
+        di_leading_lepton_mass = di_leading_lepton.mass
         
         SSlepton = ( (ak.sum(lepton.charge, axis=1) != 0) & (ak.num(lepton)==2) )
         OSlepton = ( (ak.sum(lepton.charge, axis=1) == 0) & (ak.num(lepton)==2) )
@@ -144,29 +156,38 @@ class FCNC_cutflow(processor.ProcessorABC):
         subleading_btag = btag[:, 1:2]
         
         jet = jet[jet.pt>30]
+        jet = jet[ak.argsort(jet.pt, ascending=False)]
+        
+        ht = ak.sum(jet.pt, axis=1)
         
         leading_jet = jet[:,0:1]
         subleading_jet = jet[:,1:2]
         subsubleading_jet = jet[:,2:3]
+        
+        forward_jet = jet[ak.argsort(np.abs(jet.eta), ascending=False)][:,0:1]
                 
         
         ## MET -> can switch to puppi MET
         if self.year == 2016 or self.year == 2018:
             met_pt = ev.MET.pt
+            met_phi = ev.MET.phi
         elif self.year == 2017:
             met_pt = ev.METFixEE2017.pt
-        met_phi = ev.MET.phi      
+            met_phi = ev.METFixEE2017.phi
+              
 
 
         # setting up the various weights
         weight = Weights( len(ev) )
         weight2 = Weights( len(ev) )
         
+        lumi = {2016: 35.9, 2017: 41.5, 2018: 59.71}
+        
         if not dataset=='EGamma':
-            #generator weight
-            weight.add("weight", ev.genWeight)  
-            weight.add("lepton", self.leptonSF.get(electron, muon))
-            weight.add("pileup", self.PU.reweight(ak.to_numpy(ev.Pileup.nTrueInt), to='central'), weightUp = self.PU.reweight(ak.to_numpy(ev.Pileup.nTrueInt), to='up'), weightDown = self.PU.reweight(ak.to_numpy(ev.Pileup.nTrueInt), to='down'), shift=False)
+            weight.add("lumi weight", np.array([lumi[self.year]*1000*meta[dataset]['xsec']/meta[dataset]['sumWeight']])*(1-0.99*(dataset in nano_mappings['hct'] or dataset in nano_mappings['hut']))) #lumi weight
+            weight.add("weight", ev.genWeight) #generator weight
+            weight.add("lepton", self.leptonSF.get(electron, muon)) #lepton SFs
+            weight.add("pileup", self.PU.reweight(ak.to_numpy(ev.Pileup.nTrueInt), to='central'), weightUp = self.PU.reweight(ak.to_numpy(ev.Pileup.nTrueInt), to='up'), weightDown = self.PU.reweight(ak.to_numpy(ev.Pileup.nTrueInt), to='down'), shift=False) #pileup reweighting
             weight.add("btag", self.btagSF.Method1a(btag, light))     #are these ready?
             weight.add("trigger", self.triggerSF.get(electron, muon)) #are these ready?
                        
@@ -206,7 +227,9 @@ class FCNC_cutflow(processor.ProcessorABC):
         flip = (ak.num(flip_electron) >= 1)  
         fake = (ak.num(non_prompt_lepton) >= 1)
         no_fake = (ak.num(non_prompt_lepton) == 0)
-
+        
+        #bdt selections
+        sr = ( (ss & Zmass & two_jets) | (ml & one_jet) )
 
 
         selection = PackedSelection()
@@ -225,6 +248,7 @@ class FCNC_cutflow(processor.ProcessorABC):
         selection.add('fakes',             fake)
         selection.add('no flips',          no_flip)
         selection.add('no fakes',          no_fake)
+        selection.add('signal regions',    sr)
 
         sk_reqs = ['"skim"']
         sk_reqs_d = { sel: True for sel in sk_reqs }
@@ -254,8 +278,12 @@ class FCNC_cutflow(processor.ProcessorABC):
         fake_ml_reqs_d = { sel: True for sel in fake_ml_reqs }
         fake_ml_sel = selection.require(**fake_ml_reqs_d)
         
+        sr_reqs = bl_reqs + ['signal regions']
+        sr_reqs_d = { sel: True for sel in sr_reqs }
+        sr_sel = selection.require(**sr_reqs_d)
+        
         #cutflow
-        cutflow1 = Cutflow(output, ev, weight=weight2)
+        cutflow1 = Cutflow(output, ev, weight=weight)
         #cutflow2 = Cutflow(output, ev, weight=weight)
         
         cutflow1_reqs_d = {}
@@ -267,8 +295,66 @@ class FCNC_cutflow(processor.ProcessorABC):
         #for req in ml_reqs:
         #    cutflow2_reqs_d.update({req: True})
         #    cutflow2.addRow(req, selection.require(**cutflow2_reqs_d) )
-     
         
+        
+        #BDT outputs
+        
+        if self.dump:
+            
+            BDT_inputs = {
+                'lead_lep_pt': ak.to_numpy(pad_and_flatten(leading_lepton.pt)),
+                'sublead_lep_pt':  ak.to_numpy(pad_and_flatten(subleading_lepton.pt)),
+                'subsublead_lep_pt': ak.to_numpy(pad_and_flatten(subsubleading_lepton.pt)),
+                'lead_lep_eta': ak.to_numpy(pad_and_flatten(np.abs(leading_lepton.eta))),
+                'sublead_lep_eta': ak.to_numpy(pad_and_flatten(np.abs(subleading_lepton.eta))),
+                'subsublead_lep_eta': ak.to_numpy(pad_and_flatten(np.abs(subsubleading_lepton.eta))),
+                'lead_lep_dxy': ak.to_numpy(pad_and_flatten(np.abs(leading_lepton.dxy))),
+                'sublead_lep_dxy':  ak.to_numpy(pad_and_flatten(np.abs(subleading_lepton.dxy))),
+                'subsublead_lep_dxy': ak.to_numpy(pad_and_flatten(np.abs(subsubleading_lepton.dxy))),
+                'lead_lep_dz': ak.to_numpy(pad_and_flatten(np.abs(leading_lepton.dz))),
+                'sublead_lep_dz':  ak.to_numpy(pad_and_flatten(np.abs(subleading_lepton.dz))),
+                'subsublead_lep_dz': ak.to_numpy(pad_and_flatten(np.abs(subsubleading_lepton.dz))),
+                'lead_lep_MET_MT': ak.to_numpy(pad_and_flatten(mt(leading_lepton.pt, leading_lepton.phi, met_pt, met_phi))),
+                'sublead_lep_MET_MT': ak.to_numpy(pad_and_flatten(mt(subleading_lepton.pt, subleading_lepton.phi, met_pt, met_phi))),
+                'subsublead_lep_MET_MT': ak.to_numpy(pad_and_flatten(mt(subsubleading_lepton.pt, subsubleading_lepton.phi, met_pt, met_phi))),
+                'lead_jet_pt': ak.to_numpy(pad_and_flatten(leading_jet.pt)),
+                'sublead_jet_pt': ak.to_numpy(pad_and_flatten(subleading_jet.pt)),
+                'subsublead_jet_pt': ak.to_numpy(pad_and_flatten(subsubleading_jet.pt)),
+                'lead_jet_btag_score': ak.to_numpy(pad_and_flatten(leading_jet.btagDeepFlavB)),
+                'sublead_jet_btag_score': ak.to_numpy(pad_and_flatten(subleading_jet.btagDeepFlavB)),
+                'subsublead_jet_btag_score': ak.to_numpy(pad_and_flatten(subsubleading_jet.btagDeepFlavB)),
+                'MET_pt': ak.to_numpy(met_pt),
+                'forward_jet_pt': ak.to_numpy(pad_and_flatten(forward_jet.pt)),
+                'HT': ak.to_numpy(ht),
+                'n_electrons': ak.to_numpy(ak.num(electron)),
+                'n_jets': ak.to_numpy(ak.num(jet)),
+                'n_btags': ak.to_numpy(ak.num(btag)),
+                'lead_btag_pt': ak.to_numpy(pad_and_flatten(leading_btag.pt)),
+                'lead_btag_btag_score': ak.to_numpy(pad_and_flatten(leading_btag.btagDeepFlavB)),
+                'sub_lead_lead_mass': ak.to_numpy(pad_and_flatten(di_leading_lepton.mass)),
+            }
+            
+            for k in BDT_inputs:
+                output[k] += processor.column_accumulator(BDT_inputs[k][sr_sel])
+            
+            labels = {'hct': -2, 'hut':-1, 'Rares': 1} 
+            nano_mappings = nano_mapping(self.year)
+            if dataset in nano_mappings['hut']:
+                label_mult = labels['hut']
+                output['label']  += processor.column_accumulator(np.ones(len(ev[sr_sel])) * ak.to_numpy(label_mult))
+            elif dataset in nano_mappings['hct']:
+                label_mult = labels['hct']
+                output['label']  += processor.column_accumulator(np.ones(len(ev[sr_sel])) * ak.to_numpy(label_mult))
+            elif dataset in nano_mappings['Rares']:
+                label_mult = labels['Rares']
+                output['label']  += processor.column_accumulator(np.ones(len(ev[sr_sel])) * ak.to_numpy(label_mult))
+            else:
+                label_mult = 2*flip + 3*fake
+                output['label']  += processor.column_accumulator(np.ones(len(ev[sr_sel])) * ak.to_numpy(label_mult[sr_sel]))     
+            
+            output['weight'] += processor.column_accumulator(ak.to_numpy(weight.weight()[sr_sel]))
+            
+ 
         #outputs
         
         output["j_vs_b_ss"].fill(

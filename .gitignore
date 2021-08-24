@@ -10,6 +10,9 @@ histos/*
 notebooks/histos*
 notebooks/.ipynb_checkpoints/*
 
+notebooks/FCNC*.txt
+notebooks/FCNC*.h5
+
 #ignore large files
 caches/nano_analysis/K_simple_output/output.pkl
 coffeaEnv/lib/python3.6/site-packages/llvmlite/binding/libllvmlite.so
