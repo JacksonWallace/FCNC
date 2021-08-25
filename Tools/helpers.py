@@ -272,13 +272,6 @@ def cutflow_scale_and_merge(output, samples, fileset, nano_mapping, lumi=60):
         for sample in nano_mapping[group]:
             if sample in fileset:
                 temp = output[sample].copy()
-                #if group == 'hct' or group == 'hut' or group == 'hct2' or group == 'hut2':
-                #    scale = lumi*1000*samples[sample]['xsec']/samples[sample]['sumWeight']*0.01
-                #else:
-                #    scale = lumi*1000*samples[sample]['xsec']/samples[sample]['sumWeight']
-                # scale according to cross sections
-                #for key in temp.keys():
-                #    temp[key] *= scale
                 combined += temp
         merged[group] = combined
                    

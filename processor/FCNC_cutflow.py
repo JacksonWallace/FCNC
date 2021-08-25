@@ -338,19 +338,12 @@ class FCNC_cutflow(processor.ProcessorABC):
                 output[k] += processor.column_accumulator(BDT_inputs[k][sr_sel])
             
             labels = {'hct': -2, 'hut':-1, 'Rares': 1} 
-            nano_mappings = nano_mapping(self.year)
-            if dataset in nano_mappings['hut']:
-                label_mult = labels['hut']
-                output['label']  += processor.column_accumulator(np.ones(len(ev[sr_sel])) * ak.to_numpy(label_mult))
-            elif dataset in nano_mappings['hct']:
-                label_mult = labels['hct']
-                output['label']  += processor.column_accumulator(np.ones(len(ev[sr_sel])) * ak.to_numpy(label_mult))
-            elif dataset in nano_mappings['Rares']:
-                label_mult = labels['Rares']
-                output['label']  += processor.column_accumulator(np.ones(len(ev[sr_sel])) * ak.to_numpy(label_mult))
+            if dataset in [nano_mappings[label] for label in labels]:
+                label_mult = labels[label]
+                output['label']  += processor.column_accumulator(np.ones(len(ev[sr_sel])) * label_mult)
             else:
                 label_mult = 2*flip + 3*fake
-                output['label']  += processor.column_accumulator(np.ones(len(ev[sr_sel])) * ak.to_numpy(label_mult[sr_sel]))     
+                output['label']  += processor.column_accumulator(np.ones(len(ev[sr_sel])) * label_mult[sr_sel])     
             
             output['weight'] += processor.column_accumulator(ak.to_numpy(weight.weight()[sr_sel]))
             
