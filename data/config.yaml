@@ -15,7 +15,7 @@ caches:
   WH_small: WH_small
 lumi:
   2016: 35.9
-  2017: 41.5
+  2017: 41.48
   2018: 59.71
 meta:
   localNano: /hadoop/cms/store/user/dspitzba/nanoAOD/

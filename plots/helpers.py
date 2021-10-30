@@ -118,7 +118,7 @@ signal_fill_opts = {
 import mplhep as hep
 plt.style.use(hep.style.CMS)
 
-def makePlot(output, histo, axis, bins=None, data=[], normalize=True, log=False, save=False, axis_label=None, ratio_range=None, upHists=[], downHists=[], shape=False, ymax=False, new_colors=colors, new_labels=my_labels, order=None, signals=[], omit=[], lumi=60.0, binwnorm=None, overlay=None, use_label=True, y_axis_label='Events'):
+def makePlot(output, histo, axis, bins=None, data=[], normalize=True, log=False, save=False, axis_label=None, ratio_range=None, upHists=[], downHists=[], shape=False, ymax=False, new_colors=colors, new_labels=my_labels, order=None, signals=[], omit=[], lumi=60.0, binwnorm=None, overlay=None, is_data=True, y_axis_label='Events', rescale={}, obs_label='Observation'):
     
     if save:
         finalizePlotDir( '/'.join(save.split('/')[:-1]) )
@@ -157,11 +157,12 @@ def makePlot(output, histo, axis, bins=None, data=[], normalize=True, log=False,
     
     print ("Data:", round(Data_total,0), "MC:", round(MC_total,2))
     
+    rescale_tmp = { process: 1 if not process in rescale else rescale[process] for process in processes }
     if normalize and data_sel:
-        scales = { process: Data_total/MC_total for process in processes }
+        scales = { process: Data_total*rescale_tmp[process]/MC_total for process in processes }
         histogram.scale(scales, axis='dataset')
     else:
-        scales = {}
+        scales = rescale_tmp
 
     if shape:
         scales = { process: 1/histogram[process].sum("dataset").values(overflow='over')[()].sum() for process in processes }
@@ -205,7 +206,7 @@ def makePlot(output, histo, axis, bins=None, data=[], normalize=True, log=False,
     for handle, label in zip(handles, labels):
         try:
             if label is None or label=='None':
-                updated_labels.append("Observation")
+                updated_labels.append(obs_label)
                 handle.set_color('#000000')
             else:
                 updated_labels.append(new_labels[label])
@@ -246,9 +247,6 @@ def makePlot(output, histo, axis, bins=None, data=[], normalize=True, log=False,
 
     ax.legend(
         loc='upper right',
-        #loc='upper left',
-        #bbox_to_anchor=(0.02, 0.72),#, 0.4, 0.25),
-        #bbox_to_anchor=(0.1, 0.72),
         ncol=2,
         borderaxespad=0.0,
         labels=updated_labels,
@@ -258,29 +256,19 @@ def makePlot(output, histo, axis, bins=None, data=[], normalize=True, log=False,
 
     hep.cms.label(
         "Preliminary",
-        data=len(data)>0,
-        #year=2018,
+        data=len(data)>0 and is_data,
         lumi=lumi,
         loc=0,
         ax=ax,
     )
-
-    #if use_label:
-    #    if len(data)>0:
-    #        fig.text(0.0, 0.995, '$\\bf{CMS}$ Preliminary', fontsize=25,  horizontalalignment='left', verticalalignment='bottom', transform=ax.transAxes )
-    #    else:
-    #        fig.text(0.0, 0.995, '$\\bf{CMS}$ Simulation', fontsize=25,  horizontalalignment='left', verticalalignment='bottom', transform=ax.transAxes )
-    #    fig.text(0.6, 0.995, r'$%.1f\ fb^{-1}$ (13 TeV)'%(lumi), fontsize=25,  horizontalalignment='left', verticalalignment='bottom', transform=ax.transAxes )
 
     if normalize:
         fig.text(0.55, 0.55, 'Data/MC = %s'%round(Data_total/MC_total,2), fontsize=20,  horizontalalignment='left', verticalalignment='bottom', transform=ax.transAxes )
 
 
     if save:
-        #finalizePlotDir(outdir)
         fig.savefig("{}.pdf".format(save))
         fig.savefig("{}.png".format(save))
-        #fig.savefig(save)
         print ("Figure saved in:", save)
 
 

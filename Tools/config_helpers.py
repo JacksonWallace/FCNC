@@ -14,6 +14,7 @@ import math
 import copy
 import re
 
+
 import glob
 
 redirector_ucsd = 'root://xcache-redirector.t2.ucsd.edu:2042/' # this one is exclusively for NanoAOD. 165 TB cap.
@@ -37,6 +38,15 @@ def dump_yaml(data, f_out):
 
 def loadConfig():
     return load_yaml(data_path+'config.yaml')
+
+def get_cache(cache_name):
+    from klepto.archives import dir_archive
+    cfg = loadConfig()
+    cache_dir = os.path.expandvars(cfg['caches']['base'])
+
+    cache = dir_archive(cache_dir+cache_name, serialized=True)
+    cache.load()
+    return cache.get('simple_output')
 
 def dumpConfig(cfg):
     with open(data_path+'config.yaml', 'w') as f:

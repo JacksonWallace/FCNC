@@ -40,8 +40,7 @@ isolation1_axis         = hist.Bin("isolation1",    r"Iso1", np.array([0, 1/0.80
 isolation2_axis         = hist.Bin("isolation2",    r"Iso2", np.array([0, 7.2, 16]))
 charge_axis             = hist.Bin("charge",        r"Charge", 5, -2.5, 2.5)
 
-variations = ['pt_jesTotalUp', 'pt_jesTotalDown']
-nb_variations = ['centralUp', 'centralDown', 'upCentral', 'downCentral']
+variations = ['pt_jesTotalUp', 'pt_jesTotalDown', 'PUUp', 'PUDown', 'bUp', 'bDown', 'lUp', 'lDown']
 
 desired_output = {
             
@@ -165,6 +164,3 @@ outputs_with_vars = ['j1', 'j2', 'j3', 'b1', 'b2', 'N_jet', 'fwd_jet', 'N_b', 'N
 for out in outputs_with_vars:
     desired_output.update( { out+'_'+var: desired_output[out].copy() for var in variations } )
     
-outputs_with_nb_vars = ['N_b']
-for out in outputs_with_nb_vars:
-    desired_output.update( { out+'_'+var: desired_output[out].copy() for var in nb_variations } )
