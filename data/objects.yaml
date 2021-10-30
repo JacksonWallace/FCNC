@@ -125,7 +125,12 @@ Electron:
     jetRelIso:
       max: 0.7
     deepJet:
-      max: 0.2770
+      2016:
+        max: 0.3093
+      2017:
+        max: 0.3040
+      2018:
+        max: 0.2783
     mvaTTH:
       max: 0.80
 
@@ -158,7 +163,12 @@ Electron:
     jetRelIso:
       max: 0.7
     deepJet:
-      max: 0.2770
+      2016:
+        max: 0.3093
+      2017:
+        max: 0.3040
+      2018:
+        max: 0.2783
     mvaTTH:
       max: 0.80
     tightCharge: 2
@@ -190,7 +200,12 @@ Electron:
     lostHits: 0
     mvaFall17V2noIso_WPL: 1
     deepJet:
-      max: 0.2770
+      2016:
+        max: 0.3093
+      2017:
+        max: 0.3040
+      2018:
+        max: 0.2783
     mvaTTH:
       min: 0.80
 
@@ -221,7 +236,12 @@ Electron:
     lostHits: 0
     mvaFall17V2noIso_WPL: 1
     deepJet:
-      max: 0.2770
+      2016:
+        max: 0.3093
+      2017:
+        max: 0.3040
+      2018:
+        max: 0.2783
     mvaTTH:
       min: 0.80
     tightCharge: 2
@@ -375,29 +395,6 @@ Muon:
     jetRelIsoV2:
       max: 0.5
 
-  fakeableTest:
-    pt:
-      min: 10
-    eta:
-      max: 2.4
-      extra: abs
-    looseId: 1
-    dxy:
-      max: 0.05
-      extra: abs
-    dz:
-      max: 0.10
-      extra: abs
-    sip3d:
-      max: 8
-      extra: abs
-    miniPFRelIso_all:
-      max: 0.4
-    mvaTTH:
-      max: 0.85
-    ptErrRel:
-      max: 0.2
-
   tightTTH:
     pt:
       min: 10
@@ -420,7 +417,12 @@ Muon:
     mvaTTH:
       min: 0.85
     deepJet:
-      max: 0.2770
+      2016:
+        max: 0.3093
+      2017:
+        max: 0.3040
+      2018:
+        max: 0.2783
 
   tightSSTTH:
     pt:
@@ -444,6 +446,11 @@ Muon:
     mvaTTH:
       min: 0.85
     deepJet:
-      max: 0.2770
+      2016:
+        max: 0.3093
+      2017:
+        max: 0.3040
+      2018:
+        max: 0.2783
     ptErrRel:
       max: 0.2
